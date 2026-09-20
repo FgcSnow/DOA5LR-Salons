@@ -1,4 +1,4 @@
-# DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and by DOA5LR-Telemetry.asi (one key per line)
+# DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.3
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.3/DOA5LR-Salons-0.3.3.zip
 sha256=071e2962847ae81d69b77073bd19290cb6efe7e535fbfff8595fcb98962060ce
