@@ -1,17 +1,16 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
-version=0.3.4
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.4/DOA5LR-Salons-0.3.4.zip
-sha256=c520460502712c32239ca88821e96dd0ca47aeb1abb99fc879e033ce1caec7da
-size=5111142
-notes=pack 0.3.4: character select grid fixed (d3d9.dll removed), 60fps-menus 0.13 with offline win poses
-note=Fix: the character select grid, names and button hints disappeared while a player was picking a costume. Cause: the root d3d9.dll (an old uMod texture client bundled with AutoLink) - it is removed. AutoLink itself, custom costumes and the desktop resolution are unchanged.
-note=60fps-menus 0.13: the win poses after an OFFLINE fight now run at 60 fps too (menus, intros, online win poses and Story cutscenes already did). Normal speed, voices in sync.
-note=Reminder: DOA5LR-Salons-Installer.exe installs and updates everything in one click and keeps a backup; the game opens it after you close it when a newer pack exists. The pack sends nothing anywhere and our plugins write no log files (only Lobby 0.9.0 keeps its local DOA5LR-Lobby.log diagnostic, see LOBBY-EN.txt).
-note=Borderless 1.1: F11 in game cycles Borderless / Window / Fullscreen (saved). Your .ini settings are kept; old root files are cleaned up automatically.
+version=0.3.5
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.5/DOA5LR-Salons-0.3.5.zip
+sha256=6b6206b9b82571fe8eb7bde749b61d695dfe2e80adff35e5933cdbe01eae9e96
+size=5111557
+notes=pack 0.3.5: HOTFIX - network error / desync right after the intros in some online matches (60fps-menus 0.13b)
+note=HOTFIX (0.3.5): with pack 0.3.3/0.3.4, some online matches (2-player rooms in our tests) dropped with a network error right after the intros: the 60fps plugin did not recognise that kind of online match, took the intro for an offline cutscene and ran it at 60 fps without the 30 Hz stream pairing -> desync. 60fps-menus 0.13b fixes it: in those matches the intros stay native, everything else is unchanged. Please update.
+note=0.3.4: character select grid, names and button hints no longer disappear while a player picks a costume (old root d3d9.dll removed; AutoLink, costumes and desktop resolution unchanged). 60fps-menus: win poses after an OFFLINE fight at 60 fps.
+note=Reminder: the installer updates everything in one click and keeps a backup; the game opens it after you close it when a newer pack exists. The pack sends nothing anywhere and our plugins write no log files (only Lobby 0.9.0 keeps its local DOA5LR-Lobby.log diagnostic, see LOBBY-EN.txt).
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.4/DOA5LR-Salons-Installer.exe
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.5/DOA5LR-Salons-Installer.exe
 installer_version=1.0.2
-installer_sha256=c9310b88e9191aef18c04cd58d213d048f98bcb2c632946fde79c471666d1828
+installer_sha256=1730bbbd101bf52a0518221c7026a229803dbdbb7041c0e0b1cb2fe529ba0429
 keep=*.ini
 move=DOA5LR-60fps-menus.ini|scripts\DOA5LR-60fps-menus.ini
 move=DOA5LR-Borderless.ini|scripts\DOA5LR-Borderless.ini
