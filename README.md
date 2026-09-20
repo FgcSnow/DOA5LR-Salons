@@ -1,6 +1,8 @@
 # DOA5LR-Salons — Community Lobby Mods for Dead or Alive 5 Last Round (PC)
 
-Community mod pack by **FGCsnow & BonuStage**: online lobbies, Steam invites, private rooms, 60 fps menus, borderless window, wired/Wi-Fi indicator with real ping, controller fix (Xidi), AutoLink, anonymous telemetry — and a one-click installer that keeps everything up to date.
+Community mod pack by **FGCsnow & BonuStage**: online lobbies, Steam invites, private rooms, 60 fps menus, borderless window, wired/Wi-Fi indicator with real ping, controller fix (Xidi), AutoLink — and a one-click installer that keeps everything up to date.
+
+**Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod**
 
 ## Install / update
 
@@ -20,14 +22,14 @@ Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 | InviteFix | 0.1.1 | Invite button compatibility fix |
 | WiFi-Wired-Detector | 0.8.6 | Wired/Wi-Fi tag, netcode stats, ping in the lobby list |
 | 60fps-menus | 0.11 | 60 fps menus, intros, win poses |
-| Borderless | 1.0 | Borderless fullscreen window |
-| Telemetry | 0.3.1 | Anonymous session/crash reports, F9 diag, update prompt |
-| Installer | 1.0.0 | One-click install / update / restore |
+| Borderless | 1.0.1 | Borderless fullscreen window |
+| UpdateCheck | 1.0 | Reads `version.txt`, opens the installer at game exit when a new pack is out |
+| Installer | 1.0.1 | One-click install / update / restore |
 | Ultimate ASI Loader, AutoLink 3.30, Xidi 5.0.0 | | Loader, costumes, controllers |
 
-The pack contains **no game content and no Steam API / DLC files**. Sources of every plugin and of the installer are in the zip (`scripts\*-Source\`, `Installer-Source\`). Every binary is scanned with Microsoft Defender before release; the installer verifies each download by SHA256.
+## Privacy
 
-`version.txt` on this branch is the update manifest read by the installer and by the Telemetry plugin.
+The pack **sends nothing anywhere and writes no log files**. The only network access besides the game's own is `DOA5LR-UpdateCheck.asi` reading one public text file (`version.txt` on this branch) to know whether a newer pack exists. Every plugin is open source and shipped as a release build without logging code, with embedded version information; every binary is scanned with Microsoft Defender before release, and the installer verifies each download by SHA256. The pack contains **no game content and no Steam API / DLC files**. Sources are in the zip (`scripts\*-Source\`, `Installer-Source\`).
 
 ## Credits
 
