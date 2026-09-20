@@ -21,7 +21,7 @@ Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 | Lobby | 0.9.0 | Native LOBBY entry, invites, private rooms |
 | InviteFix | 0.1.1 | Invite button compatibility fix |
 | WiFi-Wired-Detector | 0.8.6 | Wired/Wi-Fi tag, netcode stats, ping in the lobby list |
-| 60fps-menus | 0.13 | 60 fps menus, intros, win poses (offline and online), story cutscenes |
+| 60fps-menus | 0.13b | 60 fps menus, intros, win poses (offline and online), story cutscenes |
 | Borderless | 1.1 | Borderless by default, F11 cycles Borderless / Window / Fullscreen |
 | UpdateCheck | 1.0 | Reads `version.txt`, opens the installer at game exit when a new pack is out |
 | Installer | 1.0.2 | One-click install / update / restore |
