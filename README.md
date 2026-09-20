@@ -21,7 +21,7 @@ Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 | Lobby | 0.9.0 | Native LOBBY entry, invites, private rooms |
 | InviteFix | 0.1.1 | Invite button compatibility fix |
 | WiFi-Wired-Detector | 0.8.6 | Wired/Wi-Fi tag, netcode stats, ping in the lobby list |
-| 60fps-menus | 0.12c | 60 fps menus, intros, win poses, story cutscenes |
+| 60fps-menus | 0.13 | 60 fps menus, intros, win poses (offline and online), story cutscenes |
 | Borderless | 1.1 | Borderless by default, F11 cycles Borderless / Window / Fullscreen |
 | UpdateCheck | 1.0 | Reads `version.txt`, opens the installer at game exit when a new pack is out |
 | Installer | 1.0.2 | One-click install / update / restore |
@@ -29,7 +29,7 @@ Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 
 ## Privacy
 
-The pack **sends nothing anywhere and writes no log files**. The only network access besides the game's own is `DOA5LR-UpdateCheck.asi` reading one public text file (`version.txt` on this branch) to know whether a newer pack exists. Every plugin is open source and shipped as a release build without logging code, with embedded version information; every binary is scanned with Microsoft Defender before release, and the installer verifies each download by SHA256. The pack contains **no game content and no Steam API / DLC files**. Sources are in the zip (`scripts\*-Source\`, `Installer-Source\`).
+The pack **sends nothing anywhere**, and our plugins **write no log files** (the only file written is Lobby 0.9.0's local `DOA5LR-Lobby.log` diagnostic, see `LOBBY-EN.txt`; it never leaves your PC). The only network access besides the game's own is `DOA5LR-UpdateCheck.asi` reading one public text file (`version.txt` on this branch) to know whether a newer pack exists. Every plugin is open source and shipped as a release build without logging code, with embedded version information; every binary is scanned with Microsoft Defender before release, and the installer verifies each download by SHA256. The pack contains **no game content and no Steam API / DLC files**. Sources are in the zip (`scripts\*-Source\`, `Installer-Source\`).
 
 ## Credits
 
