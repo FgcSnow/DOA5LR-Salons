@@ -1,20 +1,23 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.3
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.3/DOA5LR-Salons-0.3.3.zip
-sha256=071e2962847ae81d69b77073bd19290cb6efe7e535fbfff8595fcb98962060ce
-size=5148487
+sha256=66b7a7baf9e97fbf22a7c8c74f4071e275c64054416b174db23aa6feee6d259c
+size=5159908
 notes=pack 0.3.3: one-click installer with auto-update, plugins moved to scripts\, no-log builds, update check
 note=New: DOA5LR-Salons-Installer.exe (in the game folder) checks for updates, installs them in one click, keeps a backup. Original Auto Installer concept by BRG Hades.
 note=All plugins, their .ini and the notices now live in scripts\ (Ultimate ASI Loader loads them from there). Loader, AutoLink and DInput8.ini stay at the root.
 note=Privacy: the pack sends nothing anywhere and writes no log files. DOA5LR-UpdateCheck.asi only reads version.txt on GitHub and opens the installer after you close the game when a newer pack exists (UpdatePrompt=0 in scripts\DOA5LR-UpdateCheck.ini to disable).
 note=All plugins are release builds without log file and with embedded version info (fixes the antivirus false positives).
+note=Borderless 1.1: no need to set the game to Window any more - F11 in game cycles Borderless / Window / Fullscreen (saved).
+note=60fps-menus 0.12c: offline intros and win poses of every character, and the Story mode cutscenes (camera) now run at 60 fps.
 note=Your .ini settings are kept; old root files are cleaned up automatically.
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
 installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.3/DOA5LR-Salons-Installer.exe
-installer_version=1.0.1
-installer_sha256=5612ed20e0eb73dc858315b55ac595a737e1b634d9f52c6ca82f2f1bf62ea305
+installer_version=1.0.2
+installer_sha256=914998ea2bcf058caa2fba4c80b98113ef0405d599e1f98937701c045a50d75a
 keep=*.ini
 move=DOA5LR-60fps-menus.ini|scripts\DOA5LR-60fps-menus.ini
+move=DOA5LR-Borderless.ini|scripts\DOA5LR-Borderless.ini
 move=DOA5LR-UpdateCheck.ini|scripts\DOA5LR-UpdateCheck.ini
 move=DOA5LR-WiFi-Wired-Detector.ini|scripts\DOA5LR-WiFi-Wired-Detector.ini
 delete=60FPS-EN.txt
