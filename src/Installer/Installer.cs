@@ -18,6 +18,8 @@
 //   move=old\path|new\path              (0..n, migrations: e.g. root .ini -> scripts\ ; the user file is moved before extraction)
 //   keep=*.ini                          (0..n, existing files never overwritten on update; default *.ini)
 //   installer=https://.../DOA5LR-Salons-Installer.exe   installer_version=1.0.0   installer_sha256=<sha>
+//   optional=id|label|glob;glob...     (0..n, 1.1.0: a component the player may leave out — its files are not extracted and are
+//                                       removed if present; choice saved in DOA5LR-Salons-Components.txt and reused by --update)
 //   file=name|url|fnv32|size            (for Telemetry AutoUpdate, ignored here)
 using System;
 using System.Collections.Generic;
@@ -42,13 +44,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.0.3.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.0.3.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.0.3")]
+[assembly: System.Reflection.AssemblyVersion("1.1.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.1.0")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.0.3";
+    public const string AppVersion = "1.1.0";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -64,6 +66,7 @@ static class Cfg
     public const string TelemetryIni = "DOA5LR-Telemetry.ini";
     public const string UpdateCheckIni = "DOA5LR-UpdateCheck.ini";
     public const string BorderlessIni = "DOA5LR-Borderless.ini";
+    public const string ComponentsFile = "DOA5LR-Salons-Components.txt";   // 1.1.0 : optional components chosen by the player
     public const string PatreonUrl = "https://www.patreon.com/cw/DoA5LRcommunitymod";   // empty = button hidden
     // 1.0.3 : files the pack cannot work without. Checked at every start and after every install: an antivirus can
     // quarantine one of them silently (a game plugin patches the game in memory, heuristics dislike that).
@@ -75,6 +78,46 @@ static class Cfg
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
 }
 
+// ---------------------------------------------------------------- optional components (1.1.0)
+// A component the player may leave out. Everything else in the pack is always installed — on purpose the wired/Wi-Fi tag
+// (DOA5LR-WiFi-Wired-Detector) is NOT optional: the indicator is only worth something if no player can leave it out.
+// The list comes from version.txt (optional= lines) so a future pack can add one without a new installer; Defaults is the
+// fallback for a manifest without them. A .ini of a component left out is kept (settings), everything else of it is removed.
+class Component
+{
+    public string Id, Label; public string[] Globs;
+    public bool Owns(string rel) { return Globs.Any(g => Util.PathGlob(g, rel)); }
+    public static readonly Component[] Defaults = {
+        new Component { Id = "borderless", Label = "Borderless fullscreen window (F11 in game; display mode below)", Globs = new[] { @"scripts\DOA5LR-Borderless.asi", @"scripts\DOA5LR-Borderless.ini", @"scripts\BORDERLESS-EN.txt", @"scripts\Borderless-Source\*" } },
+        new Component { Id = "60fps", Label = "60 fps menus, intros, win poses and Story cutscenes (offline only)", Globs = new[] { @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-60fps-menus.ini", @"scripts\60FPS-EN.txt", @"scripts\60fps-Source\*" } } };
+    public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
+    public static Component Parse(string v)
+    {
+        var p = v.Split('|'); if (p.Length != 3) return null;
+        var c = new Component { Id = p[0].Trim().ToLowerInvariant(), Label = p[1].Trim(), Globs = p[2].Split(';').Select(g => g.Trim().Replace('/', '\\')).Where(g => g.Length > 0 && !g.Contains("..")).ToArray() };
+        var known = Defaults.FirstOrDefault(item => item.Id == c.Id);
+        if (known == null || !c.Globs.SequenceEqual(known.Globs, StringComparer.OrdinalIgnoreCase))
+            throw new InvalidDataException("Refused: unsupported optional component: " + c.Id);
+        return known;
+    }
+    // choice file in the game folder: one "id=0|1" per line; no file or no line for an id = installed
+    public static Dictionary<string, bool> Read(string game)
+    {
+        var d = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        d["borderless"] = game != "" && (Util.InstalledVersion(game) != "" || File.Exists(Path.Combine(game, @"scripts\DOA5LR-Borderless.asi")) || File.Exists(Path.Combine(game, "DOA5LR-Borderless.asi")));
+        try { if (game != "") foreach (var ln in File.ReadAllLines(Path.Combine(game, Cfg.ComponentsFile))) { var i = ln.IndexOf('='); if (i > 0 && ln[0] != '#') d[ln.Substring(0, i).Trim()] = ln.Substring(i + 1).Trim() != "0"; } } catch { }
+        return d;
+    }
+    public static bool Selected(Dictionary<string, bool> sel, string id) { bool b; return sel == null || !sel.TryGetValue(id, out b) || b; }
+    public static void Write(string game, Dictionary<string, bool> sel)
+    {
+        File.WriteAllLines(Path.Combine(game, Cfg.ComponentsFile), new[] { "# " + Cfg.PackName + " optional components chosen in the installer (0 = left out). Everything else is always installed." }
+            .Concat(Current.Select(c => c.Id + "=" + (Selected(sel, c.Id) ? "1" : "0"))));
+    }
+    public static List<Component> LeftOut(Dictionary<string, bool> sel) { return Current.Where(c => !Selected(sel, c.Id)).ToList(); }
+    public static string Summary(Dictionary<string, bool> sel) { var o = LeftOut(sel); return o.Count == 0 ? "all components" : "left out: " + string.Join(", ", o.Select(c => c.Id)); }
+}
+
 // ---------------------------------------------------------------- manifest (version.txt)
 class Manifest
 {
@@ -82,6 +125,7 @@ class Manifest
     public long Size;
     public List<string> NoteLines = new List<string>(), Delete = new List<string>(), Keep = new List<string>();
     public List<KeyValuePair<string, string>> Move = new List<KeyValuePair<string, string>>();
+    public List<Component> Optional = new List<Component>();   // 1.1.0
     public static Manifest Parse(string text)
     {
         var m = new Manifest();
@@ -104,9 +148,11 @@ class Manifest
                 case "installer": m.InstallerUrl = v; break;
                 case "installer_version": m.InstallerVersion = v; break;
                 case "installer_sha256": m.InstallerSha256 = v.ToLowerInvariant(); break;
+                case "optional": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");
+        Component.Current = m.Optional.Count > 0 ? m.Optional.ToArray() : Component.Defaults;
         return m;
     }
 }
@@ -132,6 +178,11 @@ static class Util
     public static bool Glob(string pattern, string name)
     {
         return Regex.IsMatch(name, "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$", RegexOptions.IgnoreCase);
+    }
+    // 1.1.0 : glob on a whole relative path (dir\name.ext or dir\*), case-insensitive
+    public static bool PathGlob(string pattern, string rel)
+    {
+        return Regex.IsMatch(rel.Replace('/', '\\'), "^" + Regex.Escape(pattern.Replace('/', '\\')).Replace("\\*", ".*").Replace("\\?", ".") + "$", RegexOptions.IgnoreCase);
     }
     public static string Human(long b) { return b < 1 << 20 ? (b / 1024.0).ToString("0.#") + " KB" : (b / 1048576.0).ToString("0.0") + " MB"; }
 
@@ -173,7 +224,8 @@ static class Util
     public static List<string> MissingRequired(string game)
     {
         var miss = new List<string>();
-        try { foreach (var rel in Cfg.RequiredFiles) if (!File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
+        var left = Component.LeftOut(Component.Read(game));   // 1.1.0 : a component the player left out is not required
+        try { foreach (var rel in Cfg.RequiredFiles) if (!left.Any(c => c.Owns(rel)) && !File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
         return miss;
     }
     public static string MissingMessage(List<string> miss)
@@ -312,7 +364,8 @@ class Engine
     }
 
     // Install (fresh or update) from a local zip; returns the backup folder.
-    public void InstallZip(string zip, Manifest m)
+    public void InstallZip(string zip, Manifest m) { InstallZip(zip, m, null); }
+    public void InstallZip(string zip, Manifest m, Dictionary<string, bool> sel)
     {
         Game = Path.GetFullPath(Game);
         if (!File.Exists(Path.Combine(Game, Cfg.GameExe))) throw new Exception("game.exe not found in " + Game);
@@ -326,7 +379,12 @@ class Engine
         BackupFolder = Path.Combine(Game, Cfg.BackupDir, stamp);
         for (int k = 2; Directory.Exists(BackupFolder); k++) BackupFolder = Path.Combine(Game, Cfg.BackupDir, stamp + "-" + k);
         var bman = new List<string> { "# " + Cfg.PackName + " backup " + stamp + " — previous version: " + (prev == "" ? "(none)" : prev) + (m != null ? " — installed: " + m.Version : "") };
-        int replaced = 0, added = 0, kept = 0, deleted = 0, skipped = 0, moved = 0;
+        int replaced = 0, added = 0, kept = 0, deleted = 0, skipped = 0, moved = 0, leftOut = 0;
+        var selection = Component.Read(Game);
+        if (sel != null) foreach (var choice in sel) selection[choice.Key] = choice.Value;
+        sel = selection;
+        var left = Component.LeftOut(sel); var leftFiles = new List<string>(); var leftDirs = new List<string>();
+        Line("components: " + Component.Summary(sel));
 
         using (var z = ZipFile.OpenRead(zip))
         {
@@ -340,6 +398,9 @@ class Engine
             }
             if (!entries.Any(e => e.FullName.Equals(Cfg.VersionFile, StringComparison.OrdinalIgnoreCase))) throw new Exception("Refused: archive has no " + Cfg.VersionFile + " at its root (wrong zip?).");
             Status("Backing up files that will be replaced...");
+            if (m != null) foreach (var rel in m.Delete)
+                if (Path.IsPathRooted(rel) || rel.Contains("..") || !Inside(Abs(rel)))
+                    throw new InvalidDataException("Refused: unsafe delete in version.txt: " + rel);
             Progress(0);
             // 2. backup everything we will touch
             var moves = m != null ? m.Move : new List<KeyValuePair<string, string>>();
@@ -349,7 +410,13 @@ class Engine
                 if (!Inside(a) || !Inside(b2) || mv.Key.Contains("..") || mv.Value.Contains("..") || Cfg.Forbidden.IsMatch(mv.Key) || Cfg.Forbidden.IsMatch(mv.Value))
                     throw new Exception("Refused: unsafe move in version.txt: " + mv.Key + " -> " + mv.Value);
             }
-            var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(m != null ? m.Delete : new List<string>()).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            // 1.1.0 : files on disk that belong to a component left out (a dir\* glob covers the whole folder, whatever is in it)
+            foreach (var c in left) foreach (var g in c.Globs)
+            {
+                if (g.EndsWith("\\*")) { var d = Abs(g.Substring(0, g.Length - 2)); if (Inside(d + "\\") && Directory.Exists(d)) { leftDirs.Add(d); leftFiles.AddRange(Directory.GetFiles(d, "*", SearchOption.AllDirectories).Select(f => f.Substring(Path.GetFullPath(Game).TrimEnd('\\').Length + 1))); } }
+                else if (g.IndexOf('*') < 0 && Inside(Abs(g)) && File.Exists(Abs(g))) leftFiles.Add(g);
+            }
+            var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(m != null ? m.Delete : new List<string>()).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Concat(new[] { Cfg.ComponentsFile }).Concat(leftFiles).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             Directory.CreateDirectory(BackupFolder);
             foreach (var rel in touched)
             {
@@ -361,6 +428,7 @@ class Engine
                 }
                 else bman.Add("new|" + rel);
             }
+            File.WriteAllLines(Path.Combine(BackupFolder, "backup-manifest.txt"), bman);
             // 2b. migrations (move=): the user's file follows the new layout, then keep=*.ini protects it
             foreach (var mv in moves)
             {
@@ -376,9 +444,10 @@ class Engine
             {
                 var rel = e.FullName.Replace('/', '\\'); var abs = Abs(rel);
                 Status("Installing " + rel); Progress(++i * 100 / entries.Count);
+                if (left.Any(c => c.Owns(rel))) { leftOut++; continue; }   // 1.1.0 : component left out — not extracted (old copies removed below)
                 Directory.CreateDirectory(Path.GetDirectoryName(abs));
                 bool exists = File.Exists(abs);
-                if (exists && !FreshInstall && keep.Any(k => Util.Glob(k, Path.GetFileName(rel))))
+                if (exists && keep.Any(k => Util.Glob(k, Path.GetFileName(rel))))
                 {
                     // user settings: keep theirs, drop the new default next to it only if different
                     var tmp = abs + ".new"; e.ExtractToFile(tmp, true);
@@ -414,11 +483,21 @@ class Engine
             }
         }
         catch (Exception ex) { Line(pair[0] + " not patched: " + ex.Message); }
+        // 1.1.0 : components left out — old copies removed (backed up above), a .ini is kept (settings), then the choice is
+        // remembered (read back by --update, the file check and the next run of this installer)
+        foreach (var rel in leftFiles.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var abs = Abs(rel); if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel) || !File.Exists(abs)) continue;
+            if (rel.EndsWith(".ini", StringComparison.OrdinalIgnoreCase)) { Line("kept your " + rel + " (settings of a component left out)"); continue; }
+            File.Delete(abs); Line("removed " + rel + " (component left out)");
+        }
+        foreach (var d in leftDirs.OrderByDescending(d => d.Length)) try { if (Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
+        Component.Write(Game, sel);
         // folders emptied by the delete list
         if (m != null) foreach (var d in m.Delete.Select(r => Path.GetDirectoryName(Abs(r))).Where(d => d != null).Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(d => d.Length))
             try { if (Inside(d + "\\") && Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
         File.WriteAllLines(Path.Combine(BackupFolder, "backup-manifest.txt"), bman);
-        Line(string.Format("done: {0} replaced, {1} added, {2} settings kept, {3} moved, {4} removed, {5} skipped — backup in {6}", replaced, added, kept, moved, deleted, skipped, BackupFolder));
+        Line(string.Format("done: {0} replaced, {1} added, {2} settings kept, {3} moved, {4} removed, {5} skipped, {7} left out — backup in {6}", replaced, added, kept, moved, deleted, skipped, BackupFolder, leftOut));
         Progress(100);
     }
 
@@ -496,6 +575,8 @@ class MainForm : Form
     RichTextBox txtNotes; TextBox txtGame;
     Button btnMain, btnRestore, btnBackups, btnCheck, btnCredits, btnBrowse, btnLog;
     ComboBox cbDisplay; Label lblDisplay;
+    Label lblComp, lblCompSub; readonly List<CheckBox> chkComp = new List<CheckBox>();   // 1.1.0
+    Dictionary<string, bool> sel = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase), saved = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
     ProgressBar bar;
     public static string GameOverride;
     Manifest manifest; string game = ""; string installed = ""; bool busy; readonly bool updateMode;
@@ -505,7 +586,7 @@ class MainForm : Form
     {
         this.updateMode = updateMode;
         Text = Cfg.PackName + " Installer " + Cfg.AppVersion; BackColor = BG; ForeColor = TXT;
-        Font = new Font("Segoe UI", 10f); ClientSize = new Size(760, 676); StartPosition = FormStartPosition.CenterScreen;
+        Font = new Font("Segoe UI", 10f); ClientSize = new Size(760, 758); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
         AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96f, 96f);
         try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
@@ -541,35 +622,59 @@ class MainForm : Form
         L("Game folder", x, 300, 130, 12f, true);
         lblSub = L("Found automatically from Steam. Change it only if needed.", x + 140, 306, w - 140, 9f, false, DIM);
         txtGame = new TextBox { Left = x, Top = 332, Width = w - 132, Height = 32, BackColor = FIELD, ForeColor = TXT, BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 10.5f) };
-        txtGame.TextChanged += (s, e) => { game = txtGame.Text.Trim(); RefreshInstalled(); };
+        txtGame.TextChanged += (s, e) => { game = txtGame.Text.Trim(); LoadSelection(); RefreshInstalled(); };
         Controls.Add(txtGame);
         btnBrowse = B("Browse", x + w - 120, 330, 120, 34, BTN, (s, e) => Browse());
 
-        btnMain = B("CHECKING…", x, 384, w, 56, RED, async (s, e) => await MainAction(), true);
-        bar = new ProgressBar { Left = x, Top = 450, Width = w, Height = 8, Style = ProgressBarStyle.Continuous, Visible = false }; Controls.Add(bar);
-        lblStatus = L("", x, 464, w, 9.5f, false, DIM);
+        // 1.1.0 : optional components. Lobby, InviteFix, WiFi-Wired-Detector, controller fix and UpdateCheck are always installed.
+        lblComp = L("Components", x, 378, 130, 12f, true);
+        lblCompSub = L("Always installed: Lobby, Steam invites, wired/Wi-Fi tag, controller fix, updater.", x + 140, 384, w - 140, 9f, false, DIM);
+        BuildComponents();
 
-        lblDisplay = L("Display mode", x, 486, 120, 10f, true); lblDisplay.Top = 489;
-        cbDisplay = new ComboBox { Left = x + 120, Top = 486, Width = 360, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = FIELD, ForeColor = TXT, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f) };
+        btnMain = B("CHECKING…", x, 466, w, 56, RED, async (s, e) => await MainAction(), true);
+        bar = new ProgressBar { Left = x, Top = 532, Width = w, Height = 8, Style = ProgressBarStyle.Continuous, Visible = false }; Controls.Add(bar);
+        lblStatus = L("", x, 546, w, 9.5f, false, DIM);
+
+        lblDisplay = L("Display mode", x, 568, 120, 10f, true); lblDisplay.Top = 571;
+        cbDisplay = new ComboBox { Left = x + 120, Top = 568, Width = 360, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = FIELD, ForeColor = TXT, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f) };
         cbDisplay.Items.AddRange(new object[] { "Fullscreen (game setting)", "Window (with borders)", "Borderless fullscreen (recommended)" });
         cbDisplay.SelectedIndexChanged += (s, e) => { if (!busy && cbDisplay.Enabled && cbDisplay.Tag == null) { try { Util.WriteDisplayMode(game, cbDisplay.SelectedIndex); Status("Display mode: " + cbDisplay.Text + " — applied at the next game launch (F11 in game switches too)."); } catch (Exception ex) { Status("Display mode not saved: " + ex.Message); } } };
         Controls.Add(cbDisplay);
-        btnRestore = B("Restore backup", x, 532, 150, 40, BTN, async (s, e) => await RestoreAction());
-        btnBackups = B("Backups folder", x + 154, 532, 150, 40, BTN, (s, e) => OpenBackups());
-        btnCheck = B("Check again", x + 308, 532, 130, 40, BTN, async (s, e) => await CheckAsync());
-        btnLog = B("Log", x + 442, 532, 80, 40, BTN, (s, e) => { try { Process.Start("notepad.exe", Util.LogPath); } catch { } });
-        btnCredits = B("Credits & Thanks", x + 526, 532, w - 526, 40, BTN, (s, e) => Credits());
+        btnRestore = B("Restore backup", x, 614, 150, 40, BTN, async (s, e) => await RestoreAction());
+        btnBackups = B("Backups folder", x + 154, 614, 150, 40, BTN, (s, e) => OpenBackups());
+        btnCheck = B("Check again", x + 308, 614, 130, 40, BTN, async (s, e) => await CheckAsync());
+        btnLog = B("Log", x + 442, 614, 80, 40, BTN, (s, e) => { try { Process.Start("notepad.exe", Util.LogPath); } catch { } });
+        btnCredits = B("Credits & Thanks", x + 526, 614, w - 526, 40, BTN, (s, e) => Credits());
         if (Cfg.PatreonUrl != "")
         {
             var bp = B("♥  Support us on Patreon", x + w - 230, 44, 230, 36, Color.FromArgb(0xF9, 0x66, 0x54), (s, e) => { try { Process.Start(Cfg.PatreonUrl); } catch { } });
             bp.Font = new Font("Segoe UI", 10f, FontStyle.Bold); bp.BringToFront();
         }
-        L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 592, w, 9f, false, DIM);
-        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 614, w, 9f, false, DIM);
-        L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 640, w, 9f, false, DIM);
+        L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 674, w, 9f, false, DIM);
+        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 696, w, 9f, false, DIM);
+        L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 722, w, 9f, false, DIM);
     }
+    // 1.1.0 : one check box per optional component (list = Component.Current, may change once the manifest is read)
+    void BuildComponents()
+    {
+        foreach (var c in chkComp) Controls.Remove(c); chkComp.Clear();
+        int x = 32, top = 408;
+        foreach (var comp in Component.Current)
+        {
+            var cb = new CheckBox { Text = comp.Label, Tag = comp.Id, Left = x + 8, Top = top, AutoSize = true, ForeColor = TXT, BackColor = Color.Transparent, Font = new Font("Segoe UI", 10f), Checked = Component.Selected(sel, comp.Id), Cursor = Cursors.Hand };
+            cb.CheckedChanged += (s, e) => { if (busy) return; sel[(string)cb.Tag] = cb.Checked; if (cbDisplay != null && (string)cb.Tag == "borderless") { cbDisplay.Enabled = cb.Checked && cbDisplay.Tag == null; lblDisplay.ForeColor = cbDisplay.Enabled ? TXT : DIM; } UpdateState(); };
+            Controls.Add(cb); chkComp.Add(cb); top += 26;
+        }
+        if (lblComp != null) lblComp.Visible = lblCompSub.Visible = chkComp.Count > 0;
+    }
+    void LoadSelection()
+    {
+        saved = Component.Read(game); sel = new Dictionary<string, bool>(saved, StringComparer.OrdinalIgnoreCase);
+        foreach (var cb in chkComp) cb.Checked = Component.Selected(sel, (string)cb.Tag);
+    }
+    bool SelectionChanged() { return Component.Current.Any(c => Component.Selected(sel, c.Id) != Component.Selected(saved, c.Id)); }
 
-    void SetBusy(bool b) { busy = b; foreach (var c in new Control[] { btnMain, btnRestore, btnBackups, btnCheck, btnBrowse, txtGame }) c.Enabled = !b; bar.Visible = b; if (!b) bar.Value = 0; }
+    void SetBusy(bool b) { busy = b; foreach (var c in new Control[] { btnMain, btnRestore, btnBackups, btnCheck, btnBrowse, txtGame }.Concat(chkComp)) c.Enabled = !b; bar.Visible = b; if (!b) bar.Value = 0; }
     void Status(string s) { if (InvokeRequired) { BeginInvoke(new Action<string>(Status), s); return; } lblStatus.Text = s; }
     void Progress(int p) { if (InvokeRequired) { BeginInvoke(new Action<int>(Progress), p); return; } bar.Value = Math.Max(0, Math.Min(100, p)); }
     bool Confirm(string t, string m) { if (InvokeRequired) return (bool)Invoke(new Func<string, string, bool>(Confirm), t, m); return MessageBox.Show(this, m, t, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK; }
@@ -580,7 +685,7 @@ class MainForm : Form
         if (game != "") Util.LogPath = Path.Combine(game, Cfg.LogName);
         Util.Log("--- " + Cfg.PackName + " Installer " + Cfg.AppVersion + (updateMode ? " (--update)" : "") + " game=" + (game == "" ? "(not found)" : game));
         if (game == "") { lblSub.Text = "Not found — click Browse and pick the folder that contains game.exe."; lblSub.ForeColor = YEL; }
-        RefreshInstalled();
+        LoadSelection(); RefreshInstalled();
     }
     void RefreshInstalled()
     {
@@ -592,8 +697,9 @@ class MainForm : Form
         if (cbDisplay != null)
         {
             int m = ok ? Util.ReadDisplayMode(game) : -1;
-            cbDisplay.Tag = "sync"; cbDisplay.Enabled = m >= 0; cbDisplay.SelectedIndex = m >= 0 ? m : 2; cbDisplay.Tag = null;
-            lblDisplay.ForeColor = m >= 0 ? TXT : DIM;
+            bool bl = Component.Selected(sel, "borderless");   // 1.1.0 : no display mode without Borderless
+            cbDisplay.Tag = "sync"; cbDisplay.Enabled = m >= 0 && bl; cbDisplay.SelectedIndex = m >= 0 ? m : 2; cbDisplay.Tag = m >= 0 ? null : "off";
+            lblDisplay.ForeColor = m >= 0 && bl ? TXT : DIM;
         }
         txtGame.ForeColor = ok || game == "" ? TXT : RED;
         UpdateState();
@@ -607,7 +713,9 @@ class MainForm : Form
         if (installed == "") { lblState.Text = "Ready to install"; lblState.ForeColor = YEL; btnMain.Text = "INSTALL MOD PACK " + manifest.Version; btnMain.BackColor = RED; }
         else if (installed == "old" || Util.CmpVer(installed, manifest.Version) < 0) { lblState.Text = "Update available"; lblState.ForeColor = YEL; btnMain.Text = "UPDATE TO " + manifest.Version; btnMain.BackColor = RED; }
         else if (missing.Count > 0) { lblState.Text = "⚠ " + missing.Count + " required file(s) missing — antivirus? Restore them, then REINSTALL"; lblState.ForeColor = RED; btnMain.Text = "REINSTALL " + manifest.Version + " (repair)"; btnMain.BackColor = RED; }
+        else if (SelectionChanged()) { lblState.Text = "Components changed — click APPLY"; lblState.ForeColor = YEL; btnMain.Text = "APPLY CHANGES (reinstall " + manifest.Version + ")"; btnMain.BackColor = RED; }
         else { lblState.Text = "Up to date ✔"; lblState.ForeColor = OK; btnMain.Text = "REINSTALL " + manifest.Version + " (repair)"; btnMain.BackColor = BTN; }
+        btnMain.FlatAppearance.MouseOverBackColor = ControlPaint.Light(btnMain.BackColor, 0.15f);
     }
     // 1.0.3 : one warning dialog per run when the installed pack has required files missing
     void WarnMissing()
@@ -627,6 +735,7 @@ class MainForm : Form
             manifest = Manifest.Parse(txt);
             if (manifest.Version == "") throw new Exception("version.txt has no version= line");
             lblLatest.Text = manifest.Version;
+            BuildComponents();   // 1.1.0 : optional= lines of version.txt
             var notes = new List<string>(); if (manifest.Notes != "") notes.Add(manifest.Notes); notes.AddRange(manifest.NoteLines.Select(n => "• " + n));
             txtNotes.Text = string.Join("\r\n", notes);
             Util.Log("version.txt: latest " + manifest.Version + " installed " + (installed == "" ? "(none)" : installed) + " url " + manifest.Url);
@@ -686,9 +795,10 @@ class MainForm : Form
         try
         {
             var zip = await Task.Run(() => eng.DownloadPack(manifest));
-            await Task.Run(() => eng.InstallZip(zip, manifest));
+            var choice = new Dictionary<string, bool>(sel, StringComparer.OrdinalIgnoreCase);
+            await Task.Run(() => eng.InstallZip(zip, manifest, choice));
             await Task.Delay(1500);   // 1.0.3 : give a real-time antivirus the time to react before we check the files
-            RefreshInstalled();
+            LoadSelection(); RefreshInstalled();
             if (missing.Count > 0)
             {
                 Util.Log("install finished but required files already missing: " + string.Join(", ", missing));
@@ -699,7 +809,7 @@ class MainForm : Form
                 return;
             }
             Status("Done. " + (eng.FreshInstall ? "Installed " : "Updated to ") + manifest.Version + " — backup: " + Path.GetFileName(eng.BackupFolder));
-            var msg = (eng.FreshInstall ? "Installed " : "Updated to ") + Cfg.PackName + " " + manifest.Version + ".\r\n\r\n" + eng.Report.Split('\n').Where(l => l.Contains("kept your") || l.Contains("removed obsolete") || l.Contains("moved ")).Select(l => l.Substring(l.IndexOf("  ") + 2).Trim()).DefaultIfEmpty("").Aggregate((a, b) => a + "\r\n" + b).Trim();
+            var msg = (eng.FreshInstall ? "Installed " : "Updated to ") + Cfg.PackName + " " + manifest.Version + " (" + Component.Summary(choice) + ").\r\n\r\n" + eng.Report.Split('\n').Where(l => l.Contains("kept your") || l.Contains("removed obsolete") || l.Contains("moved ") || l.Contains("left out")).Select(l => l.Substring(l.IndexOf("  ") + 2).Trim()).DefaultIfEmpty("").Aggregate((a, b) => a + "\r\n" + b).Trim();
             msg += (eng.FreshInstall ? "\r\n\r\nRead READ-ME-FIRST-EN.txt in the game folder once (controller setup, lobby key)." : "") + "\r\n\r\nYou can start the game.";
             MessageBox.Show(this, msg.Trim(), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             if (eng.SelfReplaced) Engine.ApplySelfReplaceAndRestart("");
@@ -730,7 +840,7 @@ class MainForm : Form
         if (MessageBox.Show(this, "Restore the game folder to the state saved in " + Path.GetFileName(pick) + "?\r\nFiles added by that update will be removed and replaced files put back.", "Restore backup", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
         if (!Util.CanWrite(game)) { Relaunch("Writing to the game folder needs administrator rights. Restart the installer as administrator?"); return; }
         SetBusy(true);
-        try { await Task.Run(() => eng.Restore(pick)); RefreshInstalled(); Status("Backup " + Path.GetFileName(pick) + " restored."); MessageBox.Show(this, "Backup restored.", "Restore backup", MessageBoxButtons.OK, MessageBoxIcon.Information); if (eng.SelfReplaced) Engine.ApplySelfReplaceAndRestart(""); }
+        try { await Task.Run(() => eng.Restore(pick)); LoadSelection(); RefreshInstalled(); Status("Backup " + Path.GetFileName(pick) + " restored."); MessageBox.Show(this, "Backup restored.", "Restore backup", MessageBoxButtons.OK, MessageBoxIcon.Information); if (eng.SelfReplaced) Engine.ApplySelfReplaceAndRestart(""); }
         catch (OperationCanceledException ex) { Status(ex.Message); }
         catch (Exception ex) { Status("Restore failed: " + ex.Message); Util.Log("RESTORE FAILED: " + ex); MessageBox.Show(this, ex.Message, "Restore failed", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         finally { SetBusy(false); UpdateState(); }
@@ -751,7 +861,7 @@ class MainForm : Form
     void Browse()
     {
         using (var d = new FolderBrowserDialog { Description = "Select the Dead or Alive 5 Last Round folder (the one that contains game.exe)", SelectedPath = game != "" ? game : @"C:\", ShowNewFolderButton = false })
-            if (d.ShowDialog(this) == DialogResult.OK) { txtGame.Text = d.SelectedPath; if (File.Exists(Path.Combine(d.SelectedPath, Cfg.GameExe))) { Util.LogPath = Path.Combine(d.SelectedPath, Cfg.LogName); lblSub.Text = "Game folder set."; lblSub.ForeColor = DIM; } else MessageBox.Show(this, "game.exe is not in this folder.", "Game folder", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            if (d.ShowDialog(this) == DialogResult.OK) { txtGame.Text = d.SelectedPath; if (File.Exists(Path.Combine(d.SelectedPath, Cfg.GameExe))) { Util.LogPath = Path.Combine(d.SelectedPath, Cfg.LogName); lblSub.Text = "Game folder set."; lblSub.ForeColor = DIM; LoadSelection(); RefreshInstalled(); } else MessageBox.Show(this, "game.exe is not in this folder.", "Game folder", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
     }
     void OpenBackups()
     {
@@ -771,7 +881,7 @@ class MainForm : Form
             "• Ultimate ASI Loader — ThirteenAG (MIT)\r\n" +
             "• Xidi controller layer — Samuel Grossman (BSD)\r\n" +
             "• d3d9 resolution mod — original author credited in Optional-Resolution-Mod\\README-EN.txt\r\n\r\n" +
-            "Installer " + Cfg.AppVersion + " — source in the pack repository: " + Cfg.ProjectUrl + "\r\n" +
+            "Installer " + Cfg.AppVersion + " (optional components since 1.1.0) — source in the pack repository: " + Cfg.ProjectUrl + "\r\n" +
             "Testers and everyone in the DOA5LR lobbies: thank you.\r\n\r\n" +
             "Privacy: the public pack sends nothing anywhere. UpdateCheck only downloads version.txt from GitHub.\r\n" +
             (Cfg.PatreonUrl != "" ? "Support the project: " + Cfg.PatreonUrl : ""),
@@ -786,10 +896,12 @@ static class Program
     {
         bool updateMode = args.Any(a => a.Equals("--update", StringComparison.OrdinalIgnoreCase));
         string gameArg = null; bool auto = args.Any(a => a.Equals("--auto", StringComparison.OrdinalIgnoreCase));
+        Dictionary<string, bool> compArg = null;   // 1.1.0 : --components borderless=0,60fps=1 (headless tests)
         for (int i = 0; i + 1 < args.Length; i++)
         {
             if (args[i].Equals("--manifest", StringComparison.OrdinalIgnoreCase)) Cfg.VersionUrl = args[i + 1];
             if (args[i].Equals("--game", StringComparison.OrdinalIgnoreCase)) gameArg = args[i + 1];
+            if (args[i].Equals("--components", StringComparison.OrdinalIgnoreCase)) { compArg = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase); foreach (var kv in args[i + 1].Split(',')) { var q = kv.Split('='); if (q.Length == 2) compArg[q[0].Trim()] = q[1].Trim() != "0"; } }
         }
         if (auto)
         {
@@ -801,7 +913,7 @@ static class Program
             {
                 var m = Manifest.Parse(Util.HttpGetText(Cfg.VersionUrl));
                 var eng = new Engine { Game = g, Status = s => Util.Log("  " + s), Confirm = (t, s) => false };
-                var zip = eng.DownloadPack(m); eng.InstallZip(zip, m);
+                var zip = eng.DownloadPack(m); eng.InstallZip(zip, m, compArg);
                 Util.Log("auto: OK " + m.Version); Environment.Exit(0);
             }
             catch (Exception ex) { Util.Log("auto: FAILED " + ex.Message); Environment.Exit(1); }

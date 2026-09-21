@@ -1,6 +1,6 @@
 #include <windows.h>
 1 VERSIONINFO
-FILEVERSION     0,13,1,0
+FILEVERSION     0,13,2,0
 PRODUCTVERSION  0,3,3,0
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
@@ -14,7 +14,7 @@ BEGIN
     BEGIN
       VALUE "CompanyName",      "FGCsnow - DOA5LR community"
       VALUE "FileDescription",  "DOA5LR-Salons: 60 fps menus, intros, win poses and story cutscenes"
-      VALUE "FileVersion",      "0.13b"
+      VALUE "FileVersion",      "0.13c"
       VALUE "InternalName",     "DOA5LR-60fps-menus"
       VALUE "LegalCopyright",   "Open source, part of the DOA5LR-Salons community pack"
       VALUE "OriginalFilename", "DOA5LR-60fps-menus.asi"

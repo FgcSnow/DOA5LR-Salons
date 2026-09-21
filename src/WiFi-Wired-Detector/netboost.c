@@ -1,4 +1,6 @@
-// DOA5LR-WiFi-Wired-Detector.asi (ex-NetBoost) v0.8.7 — mouchard reseau P2P (statistiques, ping reel,
+// DOA5LR-WiFi-Wired-Detector.asi (ex-NetBoost) v0.8.8 — mouchard reseau P2P (statistiques, ping reel,
+// 0.8.8 : LinkOverride=1 (forcer « cable ») N'EXISTE PLUS (decision Snow 21/09 : l'indicateur ne vaut que si personne
+//         ne peut se declarer cable a la main). Valeurs : 0 = auto, 2 = forcer sans fil ; 1 ou autre = ignore (auto).
 // 0.8.7 : AFFICHAGE DU PING RETIRE (decision Snow 21/09 : on veut seulement savoir cable / Wi-Fi). PingDisplay et
 //         PingDisplaySelf ne sont plus lus (forces a 0) : aucun hook ISteamFriends, rien d'ecrit dans les fiches.
 //         Le HELLO ping/pong reste (il transporte le type de lien ; le RTT ne sert plus qu'au journal du build debug).
@@ -61,7 +63,7 @@ static int g_lobbyProbe = 1;
 #define NC_MGR_RVA   0xF82950
 #define NC_CHECK_RVA 0x50C570   // debut de NameCardManager::Find (0xFBC570 - 0xAB0000)
 static const uint8_t NC_CHECK[16] = { 0x55,0x8b,0xec,0x57,0x8b,0x7d,0x08,0x83,0xff,0xff,0x75,0x0b,0x8d,0x81,0x98,0x11 };
-static int g_linkOverride = 0;       // ini LinkOverride : 0 = auto, 1 = cable, 2 = sans fil
+static int g_linkOverride = 0;       // ini LinkOverride : 0 = auto, 2 = forcer sans fil (0.8.8 : 1 = forcer cable n'existe plus -> auto)
 static int g_pingDisplay = 0, g_pingDisplaySelf = 0;   // 0.8.7 : toujours 0 (affichage du ping retire) ; le code 0.8.6 reste mais n'est jamais atteint
 static uint8_t *g_ncMgr = NULL; static char g_persona[64] = "";
 static uint64_t g_ncPatched = 0;
@@ -462,7 +464,7 @@ static DWORD WINAPI stats_thread(LPVOID unused)
         LONG polls = InterlockedExchange(&g_pollCount, 0);
         EnterCriticalSection(&g_cs);
         FILE *live = fopen(livePath, "w");
-        if (live) fprintf(live, "DOA5LR NetBoost — redondance=%d relais autorise=%d | version=0.8.7 lien=%s sondages/s=%ld\n", g_redundancy, g_allowRelay, linkName(g_linkType), (long)polls);
+        if (live) fprintf(live, "DOA5LR NetBoost — redondance=%d relais autorise=%d | version=0.8.8 lien=%s sondages/s=%ld\n", g_redundancy, g_allowRelay, linkName(g_linkType), (long)polls);
         for (int i = 0; i < MAXPEER; i++) {
             Peer *p = &g_peers[i]; if (!p->used) continue;
             // etat de session : cache rempli par steam_tick (thread du jeu). Jamais d'appel Steam ici.
@@ -623,12 +625,13 @@ static DWORD WINAPI worker(LPVOID unused)
     snprintf(path, sizeof path, "%sDOA5LR-WiFi-Wired-Detector.log", g_dir);
     g_log = fopen(path, "a");
     snprintf(path, sizeof path, "%sDOA5LR-WiFi-Wired-Detector.ini", g_dir);
-    g_redundancy = GetPrivateProfileIntA("NetBoost", "Redundancy", 2, path);
+    g_redundancy = GetPrivateProfileIntA("NetBoost", "Redundancy", 0, path);
     if (g_redundancy < 0) g_redundancy = 0; if (g_redundancy > HIST) g_redundancy = HIST;
     g_allowRelay = GetPrivateProfileIntA("NetBoost", "AllowRelay", 1, path);
     g_logPackets = GetPrivateProfileIntA("NetBoost", "LogPackets", 0, path);
     g_lobbyProbe = GetPrivateProfileIntA("NetBoost", "LobbyProbe", 0, path);
     g_linkOverride = GetPrivateProfileIntA("NetBoost", "LinkOverride", 0, path);
+    if (g_linkOverride != 2) { if (g_linkOverride) logf_("LinkOverride=%d ignore (0.8.8 : seul 2 = forcer sans fil existe encore, jamais forcer cable)", g_linkOverride); g_linkOverride = 0; }
     g_pingDisplay = 0; g_pingDisplaySelf = 0;   // 0.8.7 : plus lus dans l'ini, affichage du ping retire
     g_packetLogMax = GetPrivateProfileIntA("NetBoost", "PacketLogMax", 3000, path);
     {   // type de connexion locale : carte active qui porte une passerelle par defaut
@@ -644,7 +647,7 @@ static DWORD WINAPI worker(LPVOID unused)
         free(aa);
     }
     logf_("connexion locale : %s", linkName(g_linkType));
-    logf_("=== NetBoost v0.8.7 demarre (Redundancy=%d AllowRelay=%d LogPackets=%d PingDisplay=%d PingDisplaySelf=%d)", g_redundancy, g_allowRelay, g_logPackets, g_pingDisplay, g_pingDisplaySelf);
+    logf_("=== NetBoost v0.8.8 demarre (Redundancy=%d AllowRelay=%d LogPackets=%d PingDisplay=%d PingDisplaySelf=%d)", g_redundancy, g_allowRelay, g_logPackets, g_pingDisplay, g_pingDisplaySelf);
     for (int tries = 0; tries < 1200 && !g_iface; tries++) {
         HMODULE m = GetModuleHandleA("steam_api.dll");
         if (m) { SteamNetworking_t acc = (SteamNetworking_t)GetProcAddress(m, "SteamNetworking"); if (acc) g_iface = acc(); }

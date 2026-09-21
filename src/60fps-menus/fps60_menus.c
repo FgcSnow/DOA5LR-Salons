@@ -1,4 +1,4 @@
-// DOA5LR 1.10C / AutoLink 3.30 v0.13b: v0.13 + offline paths require no online reader (online reader desync fix).
+// DOA5LR 1.10C / AutoLink 3.30 v0.13c: OFFLINE ONLY (no 60 fps path while an online session or online reader exists).
 // Native timing tables and combat code are untouched. AutoLink's own FPS
 // compensation factor is halved only while an eligible menu requests 60 fps.
 #include <windows.h>
@@ -96,9 +96,21 @@ static void apply_scale(void) {
     *fps=written_fps_factor;*scale=written_scale;scale_owned=TRUE;
 }
 
+// v0.13c: OFFLINE ONLY. Tester report 21/09 (pack 0.3.5, 3-4 player rooms = reader type 5):
+// round-start network errors every few matches and a character-select mismatch. The 0.13b
+// log (23:03) shows the online character select (GUI 4) running at 60 fps with reader type 0:
+// the online reader only exists once the fight starts, so it cannot gate the menus. Any live
+// Online::Matching state object (base+0xf81898+4, NULL outside online play; used by the lobby
+// launcher) or any online reader now disables every path of this plugin. The type 5 online
+// paths (GUI 0 intro subframes, source30 win poses) and the two reader call patches are gone.
+static BOOL online_session(void) {
+    return *(DWORD*)(base+0xf8f208)!=0 || *(DWORD*)(base+0xf81898+4)!=0;
+}
+
 // Context must be a live, visible instance of one of the three verified menus.
 static BOOL eligible(BYTE *object) {
     BYTE header[0x6c];
+    if(online_session())return FALSE; // v0.13c: online menus (room character/stage select) stay native
     if(!object || !readmem(object,header,sizeof(header)))return FALSE;
     DWORD vt=u32(header), id=u32(header+4);
     if(!((vt==(DWORD)(base+0xc0f22c)&&id==9) ||
@@ -232,9 +244,9 @@ static BOOL win_offline_eligible(void) {
         u32(header)==(DWORD)(base+0x9b932c) && header[4]==1;
 }
 static int scene_kind(void) {
-    if(intro_eligible())return 1;
-    if(win_source_eligible())return 2;
-    if(story_eligible())return 3;
+    if(online_session())return 0;                     // v0.13c: nothing online, ever
+    if(intro_eligible())return 1;                     // kind 1: offline GUI -1 intros only (GUI 0 path needs type 5)
+    if(story_eligible())return 3;                     // kind 2 (online source30 win poses) removed
     return win_offline_eligible()?4:0;
 }
 #include "reader_subframes.h"
@@ -375,7 +387,7 @@ static DWORD WINAPI worker(void *unused) {
     (void)unused;
     FILE *log=LOG_OPEN();if(!log)return 0;
     setvbuf(log,NULL,_IONBF,0);
-    fprintf(log,"v0.13b; v0.13 + offline paths only without online reader (reader type 1 desync fix). PID=%lu\n",GetCurrentProcessId());
+    fprintf(log,"v0.13c; OFFLINE ONLY: menus/intros/win poses/story at 60 fps only outside online sessions. PID=%lu\n",GetCurrentProcessId());
     BOOL ready=FALSE;
     for(int n=0;n<600;n++) {
         albase=(BYTE*)GetModuleHandleW(L"dinput8Hooked.dll");
@@ -426,23 +438,17 @@ static DWORD WINAPI worker(void *unused) {
         while(installed)exchange(&hooks[--installed],FALSE);
         fprintf(log,"Pointer installation failed; installed pointers rolled back.\n");fclose(log);return 0;
     }
-    unsigned patched=0;
-    for(;patched<2;patched++)if(!reader_call_exchange(&reader_calls[patched],TRUE))break;
-    if(patched!=2) {
-        while(patched)reader_call_exchange(&reader_calls[--patched],FALSE);
-        while(installed)exchange(&hooks[--installed],FALSE);
-        fprintf(log,"Reader installation failed; all own hooks rolled back.\n");fclose(log);return 0;
-    }
-    fprintf(log,"Ready: menus + legacy intros; source30 spectator action Movies and intro subframes; source60 bypass; no participant extension or local Win hooks.\n");
+    (void)reader_calls; // v0.13c: the online reader is never patched (signatures still checked above)
+    fprintf(log,"Ready (v0.13c OFFLINE ONLY): menus + offline intros/win poses/story; every path off while an online session or reader exists; reader calls untouched.\n");
     unsigned trace_read=0;
     int previous_enabled=-1, previous_gui=-1, previous_forced=-1,previous_phase=-1;
-    DWORD previous_mode=~0u,last_report=0,previous_scene=~0u;
+    DWORD previous_mode=~0u,last_report=0,previous_scene=~0u,previous_matching=~0u;
     for(;;) {
         LONG on=GetPrivateProfileIntW(L"Menus",L"Enabled",0,ini)!=0;
         InterlockedExchange(&enabled,on);
         InterlockedExchange(&intro_enabled,GetPrivateProfileIntW(L"IntroTest",L"Enabled",0,ini)!=0);
         InterlockedExchange(&match_intros_enabled,GetPrivateProfileIntW(L"IntroTest",L"MatchContext",0,ini)!=0);
-        InterlockedExchange(&match_subframes_enabled,GetPrivateProfileIntW(L"IntroTest",L"SpectatorSubframes",0,ini)!=0);
+        InterlockedExchange(&match_subframes_enabled,0); // v0.13c: SpectatorSubframes ignored (online paths removed)
         InterlockedExchange(&win_enabled,GetPrivateProfileIntW(L"IntroTest",L"WinPoses",0,ini)!=0);
         InterlockedExchange(&story_enabled,GetPrivateProfileIntW(L"StoryTest",L"Enabled",0,ini)!=0);
         while(trace_read<1024 && intro_trace[trace_read].ready) {
@@ -454,6 +460,7 @@ static DWORD WINAPI worker(void *unused) {
         int gui=*(DWORD*)(base+0xf8a7ac),phase=*(DWORD*)(base+0xfce5cc);
         DWORD idx=*(DWORD*)(base+0x108b490)&3;
         DWORD mode=*(DWORD*)(base+0x108b448+idx*16);
+        DWORD matching=*(DWORD*)(base+0xf81898+4);
         int active=forced;
         DWORD now=GetTickCount();
         // Diagnostic only: identify the story context (scene id, actors) for the gate above.
@@ -462,7 +469,7 @@ static DWORD WINAPI worker(void *unused) {
         if(phase>=3 && phase<=7 && movie && readmem(movie,movie_header,sizeof(movie_header)) &&
            u32(movie_header)==(DWORD)(base+0x9b932c)) {scene=u32(movie_header+0x1c);movie_active=movie_header[4];}
         if(on!=previous_enabled || gui!=previous_gui || active!=previous_forced ||
-           phase!=previous_phase || mode!=previous_mode || scene!=previous_scene || now-last_report>=10000) {
+           phase!=previous_phase || mode!=previous_mode || scene!=previous_scene || matching!=previous_matching || now-last_report>=10000) {
             if(scene!=~0u)fprintf(log,"RTM gui=%d phase=%d movie=%p active=%d scene=%lu kind=%d readerType=%lu anim=%lx/%lx move=%lx/%lx\n",
                 gui,phase,(void*)movie,movie_active,scene,active_scene_kind,*(DWORD*)(base+0xf8f208),
                 *(DWORD*)(base+0xfd0540+0x64),*(DWORD*)(base+0xfd0540+0x6c8+0x64),
@@ -470,11 +477,10 @@ static DWORD WINAPI worker(void *unused) {
             fprintf(log,"t=%lu enabled=%ld gui=%d phase=%d override=%d nativeMode=%lu ALrequest=%lu menuCalls=%ld filterCalls=%ld FPSfactor=%.3f scale=%.3f\n",
                 now,on,gui,phase,active,mode,*(DWORD*)(albase+0xffff0),menu_calls,filter_calls,
                 *(float*)(albase+0xbd634),*(float*)(base+0xdd8fbc));
-            fprintf(log,"READER subframes=%ld type=%lu reads=%ld reused=%ld advances=%ld held=%ld seq=%lu index=%lu data=%u\n",
-                match_subframes_enabled,*(DWORD*)(base+0xf8f208),reader_reads,reader_reuses,reader_advances,reader_holds,
-                *(DWORD*)(base+0xf8f208+0x10),*(DWORD*)(base+0xf8f208+0xcb0),base[0xf8f208+0xd08]);
+            fprintf(log,"ONLINE matching=%08lx readerType=%lu session=%d\n",
+                *(DWORD*)(base+0xf81898+4),*(DWORD*)(base+0xf8f208),online_session());
             fprintf(log,"SOURCE_SCENE win_option=%ld story_option=%ld kind=%d\n",win_enabled,story_enabled,active_scene_kind);
-            previous_enabled=on;previous_gui=gui;previous_forced=active;previous_phase=phase;previous_mode=mode;previous_scene=scene;last_report=now;
+            previous_enabled=on;previous_gui=gui;previous_forced=active;previous_phase=phase;previous_mode=mode;previous_scene=scene;previous_matching=matching;last_report=now;
         }
         Sleep(250);
     }
