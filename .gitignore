@@ -1,0 +1,5 @@
+# build outputs of src\
+src/**/*.asi
+src/**/*.exe
+src/**/*.res
+src/**/my-signing.cer

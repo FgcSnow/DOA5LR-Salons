@@ -1,0 +1,31 @@
+// Ressource VERSIONINFO : un binaire avec editeur/description/version est moins suspect pour les heuristiques antivirus.
+#include <windows.h>
+1 VERSIONINFO
+FILEVERSION     0,1,1,0
+PRODUCTVERSION  0,3,3,0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_DLL
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName",      "FGCsnow - DOA5LR community"
+      VALUE "FileDescription",  "DOA5LR-Salons: InviteFix plugin (fixes the Invite button of the Lobby mod)"
+      VALUE "FileVersion",      "0.1.1"
+      VALUE "InternalName",     "DOA5LR-InviteFix"
+      VALUE "LegalCopyright",   "Open source, part of the DOA5LR-Salons community pack"
+      VALUE "OriginalFilename", "DOA5LR-InviteFix.asi"
+      VALUE "ProductName",      "DOA5LR-Salons Community Lobby Mods"
+      VALUE "ProductVersion",   "0.3.3"
+      VALUE "Comments",         "https://github.com/FgcSnow/DOA5LR-Salons"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

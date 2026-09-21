@@ -29,7 +29,19 @@ Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 
 ## Privacy
 
-The pack **sends nothing anywhere**, and our plugins **write no log files** (the only file written is Lobby 0.9.0's local `DOA5LR-Lobby.log` diagnostic, see `LOBBY-EN.txt`; it never leaves your PC). The only network access besides the game's own is `DOA5LR-UpdateCheck.asi` reading one public text file (`version.txt` on this branch) to know whether a newer pack exists. Every plugin is open source and shipped as a release build without logging code, with embedded version information; every binary is scanned with Microsoft Defender before release, and the installer verifies each download by SHA256. The pack contains **no game content and no Steam API / DLC files**. Sources are in the zip (`scripts\*-Source\`, `Installer-Source\`).
+The pack **sends nothing anywhere**, and our plugins **write no log files** (the only file written is Lobby 0.9.0's local `DOA5LR-Lobby.log` diagnostic, see `LOBBY-EN.txt`; it never leaves your PC). The only network access besides the game's own is `DOA5LR-UpdateCheck.asi` reading one public text file (`version.txt` on this branch) to know whether a newer pack exists. Every plugin is open source and shipped as a release build without logging code, with embedded version information; every binary is scanned with Microsoft Defender before release, and the installer verifies each download by SHA256. The pack contains **no game content and no Steam API / DLC files**. Sources are in this repository (see below) and in the zip (`scripts\*-Source\`, `Installer-Source\`).
+
+## Build it yourself / verify a release
+
+Every plugin and the installer are open source, in [`src/`](src/) — one C file per plugin, one C# file for the installer, exactly as released. `src/build-all.cmd` builds everything with [LLVM-MinGW](https://github.com/mstorsjo/llvm-mingw) (`winget install MartinStorsjo.LLVM-MinGW.UCRT`) and the C# compiler that ships in Windows; no SDK to install. Plugin builds are reproducible: your `.asi` should match `SHA256SUMS-unsigned.txt` attached to each release. Read [`src/README.md`](src/README.md).
+
+The Lobby module (`DOA5LR-Lobby.asi`) is a third-party community build shipped as received; we do not hold its source.
+
+## Antivirus warnings and code signing
+
+An `.asi` plugin is a DLL that patches the game in memory — the same pattern some malware uses, so heuristic antivirus engines and SmartScreen ("not commonly downloaded") may complain. That is why the sources are public and reproducible: read, build, compare.
+
+Since 0.3.6 our binaries are signed with a self-signed certificate (subject `CN=FGCsnow - DOA5LR-Salons`, thumbprint `0EBE9F4F8879992F594F99E7B38C4B024A68F978`, timestamped). It is **not** a CA-issued certificate — Windows shows it as untrusted, do not install it as a trusted root; it only guarantees a file was not altered since we signed it. If Defender flags a file, you can submit it as a false positive: https://www.microsoft.com/wdsi/filesubmission
 
 ## Credits
 
