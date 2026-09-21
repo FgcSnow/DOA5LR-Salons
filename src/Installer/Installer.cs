@@ -42,13 +42,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.0.2.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.0.2.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.0.2")]
+[assembly: System.Reflection.AssemblyVersion("1.0.3.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.0.3.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.0.3")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.0.2";
+    public const string AppVersion = "1.0.3";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -65,6 +65,12 @@ static class Cfg
     public const string UpdateCheckIni = "DOA5LR-UpdateCheck.ini";
     public const string BorderlessIni = "DOA5LR-Borderless.ini";
     public const string PatreonUrl = "https://www.patreon.com/cw/DoA5LRcommunitymod";   // empty = button hidden
+    // 1.0.3 : files the pack cannot work without. Checked at every start and after every install: an antivirus can
+    // quarantine one of them silently (a game plugin patches the game in memory, heuristics dislike that).
+    public static readonly string[] RequiredFiles = {
+        "dinput8.dll", "dinput8Hooked.dll", "DInput8.ini", "dinput8ex.bin", "Xidi.32.dll",
+        @"scripts\DOA5LR-Lobby.asi", @"scripts\DOA5LR-InviteFix.asi", @"scripts\DOA5LR-Borderless.asi",
+        @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-WiFi-Wired-Detector.asi", @"scripts\DOA5LR-UpdateCheck.asi" };
     // Files the pack must never contain / the installer must never write (same rule as build_pack.py).
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
 }
@@ -162,6 +168,22 @@ static class Util
             if (File.Exists(Path.Combine(g, Cfg.GameExe))) return g;
         }
         return "";
+    }
+    // 1.0.3 : required files absent from an installed pack (empty list = all there)
+    public static List<string> MissingRequired(string game)
+    {
+        var miss = new List<string>();
+        try { foreach (var rel in Cfg.RequiredFiles) if (!File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
+        return miss;
+    }
+    public static string MissingMessage(List<string> miss)
+    {
+        return "These required files are MISSING from the game folder:\r\n\r\n    " + string.Join("\r\n    ", miss) +
+               "\r\n\r\nThe pack needs every one of them. With files missing, the LOBBY entry, Steam invites, the controller fix, " +
+               "borderless or the 60 fps menus may be absent or misbehave, and online matches can fail. Do not play with a partial pack." +
+               "\r\n\r\nThe usual cause is your antivirus quarantining a file (a game plugin patches the game in memory, which looks suspicious to heuristics; " +
+               "these are false positives, the sources are public). Open your antivirus' protection history / quarantine, restore the file(s), add the game folder " +
+               "to its exclusions, then click REINSTALL (repair) here. If your antivirus keeps deleting them, please report it as a false positive to its vendor.";
     }
     public static string InstalledVersion(string game)
     {
@@ -477,6 +499,7 @@ class MainForm : Form
     ProgressBar bar;
     public static string GameOverride;
     Manifest manifest; string game = ""; string installed = ""; bool busy; readonly bool updateMode;
+    List<string> missing = new List<string>(); bool missingWarned;   // 1.0.3
 
     public MainForm(bool updateMode)
     {
@@ -563,7 +586,9 @@ class MainForm : Form
     {
         bool ok = game != "" && File.Exists(Path.Combine(game, Cfg.GameExe));
         installed = ok ? Util.InstalledVersion(game) : "";
-        lblInstalled.Text = !ok ? "—" : installed == "" ? "not installed" : installed == "old" ? "old pack (< 0.3.2)" : installed;
+        missing = ok && installed != "" ? Util.MissingRequired(game) : new List<string>();
+        if (missing.Count > 0) Util.Log("required files missing: " + string.Join(", ", missing));
+        lblInstalled.Text = !ok ? "—" : installed == "" ? "not installed" : installed == "old" ? "old pack (< 0.3.2)" : installed + (missing.Count > 0 ? "  ⚠ " + missing.Count + " file(s) missing" : "");
         if (cbDisplay != null)
         {
             int m = ok ? Util.ReadDisplayMode(game) : -1;
@@ -581,7 +606,15 @@ class MainForm : Form
         if (!ok) { lblState.Text = "Select the game folder"; lblState.ForeColor = YEL; btnMain.Text = "SELECT THE GAME FOLDER FIRST"; btnMain.BackColor = BTN; return; }
         if (installed == "") { lblState.Text = "Ready to install"; lblState.ForeColor = YEL; btnMain.Text = "INSTALL MOD PACK " + manifest.Version; btnMain.BackColor = RED; }
         else if (installed == "old" || Util.CmpVer(installed, manifest.Version) < 0) { lblState.Text = "Update available"; lblState.ForeColor = YEL; btnMain.Text = "UPDATE TO " + manifest.Version; btnMain.BackColor = RED; }
+        else if (missing.Count > 0) { lblState.Text = "⚠ " + missing.Count + " required file(s) missing — antivirus? Restore them, then REINSTALL"; lblState.ForeColor = RED; btnMain.Text = "REINSTALL " + manifest.Version + " (repair)"; btnMain.BackColor = RED; }
         else { lblState.Text = "Up to date ✔"; lblState.ForeColor = OK; btnMain.Text = "REINSTALL " + manifest.Version + " (repair)"; btnMain.BackColor = BTN; }
+    }
+    // 1.0.3 : one warning dialog per run when the installed pack has required files missing
+    void WarnMissing()
+    {
+        if (missing.Count == 0 || missingWarned) return;
+        missingWarned = true; Activate(); TopMost = true; TopMost = false;
+        MessageBox.Show(this, Util.MissingMessage(missing), "Required files missing — the pack will not work", MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 
     async Task CheckAsync()
@@ -602,12 +635,19 @@ class MainForm : Form
             if (updateMode)
             {
                 bool outdated = installed != "" && (installed == "old" || Util.CmpVer(installed, manifest.Version) < 0);
+                if (!outdated && missing.Count > 0)
+                {   // 1.0.3 : up to date but files missing (antivirus) -> warn at game exit, offer the repair
+                    Activate(); TopMost = true; TopMost = false; missingWarned = true;
+                    if (MessageBox.Show(this, Util.MissingMessage(missing) + "\r\n\r\nReinstall the pack now (repair)?", "Required files missing — the pack will not work", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes) { await MainAction(); return; }
+                    Close(); return;
+                }
                 if (!outdated) { Util.Log("--update: already up to date, exiting"); Close(); return; }
                 if (Snoozed(manifest.Version)) { Util.Log("--update: " + manifest.Version + " snoozed by the player, exiting"); Close(); return; }
                 Activate(); TopMost = true; TopMost = false;
                 if (MessageBox.Show(this, Cfg.PackName + " " + manifest.Version + " is available (you have " + installed + ").\r\n\r\n" + txtNotes.Text + "\r\n\r\nUpdate now?  (No = ask again tomorrow)", "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes) await MainAction();
                 else { Snooze(manifest.Version); Close(); }
             }
+            else WarnMissing();
         }
         catch (Exception ex)
         {
@@ -647,7 +687,17 @@ class MainForm : Form
         {
             var zip = await Task.Run(() => eng.DownloadPack(manifest));
             await Task.Run(() => eng.InstallZip(zip, manifest));
+            await Task.Delay(1500);   // 1.0.3 : give a real-time antivirus the time to react before we check the files
             RefreshInstalled();
+            if (missing.Count > 0)
+            {
+                Util.Log("install finished but required files already missing: " + string.Join(", ", missing));
+                Status("Installed, but " + missing.Count + " required file(s) were removed right away (antivirus?)");
+                MessageBox.Show(this, "The pack was extracted, but these files were removed again within seconds — your antivirus almost certainly quarantined them:\r\n\r\n    " + string.Join("\r\n    ", missing) +
+                    "\r\n\r\nDo not play like this. Restore them from the antivirus quarantine, add the game folder to its exclusions, then click REINSTALL (repair).", "Files removed by the antivirus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (eng.SelfReplaced) Engine.ApplySelfReplaceAndRestart("");
+                return;
+            }
             Status("Done. " + (eng.FreshInstall ? "Installed " : "Updated to ") + manifest.Version + " — backup: " + Path.GetFileName(eng.BackupFolder));
             var msg = (eng.FreshInstall ? "Installed " : "Updated to ") + Cfg.PackName + " " + manifest.Version + ".\r\n\r\n" + eng.Report.Split('\n').Where(l => l.Contains("kept your") || l.Contains("removed obsolete") || l.Contains("moved ")).Select(l => l.Substring(l.IndexOf("  ") + 2).Trim()).DefaultIfEmpty("").Aggregate((a, b) => a + "\r\n" + b).Trim();
             msg += (eng.FreshInstall ? "\r\n\r\nRead READ-ME-FIRST-EN.txt in the game folder once (controller setup, lobby key)." : "") + "\r\n\r\nYou can start the game.";

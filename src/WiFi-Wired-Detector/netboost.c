@@ -1,4 +1,7 @@
-// DOA5LR-WiFi-Wired-Detector.asi (ex-NetBoost) v0.8.6 — mouchard reseau P2P (statistiques, ping reel,
+// DOA5LR-WiFi-Wired-Detector.asi (ex-NetBoost) v0.8.7 — mouchard reseau P2P (statistiques, ping reel,
+// 0.8.7 : AFFICHAGE DU PING RETIRE (decision Snow 21/09 : on veut seulement savoir cable / Wi-Fi). PingDisplay et
+//         PingDisplaySelf ne sont plus lus (forces a 0) : aucun hook ISteamFriends, rien d'ecrit dans les fiches.
+//         Le HELLO ping/pong reste (il transporte le type de lien ; le RTT ne sert plus qu'au journal du build debug).
 // verdict relais, qualite), type de connexion dans le salon + REDONDANCE de paquets, pour DOA5LR PC.
 // 0.8.6 : PING AFFICHE DANS LE SALON (PingDisplay=1 : " 45ms" ajoute au nom du pair dans sa fiche locale
 //         NameCard, +0xE4 ; =2 : RTT ecrit dans le champ qualite +0x108 ; 0 = rien) pour les pairs equipes
@@ -59,7 +62,7 @@ static int g_lobbyProbe = 1;
 #define NC_CHECK_RVA 0x50C570   // debut de NameCardManager::Find (0xFBC570 - 0xAB0000)
 static const uint8_t NC_CHECK[16] = { 0x55,0x8b,0xec,0x57,0x8b,0x7d,0x08,0x83,0xff,0xff,0x75,0x0b,0x8d,0x81,0x98,0x11 };
 static int g_linkOverride = 0;       // ini LinkOverride : 0 = auto, 1 = cable, 2 = sans fil
-static int g_pingDisplay = 1, g_pingDisplaySelf = 0;   // 0.8.6 : ping dans la fiche du pair (1 nom, 2 qualite), soi aussi (test)
+static int g_pingDisplay = 0, g_pingDisplaySelf = 0;   // 0.8.7 : toujours 0 (affichage du ping retire) ; le code 0.8.6 reste mais n'est jamais atteint
 static uint8_t *g_ncMgr = NULL; static char g_persona[64] = "";
 static uint64_t g_ncPatched = 0;
 static void namecard_fix(void);
@@ -101,7 +104,7 @@ static const char HELLO[12]   = "D5NB-HELLO1";
 // ms de l'emetteur (renvoye tel quel dans le pong -> RTT), [18] version du plugin (5), [19] reserve.
 // Les 0.8.3/0.8.4 ne lisent que [12] et ne repondent jamais : pas de ping mesure avec eux.
 #define HELLO_V2_LEN 20
-#define PLUGIN_VER_BYTE 6
+#define PLUGIN_VER_BYTE 7
 static uint8_t g_linkType = 0;   // 0 inconnu, 1 cable (Ethernet), 2 Wi-Fi
 static CSteamID g_selfId = 0;    // SteamID local (ISteamUser::GetSteamID), pour ignorer la session vers soi-meme
 static const char *linkName(int t) { return t == 1 ? "CABLE" : t == 2 ? "WI-FI" : "?"; }
@@ -459,7 +462,7 @@ static DWORD WINAPI stats_thread(LPVOID unused)
         LONG polls = InterlockedExchange(&g_pollCount, 0);
         EnterCriticalSection(&g_cs);
         FILE *live = fopen(livePath, "w");
-        if (live) fprintf(live, "DOA5LR NetBoost — redondance=%d relais autorise=%d | version=0.8.6c lien=%s sondages/s=%ld\n", g_redundancy, g_allowRelay, linkName(g_linkType), (long)polls);
+        if (live) fprintf(live, "DOA5LR NetBoost — redondance=%d relais autorise=%d | version=0.8.7 lien=%s sondages/s=%ld\n", g_redundancy, g_allowRelay, linkName(g_linkType), (long)polls);
         for (int i = 0; i < MAXPEER; i++) {
             Peer *p = &g_peers[i]; if (!p->used) continue;
             // etat de session : cache rempli par steam_tick (thread du jeu). Jamais d'appel Steam ici.
@@ -626,8 +629,7 @@ static DWORD WINAPI worker(LPVOID unused)
     g_logPackets = GetPrivateProfileIntA("NetBoost", "LogPackets", 0, path);
     g_lobbyProbe = GetPrivateProfileIntA("NetBoost", "LobbyProbe", 0, path);
     g_linkOverride = GetPrivateProfileIntA("NetBoost", "LinkOverride", 0, path);
-    g_pingDisplay = GetPrivateProfileIntA("NetBoost", "PingDisplay", 1, path);
-    g_pingDisplaySelf = GetPrivateProfileIntA("NetBoost", "PingDisplaySelf", 0, path);
+    g_pingDisplay = 0; g_pingDisplaySelf = 0;   // 0.8.7 : plus lus dans l'ini, affichage du ping retire
     g_packetLogMax = GetPrivateProfileIntA("NetBoost", "PacketLogMax", 3000, path);
     {   // type de connexion locale : carte active qui porte une passerelle par defaut
         ULONG sz = 0; GetAdaptersAddresses(AF_INET, GAA_FLAG_INCLUDE_GATEWAYS, NULL, NULL, &sz);
@@ -642,7 +644,7 @@ static DWORD WINAPI worker(LPVOID unused)
         free(aa);
     }
     logf_("connexion locale : %s", linkName(g_linkType));
-    logf_("=== NetBoost v0.8.6c demarre (Redundancy=%d AllowRelay=%d LogPackets=%d PingDisplay=%d PingDisplaySelf=%d)", g_redundancy, g_allowRelay, g_logPackets, g_pingDisplay, g_pingDisplaySelf);
+    logf_("=== NetBoost v0.8.7 demarre (Redundancy=%d AllowRelay=%d LogPackets=%d PingDisplay=%d PingDisplaySelf=%d)", g_redundancy, g_allowRelay, g_logPackets, g_pingDisplay, g_pingDisplaySelf);
     for (int tries = 0; tries < 1200 && !g_iface; tries++) {
         HMODULE m = GetModuleHandleA("steam_api.dll");
         if (m) { SteamNetworking_t acc = (SteamNetworking_t)GetProcAddress(m, "SteamNetworking"); if (acc) g_iface = acc(); }
