@@ -20,8 +20,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
----
-This license covers the code in src/ written for this pack (plugins and installer).
-It does not cover third-party components shipped in the pack under their own terms:
-the Lobby module (community build), Ultimate ASI Loader (ThirteenAG), AutoLink
-(FallingCat), Xidi (Samuel Grossman) and the optional resolution mod (Steffen André Langnes).

@@ -45,7 +45,7 @@ Since 0.3.6 our binaries are signed with a self-signed certificate (subject `CN=
 
 ## License
 
-Our code (everything in `src/`) is released under the [MIT License](LICENSE). Third-party components keep their own terms.
+Our code (everything in `src/`: plugins and installer) is released under the [MIT License](LICENSE). It does not cover the third-party components shipped in the pack under their own terms: the Lobby module (community build), Ultimate ASI Loader (ThirteenAG), AutoLink (FallingCat), Xidi (Samuel Grossman) and the optional resolution mod (Steffen André Langnes).
 
 ## Credits
 
