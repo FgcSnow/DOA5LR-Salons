@@ -1,10 +1,10 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.7
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.7/DOA5LR-Salons-0.3.7.zip
-sha256=6f27e86ca8d8ae33c5cf6f99c81ff029df4ef94e5e2257f243bfe43e6077411e
-size=5153268
-notes=pack 0.3.7: installer is back (1.0.3, fixed for antivirus + checks your files), WiFi-Wired-Detector shows wired/Wi-Fi only (ping removed), 60fps-menus offline only
-note=0.3.7: the installer is back in the pack (1.0.3). We found what antivirus behavioral engines disliked (Kaspersky killed the install and rolled it back): a hidden command shell the installer used to replace itself on self-update. Gone. Retested clean on Kaspersky; Defender detections were cloud-ML false positives, reported to Microsoft (and Kaspersky). All our binaries are now signed; sources on GitHub.
+sha256=3789699e8bd2f8fc09fc7a2ef99bf87ee7d855b806f7dc025687c4bacb1b045b
+size=5110770
+notes=pack 0.3.7: installer is back as a separate download (1.0.3, fixed for antivirus + checks your files), WiFi-Wired-Detector shows wired/Wi-Fi only (ping removed), 60fps-menus offline only
+note=0.3.7: the installer is back (1.0.3), as a separate download on the release page (never inside the zip: if an antivirus quarantines it, the zip must not go with it). We found what antivirus behavioral engines disliked (Kaspersky killed the install and rolled it back): a hidden command shell the installer used to replace itself on self-update. Gone. Retested clean on Kaspersky; Defender detections were cloud-ML false positives, reported to Microsoft (and Kaspersky). All our binaries are now signed; sources on GitHub.
 note=0.3.7: the installer now checks that every required file is present (at start, after each install and when the game closes) and warns you if one is missing (antivirus quarantine): restore it, add the game folder to the antivirus exclusions, click REINSTALL. Do not play with a partial pack.
 note=0.3.7: WiFi-Wired-Detector 0.8.7 shows only the wired/Wi-Fi tag next to names; the ping display added in 0.8.6 is removed.
 note=If your antivirus flags anything from this pack, please report it as a false positive (Microsoft: microsoft.com/wdsi/filesubmission, Kaspersky: opentip.kaspersky.com) - every report helps.
@@ -15,7 +15,7 @@ note=Reminder: the installer updates everything in one click and keeps a backup;
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
 installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.7/DOA5LR-Salons-Installer.exe
 installer_version=1.0.3
-installer_sha256=a112c35d55fa1f2805fe7a9565caadb1c24d5d00f15587a6528bd01b3a2c2c6c
+installer_sha256=0fec24fa2ca09041b45f5e329987209be743b93b9164725150cfb8789022bb4e
 keep=*.ini
 move=DOA5LR-60fps-menus.ini|scripts\DOA5LR-60fps-menus.ini
 move=DOA5LR-Borderless.ini|scripts\DOA5LR-Borderless.ini
