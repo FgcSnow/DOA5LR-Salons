@@ -20,20 +20,20 @@ Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 |---|---|---|
 | Lobby | 0.9.0 | Native LOBBY entry, invites, private rooms |
 | InviteFix | 0.1.1 | Invite button compatibility fix |
-| WiFi-Wired-Detector | 0.8.7 | Wired/Wi-Fi tag next to names (ping display removed in 0.3.7) |
+| WiFi-Wired-Detector | 0.8.8 | Wired/Wi-Fi tag next to names (ping display removed in 0.3.7, force-wired setting removed in 0.3.8) — always installed |
 | 60fps-menus | 0.13c | 60 fps menus, intros, win poses and story cutscenes **offline only** — does nothing at all in the Online menu |
-| Borderless | 1.1 | Borderless by default, F11 cycles Borderless / Window / Fullscreen |
+| Borderless | 1.1 | Unchecked for new installer installations; existing choices preserved. F11 cycles display modes when installed |
 | UpdateCheck | 1.0 | Reads `version.txt`, tells you at game exit when a new pack is out |
-| Installer | 1.0.2 (set aside in 0.3.6) | One-click install / update / restore — source in `src/Installer`, back as a separate download once cleared |
+| Installer | 1.1.0 | One-click install / update / restore, check boxes for the optional components (Borderless, 60fps-menus) — source in `src/Installer`, separate download on each release |
 | Ultimate ASI Loader, AutoLink 3.30, Xidi 5.0.0 | | Loader, costumes, controllers |
 
 ## Privacy
 
-The pack **sends nothing anywhere**, and our plugins **write no log files** (the only file written is Lobby 0.9.0's local `DOA5LR-Lobby.log` diagnostic, see `LOBBY-EN.txt`; it never leaves your PC). The only network access besides the game's own is `DOA5LR-UpdateCheck.asi` reading one public text file (`version.txt` on this branch) to know whether a newer pack exists. Every plugin is open source and shipped as a release build without logging code, with embedded version information; every binary is scanned with Microsoft Defender before release, and the installer verifies each download by SHA256. The pack contains **no game content and no Steam API / DLC files**. Our binaries are signed (see below). Sources are in this repository (`src/`) and in the zip (`scripts\*-Source\`).
+Release builds of the pack-maintained plugins disable diagnostic logging. Lobby 0.9.0 is an external exception and writes a local log. UpdateCheck reads a public version manifest; the installer downloads updates; WiFi-Wired exchanges connection information and ping messages with participating peers. Lobby's sources are not included and its binary is unsigned. Sources for the maintained components are in `src/` and `scripts\*-Source\`. The build scans binaries with Defender and the installer checks download hashes, but these checks and self-signed signatures do not guarantee safety or compatibility. The pack contains no game content or Steam API / DLC files.
 
 ## Build it yourself / verify a release
 
-Every plugin and the installer are open source, in [`src/`](src/) — one C file per plugin, one C# file for the installer, exactly as released. `src/build-all.cmd` builds everything with [LLVM-MinGW](https://github.com/mstorsjo/llvm-mingw) (`winget install MartinStorsjo.LLVM-MinGW.UCRT`) and the C# compiler that ships in Windows; no SDK to install. Plugin builds are reproducible: your `.asi` should match `SHA256SUMS-reproducible-build.txt` attached to each release. Read [`src/README.md`](src/README.md).
+Sources for pack-maintained plugins and the installer are in [`src/`](src/). `src/build-all.cmd` builds these components, not external dependencies such as Lobby or AutoLink. See [`src/README.md`](src/README.md). Lobby 0.9.0 is unsigned and its source is not included; it is excluded from our source and reproducibility claims.
 
 The Lobby module (`DOA5LR-Lobby.asi`) is a third-party community build shipped as received; we do not hold its source.
 
