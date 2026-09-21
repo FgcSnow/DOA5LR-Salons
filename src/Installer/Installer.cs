@@ -442,11 +442,24 @@ class Engine
     }
 
     // Replace the running exe with <exe>.new and relaunch (used after self-update / restore).
+    // Windows lets a running .exe be renamed (not overwritten): move ourselves to .old, move .new in place, start it.
+    // No hidden command shell involved (a hidden "move & start" shell is a classic antivirus heuristic trigger).
+    // The .old file is removed at the next start (see Main).
     public static void ApplySelfReplaceAndRestart(string args)
     {
-        var exe = Application.ExecutablePath;
-        var cmd = "/c timeout /t 2 /nobreak >nul & move /y \"" + exe + ".new\" \"" + exe + "\" & start \"\" \"" + exe + "\" " + args;
-        Process.Start(new ProcessStartInfo("cmd.exe", cmd) { WindowStyle = ProcessWindowStyle.Hidden, CreateNoWindow = true, UseShellExecute = false });
+        var exe = Application.ExecutablePath; var old = exe + ".old"; var nw = exe + ".new";
+        try
+        {
+            if (File.Exists(old)) File.Delete(old);
+            File.Move(exe, old); File.Move(nw, exe);
+            Process.Start(new ProcessStartInfo(exe, args) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe) });
+        }
+        catch (Exception ex)
+        {
+            Util.Log("self-replace failed: " + ex.Message);
+            try { if (!File.Exists(exe) && File.Exists(old)) File.Move(old, exe); } catch { }
+            MessageBox.Show("The installer could not replace itself (" + ex.Message + ").\r\nRename " + Path.GetFileName(nw) + " to " + Path.GetFileName(exe) + " by hand.", "Installer update", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
         Application.Exit();
     }
 }
@@ -746,6 +759,7 @@ static class Program
         MainForm.GameOverride = gameArg;
         // leftover from a previous self-update
         try { var n = Application.ExecutablePath + ".new"; if (File.Exists(n) && new FileInfo(n).LastWriteTimeUtc < DateTime.UtcNow.AddMinutes(-10)) File.Delete(n); } catch { }
+        try { var o = Application.ExecutablePath + ".old"; if (File.Exists(o)) File.Delete(o); } catch { }   // previous version of ourselves, replaced by ApplySelfReplaceAndRestart
         Util.SetupTls();
         Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new MainForm(updateMode));
