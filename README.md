@@ -33,7 +33,7 @@ The pack **sends nothing anywhere**, and our plugins **write no log files** (the
 
 ## Build it yourself / verify a release
 
-Every plugin and the installer are open source, in [`src/`](src/) — one C file per plugin, one C# file for the installer, exactly as released. `src/build-all.cmd` builds everything with [LLVM-MinGW](https://github.com/mstorsjo/llvm-mingw) (`winget install MartinStorsjo.LLVM-MinGW.UCRT`) and the C# compiler that ships in Windows; no SDK to install. Plugin builds are reproducible: your `.asi` should match `SHA256SUMS-unsigned.txt` attached to each release. Read [`src/README.md`](src/README.md).
+Every plugin and the installer are open source, in [`src/`](src/) — one C file per plugin, one C# file for the installer, exactly as released. `src/build-all.cmd` builds everything with [LLVM-MinGW](https://github.com/mstorsjo/llvm-mingw) (`winget install MartinStorsjo.LLVM-MinGW.UCRT`) and the C# compiler that ships in Windows; no SDK to install. Plugin builds are reproducible: your `.asi` should match `SHA256SUMS-reproducible-build.txt` attached to each release. Read [`src/README.md`](src/README.md).
 
 The Lobby module (`DOA5LR-Lobby.asi`) is a third-party community build shipped as received; we do not hold its source.
 

@@ -7,7 +7,7 @@ folder); the installer is a single C# file compiled with the C# compiler that sh
 | Folder | Builds | What it does |
 |---|---|---|
 | `InviteFix/` | `DOA5LR-InviteFix.asi` | Fixes the Invite button of the Lobby module (Steam relay stub) |
-| `WiFi-Wired-Detector/` | `DOA5LR-WiFi-Wired-Detector.asi` | Wired / Wi-Fi tag, real ping in the lobby list, netcode stats |
+| `WiFi-Wired-Detector/` | `DOA5LR-WiFi-Wired-Detector.asi` | Wired / Wi-Fi tag next to names (0.8.7: ping display removed), netcode stats |
 | `60fps-menus/` | `DOA5LR-60fps-menus.asi` | 60 fps menus, intros, win poses, story cutscenes |
 | `Borderless/` | `DOA5LR-Borderless.asi` | Borderless window by default, F11 cycles modes |
 | `UpdateCheck/` | `DOA5LR-UpdateCheck.asi` | Reads `version.txt`, opens the installer at game exit when a newer pack exists |
@@ -39,7 +39,7 @@ Every plugin produces two files:
 
 The release builds are **reproducible**: the link timestamp is disabled (`-Wl,--no-insert-timestamp`), so the
 same LLVM-MinGW version yields byte-for-byte the same `.asi`. To check a release: build, then compare your
-hash with `SHA256SUMS-unsigned.txt` attached to the GitHub release (the files inside the pack carry an
+hash with `SHA256SUMS-reproducible-build.txt` attached to the GitHub release (the files inside the pack carry an
 Authenticode signature appended after the code, so their hash differs from an unsigned build — see below).
 
 ### Installer (`.exe`)
@@ -73,4 +73,4 @@ An `.asi` is a DLL loaded into `game.exe` that patches code in memory — that i
 does, and also what some malware does, so heuristic engines flag the pattern. None of our plugins reads
 anything outside the game, sends anything anywhere, or writes files (release builds). Read the code, build it,
 compare the hashes. If a false positive bothers you, submit the file to your antivirus vendor
-(Microsoft: https://www.microsoft.com/wdsi/filesubmission).
+(Microsoft: https://www.microsoft.com/wdsi/filesubmission, Kaspersky: https://opentip.kaspersky.com).
