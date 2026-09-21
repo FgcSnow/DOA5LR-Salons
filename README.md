@@ -6,13 +6,13 @@ Community mod pack by **FGCsnow & BonuStage**: online lobbies, Steam invites, pr
 
 ## Install / update
 
-**0.3.6 (21 September 2026): manual install** — the one-click installer is set aside until Microsoft clears a false positive (see *Antivirus warnings* below).
-
-1. Download **`DOA5LR-Salons-0.3.6.zip`** from the [latest release](../../releases/latest). Close the game.
-2. Extract the zip **over the game folder** (Steam → right-click the game → Manage → Browse local files), replace everything. Updating from 0.3.3-0.3.5: that's all. From an older pack: read `READ-ME-FIRST-EN.txt` first (old root files to delete).
+1. Download **`DOA5LR-Salons-Installer.exe`** from the [latest release](../../releases/latest) and save it in a folder (Downloads is fine). Never run it from inside an archive.
+2. Run it (the game must be closed). It finds the game through Steam: click **INSTALL MOD PACK** (or **UPDATE**).
 3. Start the game via Steam. Online → **LOBBY**.
 
-If you already have `DOA5LR-Salons-Installer.exe` (from the 0.3.5 release) and your antivirus lets it run, UPDATE still installs this pack with a backup — extract it to a folder first, never run it from inside the archive. When a new version is out, `DOA5LR-UpdateCheck.asi` tells you at game exit.
+That's it. The installer backs up every file it touches (`DOA5LR-Salons-Backups\` in the game folder) and can restore it. Since 1.0.3 it also **checks that every required file is present** (at start, after each install, and when the game closes) and warns you if your antivirus quarantined one: do not play with a partial pack, restore the file, add the game folder to the exclusions, click REINSTALL. When a new version is out, the installer offers it, and the game opens the installer by itself after you close it.
+
+Prefer doing it by hand? Download the zip and read `READ-ME-FIRST-EN.txt`.
 
 ## What's inside
 
@@ -20,7 +20,7 @@ If you already have `DOA5LR-Salons-Installer.exe` (from the 0.3.5 release) and y
 |---|---|---|
 | Lobby | 0.9.0 | Native LOBBY entry, invites, private rooms |
 | InviteFix | 0.1.1 | Invite button compatibility fix |
-| WiFi-Wired-Detector | 0.8.6 | Wired/Wi-Fi tag, netcode stats, ping in the lobby list |
+| WiFi-Wired-Detector | 0.8.7 | Wired/Wi-Fi tag next to names (ping display removed in 0.3.7) |
 | 60fps-menus | 0.13c | 60 fps menus, intros, win poses and story cutscenes **offline only** — does nothing at all in the Online menu |
 | Borderless | 1.1 | Borderless by default, F11 cycles Borderless / Window / Fullscreen |
 | UpdateCheck | 1.0 | Reads `version.txt`, tells you at game exit when a new pack is out |
@@ -39,9 +39,13 @@ The Lobby module (`DOA5LR-Lobby.asi`) is a third-party community build shipped a
 
 ## Antivirus warnings and code signing
 
-An `.asi` plugin is a DLL that patches the game in memory — the same pattern some malware uses, so heuristic antivirus engines and SmartScreen ("not commonly downloaded") may complain. That is why the sources are public and reproducible: read, build, compare.
+An `.asi` plugin is a DLL that patches the game in memory, and the installer downloads a zip and writes DLLs into a game folder: the same patterns some malware uses, so heuristic antivirus engines and SmartScreen ("not commonly downloaded") may complain. That is why the sources are public and reproducible: read, build, compare.
 
-Since 0.3.6 our binaries are signed with a self-signed certificate (subject `CN=FGCsnow - DOA5LR-Salons`, thumbprint `0EBE9F4F8879992F594F99E7B38C4B024A68F978`, timestamped). It is **not** a CA-issued certificate — Windows shows it as untrusted, do not install it as a trusted root; it only guarantees a file was not altered since we signed it. If your antivirus flags a file, please **report it as a false positive** — every report counts and helps the whole community: Microsoft Defender → https://www.microsoft.com/wdsi/filesubmission ; Kaspersky → https://opentip.kaspersky.com (upload the file, then "Report false positive") ; other vendors have a similar form. Kaspersky users: its System Watcher may kill the installer *after* a successful install and roll the files back (`PDM:Trojan.Win32.Generic`) — restore the installer from the quarantine, add it to *Trusted applications*, and always extract the zip to a folder before running it (never from inside WinRAR/7-Zip). We have submitted the installer to Microsoft and to the Kaspersky Allowlist program.
+What we know from actual reports (September 2026): **Windows Defender** flagged some builds of the installer as `Trojan:Win32/Wacatac.B!ml` (cloud machine-learning verdict on a never-seen file: one build flagged, the next build of the same code passes). **Kaspersky** (`PDM:Trojan.Win32.Generic`, behavioral) let the install finish, then killed it and rolled every file back; its trigger included a hidden `cmd.exe` the installer used to replace itself on self-update. Installer 1.0.3 removed that (retested clean on Kaspersky, OpenTIP sandbox: Clean). False-positive reports are filed with Microsoft and Kaspersky (Allowlist program).
+
+Since 0.3.6 our binaries are signed with a self-signed certificate (subject `CN=FGCsnow - DOA5LR-Salons`, thumbprint `0EBE9F4F8879992F594F99E7B38C4B024A68F978`, timestamped). It is **not** a CA-issued certificate: Windows shows it as untrusted, do not install it as a trusted root; it guarantees a file was not altered since we signed it and lets vendors whitelist the publisher.
+
+**If your antivirus flags a file, please report it as a false positive**, every report counts: Microsoft Defender → https://www.microsoft.com/wdsi/filesubmission ; Kaspersky → https://opentip.kaspersky.com (upload the file, then "Report false positive") ; other vendors have a similar form. Then restore the file from the quarantine, add the game folder to the exclusions and click REINSTALL in the installer. Always extract the zip (or save the installer) to a folder before running anything, never from inside WinRAR/7-Zip.
 
 ## License
 
