@@ -43,6 +43,10 @@ An `.asi` plugin is a DLL that patches the game in memory — the same pattern s
 
 Since 0.3.6 our binaries are signed with a self-signed certificate (subject `CN=FGCsnow - DOA5LR-Salons`, thumbprint `0EBE9F4F8879992F594F99E7B38C4B024A68F978`, timestamped). It is **not** a CA-issued certificate — Windows shows it as untrusted, do not install it as a trusted root; it only guarantees a file was not altered since we signed it. If Defender flags a file, you can submit it as a false positive: https://www.microsoft.com/wdsi/filesubmission
 
+## License
+
+Our code (everything in `src/`) is released under the [MIT License](LICENSE). Third-party components keep their own terms.
+
 ## Credits
 
 Original "Auto Installer for DOA5 Community Lobby Mods" concept: **BRG Hades**. `scripts\` layout: **WAZAAAAA**. Lobby module: community build. Ultimate ASI Loader: ThirteenAG. AutoLink: FallingCat. Xidi: Samuel Grossman. Optional resolution mod: Steffen André Langnes. Testers: everyone in the DOA5LR lobbies — thank you.
