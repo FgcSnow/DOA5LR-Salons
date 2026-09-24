@@ -1,37 +1,33 @@
 # DOA5LR-Salons — Controls and update notification
 
-This local test build adds a **Keyboard / controller** settings app to DOA5LR-Salons. Use it to remap keyboard controls, choose how to launch the game, or inspect connected controllers, arcade sticks and leverless controllers.
+DOA5LR-Salons 0.3.9 adds a **Keyboard / controller** settings app to DOA5LR-Salons. Use it to remap keyboard controls, choose how to launch the game, or inspect connected controllers, arcade sticks and leverless controllers.
 
 **The settings app is always available. Experimental in-game remapping is optional and off by default.** Opening the app or the desktop shortcut does not start DOA5LR.
 
-This is the `0.3.9-inputlab-draft` test package, not an announcement of a public release. It builds on the verified DOA5LR-Salons 0.3.8 pack.
+Everything from 0.3.8 is unchanged (Lobby, Steam invites, wired/Wi-Fi tag, Borderless, 60 fps menus).
 
-The candidate also includes UpdateCheck 1.1: a brief notification when a newer pack is available. It does not install an update during play.
+0.3.9 also includes UpdateCheck 1.1: a brief notification when a newer pack is available. It does not install an update during play.
 
 ## Choose a package
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Full local pack | Install or update the pack and keep its configuration window | Extract the complete distribution folder, then run the local-manifest command below |
+| Installer (recommended) | Install or update the pack and keep its configuration window | Download `DOA5LR-Salons-Installer.exe` and open it |
 | Portable controls app | Use the app without the auto-installer, on an existing compatible pack | Extract the complete `InputLab` folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
-Keep the full distribution folder together: the installer needs its local manifest and neighboring pack archive. Do not run it from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
+The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
 
-The portable remapping module requires **the verified DOA5LR-Salons 0.3.8 input setup**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
+The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8 or 0.3.9)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
 
-## Install the full local pack
+## Install or update the pack
 
-1. Close DOA5LR and extract the complete distribution folder.
-2. Open PowerShell in that extracted folder and run the command below, then check the selected game folder.
+1. Close DOA5LR.
+2. Open `DOA5LR-Salons-Installer.exe` (already installed? the game offers the update when you close it) and check the selected game folder.
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
 4. Open **Keyboard / controller**. This button works even with the experimental component unchecked.
 5. Choose a mode and use **Play via Steam** when ready to play.
 
-```powershell
-& .\DOA5LR-Salons-Installer-InputLab-draft.exe --manifest "$PWD\version-0.3.9-inputlab-draft.txt"
-```
-
-This explicitly selects the local candidate. Opening the EXE alone uses the official manifest, which still points to published 0.3.8. A local `Open-Configuration.lnk` shortcut may be supplied on the test PC for convenience; use the command above after moving or sharing the folder.
+Manual install without the installer: extract `DOA5LR-Salons-0.3.9.zip` into the game folder (the one that contains `game.exe`).
 
 The installer can create a **DOA5LR (Lobby Mods)** desktop shortcut. It opens the pack configuration window first. Its launch button opens the controls choice; it does not silently start a match or choose an input mode for you.
 

@@ -1,10 +1,10 @@
-# DOA5LR-Salons 0.3.9 candidate — Changes
+# DOA5LR-Salons 0.3.9 — Changes
 
-Version: `0.3.9-inputlab-draft`
+Version: `0.3.9`
 
 Base: verified DOA5LR-Salons 0.3.8 pack
 
-Status: local test build; no public release is implied by this document.
+Status: public release.
 
 ## Added
 
