@@ -3,3 +3,12 @@ src/**/*.asi
 src/**/*.exe
 src/**/*.res
 src/**/my-signing.cer
+
+# InputLab generated artifacts and local test runs
+src/**/payload/
+src/**/test/*.bin
+src/**/test/*.dll
+src/**/test/optional-runtime/run-*/
+**/__pycache__/
+preview-output/
+src/**/test/keyboard-startup-*/

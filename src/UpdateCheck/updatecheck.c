@@ -1,4 +1,4 @@
-/*  DOA5LR-UpdateCheck 1.0  (20/09/2026) — part of the DOA5LR-Salons community pack
+/*  DOA5LR-UpdateCheck 1.1  (21/09/2026) — part of the DOA5LR-Salons community pack
  *
  *  What it does, and nothing else:
  *    1. a few seconds after the game starts, it downloads ONE public text file (version.txt on GitHub) with
@@ -6,25 +6,27 @@
  *    2. it compares the "version=" line with DOA5LR-Salons-VERSION.txt in the game folder;
  *    3. if a newer pack exists, when you CLOSE the game it starts DOA5LR-Salons-Installer.exe --update,
  *       which asks "Update now / Later". Nothing is installed without your click.
- *  It writes no file (no log), opens no socket besides that single GET, and does nothing in-game.
+ *  1.1: when a newer pack exists it also shows a small banner on screen for a few seconds (layered window,
+ *       no D3D hook: visible in borderless / window mode, invisible in exclusive fullscreen).
+ *  It writes no file (no log), opens no socket besides that single GET, and changes nothing in the game.
  *
- *  scripts\DOA5LR-UpdateCheck.ini :  Enabled=1  UpdatePrompt=1  DelaySeconds=20  VersionUrl=<https url>
+ *  scripts\DOA5LR-UpdateCheck.ini :  Enabled=1  UpdatePrompt=1  DelaySeconds=20  Banner=1  BannerSeconds=8  VersionUrl=<https url>
  *  If DOA5LR-Telemetry.asi (testers build) is loaded, this plugin stays idle: the telemetry plugin does the same check.
  *
- *  Build (llvm-mingw) : build.cmd   ->  i686-w64-mingw32-gcc -O2 -s -shared -static -o DOA5LR-UpdateCheck.asi updatecheck.c version.res -lwinhttp
+ *  Build (llvm-mingw) : build.cmd   ->  i686-w64-mingw32-gcc -O2 -s -shared -static -o DOA5LR-UpdateCheck.asi updatecheck.c version.res -lwinhttp -lgdi32
  */
 #include <windows.h>
 #include <winhttp.h>
 #include <stdio.h>
 #include <string.h>
 
-#define UVER "1.0"
+#define UVER "1.1"
 #ifndef DEFAULT_VERSION_URL
 #define DEFAULT_VERSION_URL "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt"
 #endif
 
 static char g_dir[MAX_PATH], g_game[MAX_PATH], g_url[512], g_installed[24], g_latest[24];
-static int g_enabled = 1, g_prompt = 1, g_delay = 20, g_outdated = 0;
+static int g_enabled = 1, g_prompt = 1, g_delay = 20, g_outdated = 0, g_banner = 1, g_bannerSec = 8;
 static volatile LONG g_launched = 0;
 typedef void (WINAPI *ExitProcess_t)(UINT);
 static ExitProcess_t o_ExitProcess;
@@ -84,6 +86,55 @@ static void launch_installer(void)
     STARTUPINFOA si = { sizeof si }; PROCESS_INFORMATION pi;
     if (CreateProcessA(exe, cmd, NULL, NULL, FALSE, DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP, NULL, g_game, &si, &pi)) { CloseHandle(pi.hThread); CloseHandle(pi.hProcess); }
 }
+/* Banner (1.1): a layered, non-activating, click-through window on top of the game for a few seconds. */
+static WCHAR g_bannerText[160];
+static LRESULT CALLBACK banner_proc(HWND w, UINT m, WPARAM wp, LPARAM lp)
+{
+    if (m == WM_PAINT) {
+        PAINTSTRUCT ps; HDC dc = BeginPaint(w, &ps); RECT r; GetClientRect(w, &r);
+        HBRUSH bg = CreateSolidBrush(RGB(20, 24, 34)); FillRect(dc, &r, bg); DeleteObject(bg);
+        HBRUSH acc = CreateSolidBrush(RGB(226, 55, 68)); RECT bar = r; bar.right = bar.left + 6; FillRect(dc, &bar, acc); DeleteObject(acc);
+        HFONT f = CreateFontW(-24, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, L"Segoe UI");
+        HGDIOBJ of = SelectObject(dc, f); SetBkMode(dc, TRANSPARENT); SetTextColor(dc, RGB(240, 244, 250));
+        RECT t = r; t.left += 22; t.right -= 12; DrawTextW(dc, g_bannerText, -1, &t, DT_SINGLELINE | DT_VCENTER | DT_LEFT | DT_END_ELLIPSIS);
+        SelectObject(dc, of); DeleteObject(f); EndPaint(w, &ps); return 0;
+    }
+    if (m == WM_TIMER) { DestroyWindow(w); return 0; }
+    if (m == WM_DESTROY) { PostQuitMessage(0); return 0; }
+    return DefWindowProcW(w, m, wp, lp);
+}
+static BOOL CALLBACK find_game_window(HWND h, LPARAM out)
+{
+    DWORD pid = 0; GetWindowThreadProcessId(h, &pid);
+    if (pid == GetCurrentProcessId() && IsWindowVisible(h) && !GetWindow(h, GW_OWNER)) { *(HWND *)out = h; return FALSE; }
+    return TRUE;
+}
+static DWORD WINAPI banner_thread(LPVOID unused)
+{
+    (void)unused;
+    HINSTANCE hi = GetModuleHandleW(NULL);
+    WNDCLASSW wc = { 0 }; wc.lpfnWndProc = banner_proc; wc.hInstance = hi; wc.lpszClassName = L"DOA5LR_UpdateCheck_Banner"; wc.hCursor = LoadCursor(NULL, IDC_ARROW); RegisterClassW(&wc);
+    HWND game = NULL; EnumWindows(find_game_window, (LPARAM)&game);
+    HMONITOR mon = MonitorFromWindow(game ? game : GetForegroundWindow(), MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO mi = { sizeof mi }; GetMonitorInfoW(mon, &mi);
+    int w = 980, h = 60; if (w > mi.rcMonitor.right - mi.rcMonitor.left - 40) w = mi.rcMonitor.right - mi.rcMonitor.left - 40;
+    int x = mi.rcMonitor.left + (mi.rcMonitor.right - mi.rcMonitor.left - w) / 2, y = mi.rcMonitor.top + 40;
+    HWND t = CreateWindowExW(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+                             L"DOA5LR_UpdateCheck_Banner", L"", WS_POPUP, x, y, w, h, NULL, NULL, hi, NULL);
+    if (!t) return 0;
+    SetLayeredWindowAttributes(t, 0, 235, LWA_ALPHA);
+    ShowWindow(t, SW_SHOWNOACTIVATE); UpdateWindow(t); SetTimer(t, 1, (UINT)g_bannerSec * 1000, NULL);
+    MSG msg; while (GetMessageW(&msg, NULL, 0, 0) > 0) { TranslateMessage(&msg); DispatchMessageW(&msg); }
+    return 0;
+}
+static void show_banner(void)
+{
+    if (!g_banner) return;
+    WCHAR latest[24]; MultiByteToWideChar(CP_ACP, 0, g_latest, -1, latest, 24);
+    wsprintfW(g_bannerText, L"DOA5LR-Salons %s is available — the installer opens when you close the game", latest);
+    HANDLE th = CreateThread(NULL, 0, banner_thread, NULL, 0, NULL); if (th) CloseHandle(th);
+}
+
 static void WINAPI hk_ExitProcess(UINT code) { launch_installer(); o_ExitProcess(code); }
 
 static void **iat_find(HMODULE mod, const char *dll, const char *func)
@@ -116,6 +167,8 @@ static DWORD WINAPI worker(LPVOID unused)
     char ini[MAX_PATH]; snprintf(ini, sizeof ini, "%sDOA5LR-UpdateCheck.ini", g_dir);
     g_enabled = GetPrivateProfileIntA("UpdateCheck", "Enabled", 1, ini);
     g_prompt = GetPrivateProfileIntA("UpdateCheck", "UpdatePrompt", 1, ini);
+    g_banner = GetPrivateProfileIntA("UpdateCheck", "Banner", 1, ini);
+    g_bannerSec = GetPrivateProfileIntA("UpdateCheck", "BannerSeconds", 8, ini); if (g_bannerSec < 2) g_bannerSec = 2; if (g_bannerSec > 60) g_bannerSec = 60;
     g_delay = GetPrivateProfileIntA("UpdateCheck", "DelaySeconds", 20, ini); if (g_delay < 3) g_delay = 3; if (g_delay > 600) g_delay = 600;
     GetPrivateProfileStringA("UpdateCheck", "VersionUrl", DEFAULT_VERSION_URL, g_url, sizeof g_url, ini);
     if (!g_enabled || strncmp(g_url, "https://", 8)) return 0;
@@ -130,7 +183,7 @@ static DWORD WINAPI worker(LPVOID unused)
     }
     if (!g_latest[0]) return 0;
     g_outdated = version_cmp(g_installed, g_latest) < 0;
-    if (g_outdated) hook_exit();
+    if (g_outdated) { hook_exit(); show_banner(); }
     return 0;
 }
 
