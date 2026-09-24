@@ -1,7 +1,7 @@
 // Ressource VERSIONINFO : un binaire avec editeur/description/version est moins suspect pour les heuristiques antivirus.
 #include <windows.h>
 1 VERSIONINFO
-FILEVERSION     1,0,0,0
+FILEVERSION     1,1,0,0
 PRODUCTVERSION  0,3,3,0
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
@@ -15,7 +15,7 @@ BEGIN
     BEGIN
       VALUE "CompanyName",      "FGCsnow - DOA5LR community"
       VALUE "FileDescription",  "DOA5LR-Salons: update check (reads version.txt on GitHub, opens the installer when a new pack exists)"
-      VALUE "FileVersion",      "1.0"
+      VALUE "FileVersion",      "1.1"
       VALUE "InternalName",     "DOA5LR-UpdateCheck"
       VALUE "LegalCopyright",   "Open source, part of the DOA5LR-Salons community pack"
       VALUE "OriginalFilename", "DOA5LR-UpdateCheck.asi"
