@@ -36,13 +36,12 @@ The pack also includes Ultimate ASI Loader, AutoLink and Xidi. The 0.3.9 candida
 
 ## Keyboard or controller: choose before launch
 
-The **experimental in-game keyboard module is off by default**. Its settings app is always installed and accessible.
+The **experimental in-game keyboard module is off by default**. Its settings app is always installed and accessible. New pack installations use **Controller (usual configuration)** by default; updates and repairs preserve an existing saved input choice.
 
 | Choice | Behavior |
 | --- | --- |
 | **Controller (usual configuration)** | Uses the usual game/Steam controller configuration. The optional module can stay off. |
 | **Keyboard** | Applies your saved bindings and enables the module on demand. Disconnect controllers before launching. |
-| **Keyboard + controller (experimental)** | Uses the experimental reader and matching controller profiles. Automatic switching is not guaranteed. |
 
 Click a key in the app, press its replacement and save the profile. Use **Play via Steam** to apply the chosen mode and launch. Starting directly from Steam skips the app and uses the last applied settings.
 
@@ -51,7 +50,6 @@ Click a key in the app, press its replacement and save the profile. Use **Play v
 - A controller connected at startup can make DOA5LR ignore the keyboard. Keyboard mode checks for connected controllers and stops that launch; close the game, disconnect the controller and retry.
 - Finder detection is not automatic button mapping or universal device support. Only **DualSense Edge (`VID_054C&PID_0DF2`)** has been tested on real controller hardware for this candidate.
 - This project does **not** emulate a PS5 controller. Other devices need profile and hardware validation.
-- The experimental reader requests **1 ms polling**. This is not a measurement of button-to-screen latency or a promise of zero delay.
 - Rumble and controller button icons are not forwarded through the experimental keyboard path. Online modes have not been validated for this input patch.
 
 See [the controls guide](docs/INPUT-SETTINGS.md) for profiles, startup checks, portable installation and restoring the usual input setup.
@@ -71,7 +69,7 @@ To stop using InputLab, close the game, uncheck the experimental remapping compo
 | Problem | First step |
 | --- | --- |
 | Keyboard stops responding | Close DOA5LR, disconnect controllers, select Keyboard and launch from the app. |
-| A detected stick does not work in combined mode | Check the profile status; detection alone does not provide a button mapping. |
+| Finder shows **Profile needed** | See the input guide for profile status and device support limits; detection alone does not provide a button mapping. |
 | The pack reports missing files | Check the install log and antivirus protection history. Do not continue with a partial installation. |
 | Steam skips configuration | Use the pack shortcut or app. Direct Steam launches use the last applied settings. |
 | An older standalone prototype prevents installation | Restore that prototype using its saved backup, then retry the compatible pack. |

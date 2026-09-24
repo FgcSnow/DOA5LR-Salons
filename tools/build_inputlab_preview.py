@@ -76,6 +76,8 @@ def make_readme() -> bytes:
         "==================================\r\n"
         "Keyboard / controller settings remain available even when the\r\n"
         "experimental remapping component is unchecked in the installer.\r\n"
+        "A fresh pack uses Controller mode with the usual input path.\r\n"
+        "Existing saved modes and personal profiles are kept on update.\r\n"
         "Open DOA5LR-Commandes.exe, choose Keyboard or Controller,\r\n"
         "then click Play via Steam. Close the game before changing modes.\r\n"
         "The desktop shortcut opens the pack configuration window first.\r\n"
@@ -118,7 +120,6 @@ def make_readme() -> bytes:
         "disconnect the controller and restart the game.\r\n"
         "Keyboard mode checks for connected controllers before launching\r\n"
         "and asks you to disconnect them while this limitation remains.\r\n"
-        "The 1 ms polling timer does not measure button-to-screen latency.\r\n"
         "This is an unpublished local draft.\r\n"
         "Its new executables and DLLs are unsigned.\r\n"
     ).encode("utf-8-sig")
@@ -203,7 +204,8 @@ def main() -> None:
     # Preserve the mandatory 0.3.8 front-end in the ZIP. The opt-in installer
     # overlays this bridge after extracting, and can revert to that exact Xidi.
     payload["DOA5LR-InputBridge-Xidi.dll"] = payload["dinput8ex.bin"]
-    payload["DOA5LR-InputBridge.ini"] = b"[Input]\r\nMode=Hybrid\r\n" + identity_profile()
+    # Seed only fresh installs; keep=*.ini preserves an existing mode and profile.
+    payload["DOA5LR-InputBridge.ini"] = b"[Input]\r\nMode=Controller\r\n" + identity_profile()
     payload["DOA5LR-ControllerProfiles.ini"] = load(LAB / "DOA5LR-ControllerProfiles.ini")
     payload["DOA5LR-Companion.exe"] = companion
     payload["InputLab/payload/dinput8ex.bin"] = bridge

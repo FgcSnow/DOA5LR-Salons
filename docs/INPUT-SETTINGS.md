@@ -39,13 +39,14 @@ If an older standalone prototype is active, use its **Restore previous setup** b
 
 ## Choose an input mode
 
-Change modes with DOA5LR completely closed.
+Change modes with DOA5LR completely closed. New pack installations default to **Controller (usual configuration)** with the experimental component off. Updates and repairs preserve an existing saved input choice. The settings app remains available in either case.
 
 | Mode | What happens |
 | --- | --- |
 | **Controller (usual configuration)** | Uses the usual game/Steam controller setup. If the optional module is off, it stays off. If it is already installed, this mode disables its keyboard remapping path for the launch. |
 | **Keyboard** | Applies your keyboard bindings. **Play via Steam** enables the optional module when needed, after checking connected controllers. |
-| **Keyboard + controller (experimental)** | Enables the experimental module and its separate controller reader for supported profiles. Combined input remains experimental; switching devices during a session is not guaranteed. |
+
+**Keyboard + controller (experimental)** remains available for testing with matching profiles. Device switching during a session is not guaranteed.
 
 For **Keyboard**, disconnect controllers before launching. DOA5LR can stop accepting keyboard input if a controller is connected at startup. The app blocks a keyboard launch while it detects a connected controller; it does not fix that game limitation. If the keyboard was already blocked, close the game, disconnect the controller and launch again in Keyboard mode.
 
@@ -58,7 +59,7 @@ The mode selector chooses the input path. It is not a controller-pairing wizard 
 3. Use **Save profile** to keep your choices.
 4. With controllers disconnected and the game closed, click **Play via Steam** to apply the profile and launch.
 
-**Enable module** applies the selected keyboard or combined mode without starting the game. Opening the app and saving a profile alone do not activate the module.
+**Enable module** applies the selected remapping settings without starting the game. Opening the app and saving a profile alone do not activate the module.
 
 The action labels describe the game's default control assignments: Guard, Punch, Kick / Cancel, Throw / Confirm and the other listed commands. If you also changed button assignments inside DOA5LR, those in-game settings can change what an action does. Test your chosen layout in training first.
 
@@ -109,12 +110,12 @@ The settings are in `scripts/DOA5LR-UpdateCheck.ini`. `Banner=0` hides the new b
 | --- | --- |
 | Keyboard does not work in the game | Close the game, disconnect controllers, select Keyboard and launch from the app. A controller connected at startup can block the keyboard. |
 | Controller works, keyboard does not | Check the selected mode. Controller mode uses the usual controller setup; it is not an automatic keyboard/controller switch. |
-| Finder sees a device, but the experimental combined mode does not use it | Check its profile status. Detection alone does not supply a button mapping. |
+| Finder sees a device, but its profile is unavailable | Check its profile status. Detection alone does not supply a button mapping. |
 | An app file is missing | Re-extract the entire app folder. Check antivirus protection history before retrying; keep the security protection enabled. |
 | Setup rejects an existing prototype or different input DLL | Restore the older prototype with its own backup or repair the compatible pack. Do not bypass the file check. |
 | Steam launch opens the game immediately | This is the direct Steam path. Use the pack shortcut or controls app to choose settings first. |
 
-The experimental controller reader requests a **1 ms polling interval**. This is neither a measured button-to-screen latency nor a promise of 1 ms or zero added delay. Rumble and controller button icons are not carried through the experimental keyboard input path. Online modes and other controller hardware have not been validated for this input patch.
+Rumble and controller button icons are not carried through the experimental keyboard input path. Online modes and other controller hardware have not been validated for this input patch.
 
 The portable ZIP is an alternate distribution format, not an antivirus bypass or a guarantee that Windows Defender/SmartScreen will accept every file. Consult the verification report supplied with the finalized package for the actual checks and their limits. A checksum verifies file identity; it does not prove that a file is safe.
 

@@ -11,7 +11,7 @@
 | Area | Evidence | Result |
 | --- | --- | --- |
 | Input settings on the test PC | User confirmed the Keyboard / controller button works with the module unchecked | Passed |
-| Default OFF / activation / deactivation | Isolated installer lifecycle tests, including personal profile preservation and backup restoration | Passed |
+| Default OFF / activation / deactivation | Isolated installer lifecycle tests, including a fresh Controller selection with usual input flags, personal profile preservation and backup restoration | Passed |
 | Launcher routing | 18 isolated checks: configuration first, missing app handling, saved component refresh, unsaved selections preserved | Passed |
 | Diagnostic export | Allowlist, 2 MiB tails, raw bytes, open-file sharing, filtered metadata, reparse junction guard and no game writes | Passed |
 | Input mode after repair | Regression reproduced, then Keyboard/Controller/Hybrid repaired without changing mode, bindings or original-settings snapshot | Passed |

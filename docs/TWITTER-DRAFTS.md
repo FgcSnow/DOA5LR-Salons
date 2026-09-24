@@ -14,17 +14,17 @@ These English drafts describe the local 0.3.9 candidate. They have not been publ
 
 224 / 280 characters.
 
-> 2/6 The experimental in-game module is OFF by default. Keyboard / controller stays available, and a Keyboard launch enables remapping when needed. Controller mode can keep the usual game/Steam setup. A portable ZIP and backup/restore are included.
+> 2/6 The experimental module is OFF by default; Keyboard / controller settings stay available. New pack installs use the usual Controller path and existing choices are preserved. A Keyboard launch enables remapping when needed.
 
-247 / 280 characters.
+226 / 280 characters.
 
 > 3/6 Controller Finder lists connected pads, arcade sticks and leverless devices. Search by name or VID/PID and check available profiles. Detection is not universal support: only DualSense Edge has been tested on real controller hardware in this build.
 
 251 / 280 characters.
 
-> 4/6 For Keyboard mode, disconnect controllers before launching: DOA5LR can block keyboard input when a pad is connected at startup. Combined mode is still experimental. This patch does not emulate a PS5 controller or auto-map every device.
+> 4/6 For Keyboard mode, disconnect controllers before launching: DOA5LR can block keyboard input when a pad is connected at startup. This patch does not emulate a PS5 controller or auto-map every device. A portable app and backup/restore are included.
 
-239 / 280 characters.
+250 / 280 characters.
 
 > 5/6 New update banner: a version check starts after about 20 seconds; a newer pack triggers an 8-second notice in borderless/windowed mode. The installer opens when you leave the game, and you choose whether to update. Nothing is installed during a match.
 
@@ -38,4 +38,4 @@ These English drafts describe the local 0.3.9 candidate. They have not been publ
 
 Use either the short post or the full thread. Keep the limitations with the feature announcement. Add a verified download link only after the package is actually made available; update the character count if text changes.
 
-Do not advertise 1 ms total latency or zero added delay: 1 ms is only the experimental reader's requested polling interval. Do not add a Windows Defender result before the scan report exists, or present one local scan as a guarantee for every PC. Direct Steam launches still use the last applied settings; the configuration-first behavior belongs to the pack shortcut/app.
+Do not add a Windows Defender result before the scan report exists, or present one local scan as a guarantee for every PC. Direct Steam launches still use the last applied settings; the configuration-first behavior belongs to the pack shortcut/app.

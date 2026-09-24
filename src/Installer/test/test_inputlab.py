@@ -29,7 +29,7 @@ FILES = {
     "DInput8.ini": b"[PATCH]\r\nKeyboardOnly=0\r\n",
     "dinput8ex.bin": ORIGINAL,
     "DOA5LR-InputBridge-Xidi.dll": ORIGINAL,
-    "DOA5LR-InputBridge.ini": b"[Input]\r\nMode=Hybrid\r\n",
+    "DOA5LR-InputBridge.ini": b"[Input]\r\nMode=Controller\r\n",
     "DOA5LR-ControllerProfiles.ini": b"[Profiles]\r\n",
     "DOA5LR-Companion.exe": b"companion stub",
     "InputLab/payload/dinput8ex.bin": BRIDGE,
@@ -86,6 +86,28 @@ def build_restore_harness(output):
            "/out:" + str(output), "/r:System.IO.Compression.dll", "/r:System.IO.Compression.FileSystem.dll",
            str(ROOT / "Installer.cs"), str(HERE / "restore_harness.cs")]
     subprocess.run(cmd, check=True, capture_output=True)
+
+
+def build_saved_mode_harness(output):
+    # Read the real app selection in a fake game; never invoke Play or Install.
+    source = ROOT.parent / "InputLab" / "source" / "InputLab.cs"
+    harness = output.with_suffix(".cs")
+    harness.write_text('''using System;
+using System.Reflection;
+using System.Windows.Forms;
+static class SavedModeHarness {
+    [STAThread] static void Main() {
+        using (var form = new InputLab()) {
+            var mode = (ComboBox)typeof(InputLab).GetField("mode", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(form);
+            Console.WriteLine(mode.SelectedIndex);
+        }
+    }
+}
+''', encoding="utf-8")
+    csc = Path(os.environ["WINDIR"]) / "Microsoft.NET" / "Framework" / "v4.0.30319" / "csc.exe"
+    subprocess.run([str(csc), "/nologo", "/target:exe", "/platform:x86", "/main:SavedModeHarness",
+                    "/out:" + str(output), "/r:System.Windows.Forms.dll", "/r:System.Drawing.dll",
+                    str(source), str(harness)], check=True, capture_output=True)
 
 
 def main():
@@ -154,8 +176,14 @@ def main():
               "bridge active and original Xidi retained", game)
         check(finder.exists() and marker.exists() and val(comp, "inputlab") == "1",
               "device finder installed and settings snapshot recorded", game)
-        check(val(dinput, "KeyboardOnly") == "1" and val(xidi, "ActiveVirtualControllerMask") == "0",
-              "ON selects keyboard-only AutoLink and disables native Xidi controllers", game)
+        check(val(game / "DOA5LR-InputBridge.ini", "Mode") == "Controller"
+              and val(dinput, "KeyboardOnly") == "0" and val(xidi, "ActiveVirtualControllerMask") == "15",
+              "fresh ON install retains Controller mode and the usual controller settings", game)
+        saved_mode = game / "InputLab" / "saved-mode-harness.exe"
+        build_saved_mode_harness(saved_mode)
+        probe = subprocess.run([str(saved_mode)], capture_output=True, text=True, timeout=30)
+        check(probe.returncode == 0 and probe.stdout.strip() == "2",
+              "controls app reads Controller as the fresh opt-in selection", game)
         original_marker = marker.read_bytes()
 
         profile.write_bytes(b"[Keyboard]\r\nF=Poing\r\n")
@@ -188,6 +216,9 @@ def main():
                   "ON repair retains " + mode_name + " input flags", game)
             check(bridge_config.read_bytes() == applied_config and profile.read_bytes().endswith(b"F=Poing\r\n"),
                   "ON repair retains " + mode_name + " and custom punch mapping", game)
+            probe = subprocess.run([str(saved_mode)], capture_output=True, text=True, timeout=30)
+            check(probe.returncode == 0 and probe.stdout.strip() == {"Keyboard": "1", "Controller": "2", "Hybrid": "0"}[mode_name],
+                  "controls app reads the preserved explicit " + mode_name + " selection", game)
             check(marker.read_bytes() == original_marker and active.read_bytes() == BRIDGE and val(comp, "inputlab") == "1",
                   "ON repair keeps original snapshot and active runtime for " + mode_name, game)
         finder_bytes = finder.read_bytes()
@@ -259,6 +290,9 @@ def main():
                                    "--components", "inputlab=" + choice], capture_output=True, timeout=30).returncode
         check(clean_run("1") == 0 and (clean_game / "Xidi.ini").exists(),
               "ON creates Xidi.ini when none existed", clean_game)
+        # Controller mode leaves this INI equal to the packaged default; add a
+        # real user change to exercise the .ini.new preservation/restore case.
+        (clean_game / "DInput8.ini").write_bytes(b"[PATCH]\r\nKeyboardOnly=0\r\n[User]\r\nKeep=custom\r\n")
         clean_before_off = set((clean_game / "DOA5LR-Salons-Backups").iterdir())
         check(clean_run("0") == 0 and not (clean_game / "Xidi.ini").exists(),
               "OFF removes installer-created Xidi.ini", clean_game)

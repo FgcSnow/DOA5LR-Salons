@@ -4,15 +4,15 @@
 
 ## Scope and artifact identity
 
-The entire `DOA5LR-Salons-0.3.9-Preview` delivery folder was scanned on **24 September 2026, 22:09:55–22:09:56 CEST (UTC+02:00)**. The folder contained 15 delivery files, including the installer, both ZIP archives, checksums and documentation. This is the delivery-file count, not an internal Defender count of files unpacked from archives.
+The entire `DOA5LR-Salons-0.3.9-Preview` delivery folder was scanned on **24 September 2026, 22:27:52–22:27:53 CEST (UTC+02:00)**. The folder contained 18 delivery files, including the installer, both ZIP archives, checksums and documentation. This is the delivery-file count, not an internal Defender count of files unpacked from archives.
 
 | Artifact | Size in bytes | SHA-256 |
 | --- | ---: | --- |
 | `DOA5LR-Salons-Installer-InputLab-draft.exe` | 123392 | `ecfd56fa8951c30e832d5f6b93d84068cc1c14bd494a2e71ca76d48d8c35e21c` |
-| `DOA5LR-Salons-0.3.9-inputlab-draft.zip` | 6560234 | `d15d5fc0b38abd07a44b3ecf8e6107eae1cd02017fc059f46ef5e4f5b3bce85d` |
-| `DOA5LR-Commandes-portable-draft.zip` | 1028783 | `159d0f844639649a0dcb6cb7c2daba3379570302dd87df5211b347235e979ab5` |
+| `DOA5LR-Salons-0.3.9-inputlab-draft.zip` | 6560013 | `3fc4f9fc3348a3954080d24a3999d3e0532c8558ed90da858438449e72afd3f2` |
+| `DOA5LR-Commandes-portable-draft.zip` | 1028657 | `bf31fb3e25409ddf0483407287fc6f5ea2c742bfa9de0ec5a5990e55c12f919c` |
 
-All 15 delivery files had identical paths, sizes and SHA-256 hashes before and after the scan. This report was updated afterwards to record that result. Changes to documentation do not change the identity of the three artifacts above.
+All 18 delivery files had identical paths, sizes and SHA-256 hashes before and after the scan. This report was updated afterwards to record that result. Changes to documentation do not change the identity of the three artifacts above.
 
 ## Defender state at the time of the scan
 
