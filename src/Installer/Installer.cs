@@ -23,6 +23,7 @@
 //   installer=https://.../DOA5LR-Salons-Installer.exe   installer_version=1.0.0   installer_sha256=<sha>
 //   optional=id|label|glob;glob...     (0..n, 1.1.0: a component the player may leave out — its files are not extracted and are
 //                                       removed if present; choice saved in DOA5LR-Salons-Components.txt and reused by --update)
+//   optional_v2=id|label|glob;glob...  (1.3.1: same validation; older installers ignore this key and can self-update first)
 //   file=name|url|fnv32|size            (for Telemetry AutoUpdate, ignored here)
 using System;
 using System.Collections.Generic;
@@ -48,13 +49,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.0")]
+[assembly: System.Reflection.AssemblyVersion("1.3.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.1")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.0";
+    public const string AppVersion = "1.3.1";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -166,7 +167,10 @@ class Manifest
                 case "installer": m.InstallerUrl = v; break;
                 case "installer_version": m.InstallerVersion = v; break;
                 case "installer_sha256": m.InstallerSha256 = v.ToLowerInvariant(); break;
-                case "optional": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                // Keep the old key for preview manifests. Public manifests use optional_v2
+                // for InputLab so 1.1 can parse them before offering its own update.
+                case "optional":
+                case "optional_v2": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");

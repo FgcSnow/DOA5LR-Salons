@@ -1,10 +1,10 @@
-# DOA5LR-Salons — Controls and update notification
+# DOA5LR-Salons 0.3.9 — Controls, installation and updates
 
-DOA5LR-Salons 0.3.9 adds a **Keyboard / controller** settings app to DOA5LR-Salons. Use it to remap keyboard controls, choose how to launch the game, or inspect connected controllers, arcade sticks and leverless controllers.
+DOA5LR-Salons 0.3.9 includes a **Keyboard / controller** settings app. Use it to remap keyboard controls, choose how to launch the game, or inspect connected controllers, arcade sticks and leverless controllers.
 
 **The settings app is always available. Experimental in-game remapping is optional and off by default.** Opening the app or the desktop shortcut does not start DOA5LR.
 
-Everything from 0.3.8 is unchanged (Lobby, Steam invites, wired/Wi-Fi tag, Borderless, 60 fps menus).
+The Lobby, InviteFix and network-tag binaries are unchanged from 0.3.8. The existing optional Borderless and offline 60 fps features remain available. This release does not introduce a new lobby or invite fix.
 
 0.3.9 also includes UpdateCheck 1.1: a brief notification when a newer pack is available. It does not install an update during play.
 
@@ -12,22 +12,26 @@ Everything from 0.3.8 is unchanged (Lobby, Steam invites, wired/Wi-Fi tag, Borde
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Installer (recommended) | Install or update the pack and keep its configuration window | Download `DOA5LR-Salons-Installer.exe` and open it |
-| Portable controls app | Use the app without the auto-installer, on an existing compatible pack | Extract the complete `InputLab` folder, then open `InputLab/DOA5LR-Commandes.exe` |
+| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-Installer.exe) and open it |
+| Portable controls app | First use of the app on an existing compatible pack | Download the [portable ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip), extract its complete `InputLab` folder to a new folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
 The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
+
+**If InputLab is already installed or active, update through the pack installer.** Do not extract a new full pack or portable app over your existing InputLab folder. That can overwrite profiles and default INIs, or replace runtime files without preserving the recorded module state. Keep your profiles and both kinds of backup.
 
 The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8 or 0.3.9)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
 
 ## Install or update the pack
 
 1. Close DOA5LR.
-2. Open `DOA5LR-Salons-Installer.exe` (already installed? the game offers the update when you close it) and check the selected game folder.
+2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. If an older installer offers its own update, accept Installer 1.3.1 first, then continue with the pack.
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
 4. Open **Keyboard / controller**. This button works even with the experimental component unchecked.
 5. Choose a mode and use **Play via Steam** when ready to play.
 
-Manual install without the installer: extract `DOA5LR-Salons-0.3.9.zip` into the game folder (the one that contains `game.exe`).
+**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.9 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-0.3.9.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
+
+For every upgrade, including 0.3.8 and the 0.3.9 preview, use the installer to keep personal INIs, saved input choices and module backups. Do not overwrite custom INIs with archive defaults. Preview testers must run the final installer directly: the older version comparator treats preview and final 0.3.9 as the same numeric version.
 
 The installer can create a **DOA5LR (Lobby Mods)** desktop shortcut. It opens the pack configuration window first. Its launch button opens the controls choice; it does not silently start a match or choose an input mode for you.
 
@@ -63,7 +67,7 @@ The action labels describe the game's default control assignments: Guard, Punch,
 - **Default keyboard layout** resets all assignments to the native layout.
 - **Move with arrow keys** resets the layout to the native assignments, then assigns movement to the arrows. It also resets any custom action keys.
 - Assigning a key already used by another action swaps the two assignments.
-- F1–F12 are reserved for the pack's shortcuts. Ctrl, Alt and Windows keys are not assignable in this prototype.
+- F1–F12 are reserved for the pack's shortcuts. Ctrl, Alt and Windows keys are not assignable in this release.
 - Your profile is stored beside the app in `Profil-clavier.ini`. Keep this file with your app and backups.
 
 ## Find a controller, arcade stick or leverless controller
@@ -96,7 +100,7 @@ The pack installer has a separate **Restore backup** feature for its installatio
 
 UpdateCheck 1.1 reads the public version manifest after a default delay of about **20 seconds** from startup. If a newer version is found, a small banner appears for **8 seconds** by default. This separate window is visible in borderless or windowed mode; it is not visible in exclusive fullscreen.
 
-The existing update prompt remains tied to leaving the game: on normal exit, the installer opens in update mode and you choose whether to install. The banner neither closes the game nor installs files during a match. A failed or unavailable version check is not proof that the installed pack is current.
+The existing update prompt remains tied to leaving the game: if a newer version was detected, normal exit opens the installer in update mode and you choose whether to install. The banner neither closes the game nor installs files during a match. A failed or unavailable version check is not proof that the installed pack is current.
 
 The settings are in `scripts/DOA5LR-UpdateCheck.ini`. `Banner=0` hides the new banner; `Enabled=0` disables the check. Older personal INI values may be preserved by the installer.
 
@@ -107,13 +111,13 @@ The settings are in `scripts/DOA5LR-UpdateCheck.ini`. `Banner=0` hides the new b
 | Keyboard does not work in the game | Close the game, disconnect controllers, select Keyboard and launch from the app. A controller connected at startup can block the keyboard. |
 | Controller works, keyboard does not | Check the selected mode. Controller mode uses the usual controller setup; it is not an automatic keyboard/controller switch. |
 | Finder sees a device, but its profile is unavailable | Check its profile status. Detection alone does not supply a button mapping. |
-| An app file is missing | Re-extract the entire app folder. Check antivirus protection history before retrying; keep the security protection enabled. |
+| An app file is missing | Repair an installed pack through the installer. For a first-use portable copy, re-extract the entire app into a new folder. Check antivirus protection history; keep protection enabled. |
 | Setup rejects an existing prototype or different input DLL | Restore the older prototype with its own backup or repair the compatible pack. Do not bypass the file check. |
 | Steam launch opens the game immediately | This is the direct Steam path. Use the pack shortcut or controls app to choose settings first. |
 
 Rumble and controller button icons are not carried through the experimental keyboard input path. Online modes and other controller hardware have not been validated for this input patch.
 
-The portable ZIP is an alternate distribution format, not an antivirus bypass or a guarantee that Windows Defender/SmartScreen will accept every file. Consult the verification report supplied with the finalized package for the actual checks and their limits. A checksum verifies file identity; it does not prove that a file is safe.
+The portable ZIP is an alternate distribution format, not an antivirus bypass or a guarantee that Windows Defender/SmartScreen will accept every file. Consult the [validation report](VALIDATION-0.3.9.md) and [Defender check](DEFENDER-CHECK-EN.md) for the recorded checks and their limits. A checksum verifies file identity; it does not prove that a file is safe.
 
 ## Report a problem
 

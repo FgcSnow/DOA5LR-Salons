@@ -12,7 +12,7 @@ import zipfile
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-EXE = ROOT / "DOA5LR-Salons-Installer.exe"
+EXE = Path(os.environ.get("DOA5LR_INSTALLER_EXE", ROOT / "DOA5LR-Salons-Installer.exe"))
 with zipfile.ZipFile(os.environ["DOA5LR_BASE_ZIP"]) as base:
     ORIGINAL = base.read("dinput8ex.bin")
 ORIGINAL_SHA = "7f2a1c7616515153d899b726c8ecf72d5fa81c27a9d14b5c394cdd2e09f325c5"
@@ -20,7 +20,7 @@ assert hashlib.sha256(ORIGINAL).hexdigest() == ORIGINAL_SHA
 BRIDGE = b"InputLab bridge test payload (not executable)"
 
 OPTIONAL = (
-    r"optional=inputlab|Controller detection and keyboard remapping (experimental)|"
+    r"optional_v2=inputlab|Controller detection and keyboard remapping (experimental)|"
     r"DOA5LR-InputBridge-Xidi.dll;DOA5LR-InputBridge.ini;"
     r"DOA5LR-ControllerProfiles.ini;DOA5LR-Companion.exe"
 )

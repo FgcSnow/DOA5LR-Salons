@@ -4,7 +4,7 @@ Version: `0.3.9`
 
 Base: verified DOA5LR-Salons 0.3.8 pack
 
-Status: public release.
+Release notes for version 0.3.9.
 
 ## Added
 
@@ -19,7 +19,6 @@ Status: public release.
 ## Changed
 
 - Reinstalling or repairing an enabled module preserves the saved input choice.
-
 - The settings app is included independently of the optional in-game module. **Keyboard / controller** stays available when the experimental component is unchecked.
 - Experimental in-game keyboard remapping is **off by default**. New pack installations use **Controller (usual configuration)**; existing saved input choices are preserved. A Keyboard launch can activate remapping on demand.
 - The desktop shortcut opens pack configuration first. The user chooses when to launch the game.
@@ -27,6 +26,14 @@ Status: public release.
 - Keyboard launches check for connected controllers before changing game settings. When a controller is present, the app explains the startup conflict and stops the launch.
 
 The update check and exit-time installer prompt already existed in UpdateCheck 1.0. Version 1.1 adds the visible banner; it does not introduce forced updates. Installation still requires the user's choice in the installer after leaving the game.
+
+## Installing and upgrading
+
+Use the [0.3.9 installer](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-Installer.exe) for an existing pack or active InputLab installation. If an older installer offers its own update, accept Installer 1.3.1 first, then continue with the pack. It retains personal INIs, component choices and input backups. Manual full-ZIP extraction is only for a new game/base setup without existing pack settings or an active module; do not overwrite custom INIs or an installed InputLab folder with archive defaults.
+
+The [portable app](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip) needs its full folder and a compatible 0.3.8/0.3.9 input setup. See the [input guide](INPUT-SETTINGS.md). Preview testers must run the final installer directly because the older version comparator treats preview and final 0.3.9 as equal.
+
+The new installer and InputLab builds use the project's existing self-signed certificate. It is not a public-CA certificate and does not establish Windows trust or guarantee antivirus acceptance. Do not import it into Trusted Root authorities. Exact artifact checks belong to the [validation report](VALIDATION-0.3.9.md) and [Defender report](DEFENDER-CHECK-EN.md).
 
 ## Scope and current limits
 

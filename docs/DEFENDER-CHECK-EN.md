@@ -1,62 +1,55 @@
-# Microsoft Defender Antivirus check
+# Microsoft Defender Antivirus — 0.3.9 release check
 
-**Result: the local custom scan completed and reported no threats.** This applies to the preview artifacts identified below, with the Defender engine and signatures recorded here. It is not an antivirus certification or a guarantee about future detections.
+**Result: the local custom scan completed and reported no threats.** This applies to the exact artifacts below and the recorded engine/signatures. It is not antivirus certification or a prediction of future detections.
 
-## Scope and artifact identity
+## Scope and identity
 
-The entire `DOA5LR-Salons-0.3.9-Preview` delivery folder was scanned on **24 September 2026, 22:27:52–22:27:53 CEST (UTC+02:00)**. The folder contained 18 delivery files, including the installer, both ZIP archives, checksums and documentation. This is the delivery-file count, not an internal Defender count of files unpacked from archives.
+The `DOA5LR-Salons-0.3.9-Release` folder was scanned on **24 September 2026, 23:42:39–23:42:43 CEST (UTC+02:00)**. It contained eight files at the time, including the three release artifacts, checksums and preparation documents. All eight paths, sizes and SHA-256 hashes were identical before and after scanning. Documentation was finalized afterwards; the three artifacts below were not changed.
 
-| Artifact | Size in bytes | SHA-256 |
+| Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `DOA5LR-Salons-Installer-InputLab-draft.exe` | 123392 | `ecfd56fa8951c30e832d5f6b93d84068cc1c14bd494a2e71ca76d48d8c35e21c` |
-| `DOA5LR-Salons-0.3.9-inputlab-draft.zip` | 6560013 | `3fc4f9fc3348a3954080d24a3999d3e0532c8558ed90da858438449e72afd3f2` |
-| `DOA5LR-Commandes-portable-draft.zip` | 1028657 | `bf31fb3e25409ddf0483407287fc6f5ea2c742bfa9de0ec5a5990e55c12f919c` |
+| `DOA5LR-Salons-Installer.exe` | 131032 | `c6e4e36c630bb5bfb0aab80e1571872e7e9d4eda483835ecbe8166d773ef4ee3` |
+| `DOA5LR-Salons-0.3.9.zip` | 6605952 | `d8d9ca313709c15063fc635b2716e5f292d40f5f5a34219c9f8a891fe1610f3b` |
+| `DOA5LR-Commandes-portable-0.3.9.zip` | 1061597 | `7c7f08d036d1e2cc638c38f735ced6cc3b6c6117188f004471bbce79daec137a` |
 
-All 18 delivery files had identical paths, sizes and SHA-256 hashes before and after the scan. This report was updated afterwards to record that result. Changes to documentation do not change the identity of the three artifacts above.
-
-## Defender state at the time of the scan
+## Defender state
 
 | Item | Observed value |
 | --- | --- |
 | Running mode | Normal |
-| Antivirus service and antivirus protection | Enabled |
-| Real-time protection | Enabled |
-| Behavior monitoring | Enabled |
-| Tamper protection | Enabled |
+| Antivirus, real-time protection, behavior monitoring, tamper protection | Enabled |
 | Platform/product version | `4.18.26080.4` |
 | Engine version | `1.1.26080.3` |
 | Antivirus signature version | `1.459.374.0` |
 | Signature last updated | 24 September 2026, 06:55:01 CEST |
-| `DefenderSignaturesOutOfDate` | False |
+| Signatures out of date | False |
 
-No Defender settings or exclusions were changed. No manual sample submission to an external analysis service was performed.
+No antivirus settings or exclusions were changed. No manual sample submission to an external analysis service was performed.
 
 ## Command and result
 
-Exact executable and arguments, with only the personal delivery-folder path replaced by `<preview folder>`:
+The personal path is replaced with `<release folder>`:
 
 ```powershell
-& 'C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.26080.4-0\MpCmdRun.exe' -Scan -ScanType 3 -File '<preview folder>' -DisableRemediation
+& 'C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.26080.4-0\MpCmdRun.exe' -Scan -ScanType 3 -File '<release folder>' -DisableRemediation
 ```
 
-The process returned **exit code 0**. Complete command output, with the same path substitution:
+Exit code: **0**. Complete scan output:
 
 ```text
 Scan starting...
 Scan finished.
-Scanning <preview folder> found no threats.
+Scanning <release folder> found no threats.
 ```
 
-`-ScanType 3` selects a custom scan. Microsoft documents that `-DisableRemediation` scans archives, ignores file exclusions, reports detections in command output and does not apply remediation for this scan. It does not disable real-time protection. This scan's command output is the evidence; an empty Windows Security history is not a substitute for it. See [Microsoft's MpCmdRun reference](https://learn.microsoft.com/en-us/defender-endpoint/command-line-arguments-microsoft-defender-antivirus).
+The command output is the scan evidence. `-DisableRemediation` controls remediation for this custom scan; it does not turn off real-time protection. See [Microsoft's MpCmdRun reference](https://learn.microsoft.com/en-us/defender-endpoint/command-line-arguments-microsoft-defender-antivirus).
 
-The session used a non-elevated token. A separate read-only exclusion query was denied with `0x80070005`; the custom scan itself completed successfully with the output shown above. No exclusion list is included in this report.
+## Signing and limits
 
-## What this result does and does not establish
+The final installer and InputLab binaries are signed with the existing project certificate, `FGCsnow - DOA5LR-Salons`, with a DigiCert timestamp. The certificate is self-signed. Windows reports its signer chain as untrusted on the test PC; this is not a publicly trusted publisher signature. No certificate was added to Trusted Root authorities.
 
-- Microsoft Defender found no threats in this local scan of these specific artifacts.
-- Other antivirus engines, later signatures, download hosts and other PCs were not tested by this check.
-- The standalone installer is **not digitally signed**, as confirmed by `Get-AuthenticodeSignature`. This scan does not establish publisher identity.
-- SmartScreen evaluates download and publisher reputation separately. New or unsigned software can still produce a warning despite a clean local antivirus scan. See [Microsoft's SmartScreen guidance for app developers](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).
-- Do not disable antivirus protection or add blanket exclusions to install the preview. If a detection occurs, stop and report the exact detection name, affected filename, artifact hash and Defender signature version for investigation.
+Other antivirus products, later definitions and other PCs were not tested here. SmartScreen reputation is separate and may still produce a warning; see [Microsoft's SmartScreen guidance](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation).
 
-Suggested public wording: **“This preview was scanned locally with Microsoft Defender on 24 September 2026; no threats were reported. The installer is unsigned, and SmartScreen or other antivirus products may behave differently.”**
+If a detection occurs, keep protection enabled and report the exact detection name, affected file, artifact hash and antivirus signature version. Do not assume every mod-related warning is harmless.
+
+Public wording: **“The final 0.3.9 files were scanned locally with Microsoft Defender on 24 September 2026; no threats were reported. The project uses a self-signed certificate, so Windows trust and other antivirus results can differ.”**

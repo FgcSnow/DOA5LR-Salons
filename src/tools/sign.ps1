@@ -6,7 +6,7 @@
 #   - creates (once) a self-signed cert "FGCsnow - DOA5LR-Salons" in CurrentUser\My, valid 10 years,
 #     Code Signing EKU, and exports its public part next to this script (DOA5LR-Salons-signing.cer)
 #   - signs with SHA-256 + RFC3161 timestamp (signature stays valid after the cert expires)
-#   - lowers heuristic antivirus detections (unsigned PE + downloads/writes = suspicious)
+#   - records a signing identity; it does not guarantee fewer antivirus detections
 #   - does NOT remove the SmartScreen "not commonly downloaded" warning: that one needs reputation
 #     (download volume over time) or a real CA-issued certificate (Azure Trusted Signing / SignPath / OV cert)
 param([Parameter(Mandatory, ValueFromRemainingArguments)][string[]]$Files)

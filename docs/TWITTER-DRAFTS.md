@@ -1,18 +1,18 @@
 # Twitter / X announcement drafts
 
-These English drafts describe the local 0.3.9 candidate. They have not been published and contain no release date or download link. Counts cover only the quoted post text, including the thread number. No links or emoji affect X's weighted counting.
+These English drafts announce version 0.3.9. Post them only after the release and its downloads are available. Counts cover only the quoted post text, including the thread number; the posts below contain no links or emoji.
 
 ## Short post
 
-> Testing a DOA5LR-Salons update: keyboard remapping, a Keyboard / controller app, a local controller finder and an update notification. The experimental input module is off by default; settings stay available. A portable controls app is included too.
+> DOA5LR-Salons 0.3.9 adds keyboard remapping, a Keyboard / controller app, a local controller finder and an update notification. The experimental input module is off by default; settings stay available. A portable controls app is included too.
 
-249 / 280 characters.
+242 / 280 characters.
 
 ## Full thread
 
-> 1/6 Testing a DOA5LR-Salons input update: choose Keyboard or Controller before launching, change your keyboard bindings and save your layout. The desktop shortcut opens configuration first. You decide when to start the game.
+> 1/6 DOA5LR-Salons 0.3.9: choose Keyboard or Controller before launching, change your keyboard bindings and save your layout. The desktop shortcut opens configuration first. You decide when to start the game.
 
-224 / 280 characters.
+207 / 280 characters.
 
 > 2/6 The experimental module is OFF by default; Keyboard / controller settings stay available. New pack installs use the usual Controller path and existing choices are preserved. A Keyboard launch enables remapping when needed.
 
@@ -36,6 +36,6 @@ These English drafts describe the local 0.3.9 candidate. They have not been publ
 
 ## Before posting
 
-Use either the short post or the full thread. Keep the limitations with the feature announcement. Add a verified download link only after the package is actually made available; update the character count if text changes.
+Use either the short post or the full thread. Keep the limitations with the feature announcement. Link to the [0.3.9 release](https://github.com/FgcSnow/DOA5LR-Salons/releases/tag/v0.3.9) after verifying that its downloads work. Recalculate the weighted character count when adding a link or editing a post.
 
 Do not add a Windows Defender result before the scan report exists, or present one local scan as a guarantee for every PC. Direct Steam launches still use the last applied settings; the configuration-first behavior belongs to the pack shortcut/app.

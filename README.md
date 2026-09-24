@@ -4,19 +4,21 @@
 
 A community mod pack for **Dead or Alive 5 Last Round on PC**, maintained by **FGCsnow & BonuStage**. Play in lobbies, invite Steam friends, identify wired/Wi-Fi connections and choose the optional display and offline 60 fps features you want.
 
-**Published release: 0.3.8.** This branch prepares the **0.3.9 candidate** with InputLab controls and UpdateCheck 1.1. Candidate features described below are not a claim that 0.3.9 is already published.
+**Version 0.3.9** adds keyboard remapping, a controls app, a local Controller Finder, an update banner and manual diagnostics. The experimental remapping module is off by default; its settings remain available.
 
-[Download the published release](https://github.com/FgcSnow/DOA5LR-Salons/releases/latest) · [Input settings guide](docs/INPUT-SETTINGS.md) · [0.3.9 release notes](docs/RELEASE-NOTES-0.3.9.md) · [Validation report](docs/VALIDATION-0.3.9.md) · [Support the project](https://www.patreon.com/cw/DoA5LRcommunitymod)
+[Download the installer](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-Installer.exe) · [Input settings guide](docs/INPUT-SETTINGS.md) · [0.3.9 release notes](docs/RELEASE-NOTES-0.3.9.md) · [Validation report](docs/VALIDATION-0.3.9.md) · [Support the project](https://www.patreon.com/cw/DoA5LRcommunitymod)
 
 ## Start playing
 
-1. Download the installer from the [published release](https://github.com/FgcSnow/DOA5LR-Salons/releases/latest), save it to a folder and close DOA5LR.
-2. Open the installer, check the game folder and your component choices, then install or update. Keep its backups.
-3. Start the game through Steam and open **Online → Lobby**.
+1. Download the [0.3.9 installer](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-Installer.exe), save it to a folder and close DOA5LR.
+2. Open the installer, check the game folder and your component choices, then install or update. If an older installer offers its own update, accept Installer 1.3.1 first, then continue with the pack. Keep its backups.
+3. Open **Keyboard / controller**, choose your input mode and select **Play via Steam**. In the game, open **Online → Lobby**.
 
-For the **0.3.9 candidate**, follow the bundled local-package instructions. Its desktop shortcut opens configuration first; **Keyboard / controller** lets you choose the input mode before **Play via Steam**. Opening the shortcut does not immediately launch the game.
+The **DOA5LR (Lobby Mods)** desktop shortcut opens configuration first. You decide when to launch the game. Starting directly from Steam uses the last applied settings.
 
-Prefer the portable controls app? Extract its complete `InputLab` folder and open `DOA5LR-Commandes.exe`. Activating its remapping module requires the verified 0.3.8 input setup. Do not copy only the EXE; keep its supporting files and backups. See the [input guide](docs/INPUT-SETTINGS.md).
+**Upgrading an existing pack or active InputLab installation? Use the installer.** It preserves personal INIs, component choices and input backups. Do not extract the full ZIP or portable app over an existing setup: direct extraction can overwrite custom settings and bypass the module's saved state.
+
+The [portable controls app](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip) is available for an existing compatible pack. For first use, extract its complete `InputLab` folder to a new folder and open `DOA5LR-Commandes.exe`. Activation requires the verified 0.3.8/0.3.9 input setup. Keep every supporting file and backup. See the [input guide](docs/INPUT-SETTINGS.md) for compatibility and manual installation limits.
 
 ## What the pack does
 
@@ -26,13 +28,13 @@ Prefer the portable controls app? Extract its complete `InputLab` folder and ope
 | **Connection tag** | A wired/Wi-Fi indicator beside player names. The pack does not display a ping number. |
 | **Borderless display** | An optional borderless window module; F11 cycles its display modes. |
 | **Offline 60 fps** | Optional 60 fps menus, intros, win poses and story cutscenes. The module does not apply its changes in the Online menu. |
-| **Controls app — candidate** | Remap keyboard keys, save a profile and choose Keyboard or Controller before launch. The app remains available even with the experimental module off. |
-| **Controller Finder — candidate** | Inspect connected controllers, arcade sticks and leverless devices. Search local names or VID/PID identifiers and check profile status. |
-| **Update notice — candidate** | A brief UpdateCheck 1.1 banner when a newer pack is detected. Installation remains your choice after leaving the game. |
+| **Controls app** | Remap keyboard keys, save a profile and choose Keyboard or Controller before launch. The app remains available even with the experimental module off. |
+| **Controller Finder** | Inspect connected controllers, arcade sticks and leverless devices. Search local names or VID/PID identifiers and check profile status. |
+| **Update notice** | A brief UpdateCheck 1.1 banner when a newer pack is detected. Installation remains your choice after leaving the game. |
 | **Installer and restoration** | Install, update, check required files and restore saved pack snapshots. Optional components keep their own choices. |
-| **Diagnostics — candidate** | Open existing installer/Lobby logs or save a local support ZIP with a compact report and bounded log tails. You review and share it yourself. |
+| **Diagnostics** | Open existing installer/Lobby logs or save a local support ZIP with a compact report and bounded log tails. You review and share it yourself. |
 
-The pack also includes Ultimate ASI Loader, AutoLink and Xidi. The 0.3.9 candidate adds input configuration and the update banner; it does not claim a new lobby or invite fix.
+The pack also includes Ultimate ASI Loader, AutoLink and Xidi. Version 0.3.9 adds controls and diagnostics while retaining the existing Lobby, InviteFix and network-tag binaries. It does not introduce a new lobby or invite fix.
 
 ## Keyboard or controller: choose before launch
 
@@ -48,7 +50,7 @@ Click a key in the app, press its replacement and save the profile. Use **Play v
 **Current compatibility limits:**
 
 - A controller connected at startup can make DOA5LR ignore the keyboard. Keyboard mode checks for connected controllers and stops that launch; close the game, disconnect the controller and retry.
-- Finder detection is not automatic button mapping or universal device support. Only **DualSense Edge (`VID_054C&PID_0DF2`)** has been tested on real controller hardware for this candidate.
+- Finder detection is not automatic button mapping or universal device support. Only **DualSense Edge (`VID_054C&PID_0DF2`)** has been tested on real controller hardware for this input module.
 - This project does **not** emulate a PS5 controller. Other devices need profile and hardware validation.
 - Rumble and controller button icons are not forwarded through the experimental keyboard path. Online modes have not been validated for this input patch.
 
@@ -58,7 +60,9 @@ See [the controls guide](docs/INPUT-SETTINGS.md) for profiles, startup checks, p
 
 UpdateCheck 1.1 checks the public version manifest after a default startup delay of about **20 seconds**. If a newer pack is detected, a small notice appears for **8 seconds** in borderless/windowed mode. The separate banner is not visible in exclusive fullscreen.
 
-The installer opens in update mode when you leave the game normally; you choose whether to install. It does not install files during a match. The exit-time update prompt already existed in UpdateCheck 1.0; the visible banner is the new part.
+If a newer version was detected, the installer opens in update mode when you leave the game normally; you choose whether to install. It does not install files during a match. The exit-time update prompt already existed in UpdateCheck 1.0; the visible banner is the new part.
+
+Tested a 0.3.9 preview? Run the 0.3.9 installer directly to upgrade. The older version comparator treats the preview and final 0.3.9 as equal, so it cannot announce that transition as a newer version.
 
 ## Backups and troubleshooting
 
@@ -80,9 +84,9 @@ Logs are **not anonymized**. Review the ZIP before sharing and remove sensitive 
 
 ## Verification, antivirus and signing
 
-See the [candidate validation report](docs/VALIDATION-0.3.9.md) for the tested artifacts, hashes, scan results and remaining limits. A local scan describes those exact files at that time; it cannot guarantee every antivirus product or future definition will accept them. Checksums verify identity, not safety.
+See the [validation report](docs/VALIDATION-0.3.9.md) and [Defender check](docs/DEFENDER-CHECK-EN.md) for the tested artifacts, hashes, recorded scan results and remaining limits. A local scan describes those exact files at that time; it cannot guarantee every antivirus product or future definition will accept them. Checksums verify identity, not safety.
 
-The new candidate **InputLab and installer executables are unsigned**. Some existing pack components use the project's self-signed certificate, which is not a certificate from a public certification authority. Windows may show it as untrusted. Do not add that certificate to Trusted Root authorities.
+The 0.3.9 installer and InputLab builds use the project's existing **self-signed certificate**. It is not issued by a public certification authority, and Windows may show it as untrusted. Signing does not guarantee antivirus or SmartScreen acceptance. Do not add the certificate to Trusted Root authorities. Third-party components retain their upstream signing status.
 
 If an antivirus flags a file, keep protection enabled, record the exact detection and file hash, and compare the source and validation report. Ask the antivirus vendor to review the file when you suspect a false positive: [Microsoft submission portal](https://www.microsoft.com/wdsi/filesubmission) or [Kaspersky OpenTIP](https://opentip.kaspersky.com/). Do not treat a mod-related warning as automatically harmless.
 
