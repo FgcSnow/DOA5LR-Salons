@@ -42,6 +42,8 @@ NOTES = [
     "DOA5LR-JoinFix repairs the key before your room is published. It works on the HOST side: everyone who creates rooms needs 0.3.10.",
     "note=0.3.10: JoinFix also always accepts the network link of players in your room and asks Steam again for the room data "
     "after an invite if it is missing. Settings in scripts\\DOA5LR-JoinFix.ini; no log file, nothing is sent anywhere.",
+    "note=0.3.10: in a room, press F7 to copy its steam://joinlobby link to the clipboard (private rooms have no Join game "
+    "button in Steam); paste it on Discord, a click joins your room while the game is running.",
     "note=0.3.10: every other file is byte-identical to 0.3.9 (installer 1.3.1 unchanged).",
 ]
 

@@ -21,6 +21,9 @@
  *                     30 s (~1 salon sur 11). Correctif cote HOTE : juste avant la publication, les octets nuls de la
  *                     cle sont remplaces dans le contexte du jeu ET dans la valeur publiee (le jeu relit ces cles a
  *                     chaque paquet, donc tout reste coherent). Sans effet si la cle ne contient pas de zero.
+ *   CopyLinkKey=118 : (0.3) touche (code virtuel Windows, 118 = F7, 0 = aucune) qui copie dans le presse-papiers le lien
+ *                     steam://joinlobby/311730/<salon>/<hote> du salon ou l'on se trouve (les salons prives n'ont pas
+ *                     de bouton "Rejoindre la partie" dans Steam). Bip aigu = copie, bip grave = pas de salon.
  *   Log=1           : journal DOA5LR-JoinFix.log (actions seulement).
  *
  *  Tous les appels Steam se font sur le thread du jeu (tic = SteamAPI_RunCallbacks, via la table d'imports).
@@ -33,7 +36,7 @@
 #include <stdarg.h>
 #include <share.h>
 
-#define FIX_VER "0.2"
+#define FIX_VER "0.3"
 typedef uint64_t CSteamID;
 
 static CRITICAL_SECTION g_cs; static int g_logOn = 1;
@@ -66,6 +69,7 @@ static int patch_ptr(void **slot, void *hook, void **orig)
 }
 
 static int g_acceptMembers = 1, g_fastFail = 1, g_inviteRetry = 1, g_keyFix = 1;
+static int g_copyKey = 0x76;
 static int g_keyTest = 0; static char g_ini[MAX_PATH];   /* TEST : 1 = met un octet nul dans cryptSeed SANS corriger (reproduit le bug), 2 = octet nul PUIS KeyFix */
 static uint8_t *g_base;
 
@@ -219,6 +223,41 @@ static uint8_t __thiscall hk_setLobbyData(void *self, CSteamID lobby, const char
     return o_setLobbyData(self, lobby, key, value);
 }
 
+/* ---- CopyLinkKey : lien steam://joinlobby du salon courant -> presse-papiers */
+static int copy_text(const char *t)
+{
+    size_t n = strlen(t) + 1;
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
+    if (!h) return 0;
+    WCHAR *w = (WCHAR *)GlobalLock(h);
+    MultiByteToWideChar(CP_ACP, 0, t, -1, w, (int)n);
+    GlobalUnlock(h);
+    if (!OpenClipboard(NULL)) { GlobalFree(h); return 0; }
+    EmptyClipboard();
+    int ok = SetClipboardData(CF_UNICODETEXT, h) != NULL;
+    CloseClipboard();
+    if (!ok) GlobalFree(h);
+    return ok;
+}
+static int game_has_focus(void)
+{
+    DWORD pid = 0; HWND w = GetForegroundWindow();
+    if (!w) return 0;
+    GetWindowThreadProcessId(w, &pid);
+    return pid == GetCurrentProcessId();
+}
+static void copy_link(void)
+{
+    CSteamID lobby = g_lobby;
+    int n = (g_mm && lobby) ? ((GetNumLobbyMembers_t)(*(void ***)g_mm)[17])(g_mm, lobby) : 0;
+    CSteamID owner = n > 0 ? owner_of(lobby) : 0;
+    if (!owner) { MessageBeep(MB_ICONHAND); L("CopyLink : pas de salon en cours"); return; }
+    char link[128];
+    snprintf(link, sizeof link, "steam://joinlobby/311730/%llu/%llu", (unsigned long long)lobby, (unsigned long long)owner);
+    if (copy_text(link)) { MessageBeep(MB_ICONASTERISK); L("CopyLink : %s copie", link); }
+    else { MessageBeep(MB_ICONHAND); L("CopyLink : presse-papiers indisponible"); }
+}
+
 /* ---- tic sur le thread du jeu : SteamAPI_RunCallbacks (table d'imports de game.exe) */
 typedef void (__cdecl *RunCallbacks_t)(void);
 static RunCallbacks_t o_runCallbacks;
@@ -226,6 +265,12 @@ static DWORD g_lastTick;
 static void __cdecl hk_runCallbacks(void)
 {
     o_runCallbacks();
+    if (g_copyKey) {   /* chaque image : front montant de la touche, fenetre du jeu au premier plan */
+        static int was;
+        int down = (GetAsyncKeyState(g_copyKey) & 0x8000) != 0;
+        if (down && !was && game_has_focus()) copy_link();
+        was = down;
+    }
     DWORD now = GetTickCount();
     if (now - g_lastTick < 500) return;
     g_lastTick = now;
@@ -271,7 +316,7 @@ static DWORD WINAPI worker(LPVOID arg)
     if (g_keyFix && g_mm && patch_ptr(&(*(void ***)g_mm)[20], (void *)hk_setLobbyData, (void **)&o_setLobbyData)) L("KeyFix pose (SetLobbyData)");
     void **iat = (void **)(g_base + RVA_IAT_RUNCALLBACKS);
     if (patch_ptr(iat, (void *)hk_runCallbacks, (void **)&o_runCallbacks)) L("tic sur SteamAPI_RunCallbacks pose");
-    L("pret : KeyFix=%d AcceptMembers=%d FastFail=%d InviteRetry=%d", g_keyFix, g_acceptMembers, g_fastFail, g_inviteRetry);
+    L("pret : KeyFix=%d AcceptMembers=%d FastFail=%d InviteRetry=%d CopyLinkKey=%d", g_keyFix, g_acceptMembers, g_fastFail, g_inviteRetry, g_copyKey);
     return 0;
 }
 
@@ -288,6 +333,7 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved)
         g_fastFail = GetPrivateProfileIntA("JoinFix", "FastFail", 1, ini);
         g_inviteRetry = GetPrivateProfileIntA("JoinFix", "InviteRetry", 1, ini);
         g_keyFix = GetPrivateProfileIntA("JoinFix", "KeyFix", 1, ini);
+        g_copyKey = GetPrivateProfileIntA("JoinFix", "CopyLinkKey", 0x76, ini);
 #ifndef NO_LOG
         g_keyTest = GetPrivateProfileIntA("JoinFix", "KeyTest", 0, ini);
 #endif

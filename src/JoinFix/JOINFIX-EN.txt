@@ -1,4 +1,4 @@
-DOA5LR-JoinFix 0.2 (pack 0.3.10)
+DOA5LR-JoinFix 0.3 (pack 0.3.10)
 ================================
 
 Fixes rooms that nobody can join.
@@ -19,6 +19,9 @@ What JoinFix does
   It works on the HOST side: everyone who creates rooms needs the pack 0.3.10 or newer.
 - AcceptMembers: always accepts the network link of players who are in your room.
 - InviteRetry: after you accept an invite, asks Steam again for the room data if it is missing.
+- F7 = copy room link: in a room, press F7 to copy its steam://joinlobby/... link to the clipboard
+  (high beep). Paste it on Discord: a click on it joins your room (game already running). Private
+  rooms have no "Join game" button in Steam, this replaces it. Key set by CopyLinkKey in the .ini.
 - FastFail (off by default): stops a join at once, with the game's own error message, when Steam
   reports that the host cannot be reached (instead of waiting up to 90 s).
 

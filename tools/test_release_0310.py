@@ -45,7 +45,7 @@ def main():
     asi = final["scripts/DOA5LR-JoinFix.asi"]
     require(asi[:2] == b"MZ" and b"DOA5LR-JoinFix.log" not in asi and b"KeyTest" not in asi, "JoinFix release build: no log, no test mode")
     ini = final["scripts/DOA5LR-JoinFix.ini"].decode()
-    require("KeyFix=1" in ini and "FastFail=0" in ini and "KeyTest" not in ini, "JoinFix defaults: KeyFix on, FastFail off")
+    require("KeyFix=1" in ini and "FastFail=0" in ini and "CopyLinkKey=118" in ini and "KeyTest" not in ini, "JoinFix defaults: KeyFix on, FastFail off")
     require(final["DOA5LR-Salons-VERSION.txt"] == b"0.3.10\r\n", "pack version file")
     require(final["DOA5LR-Salons-Installer.exe"] == exe.read_bytes() == (args.base_dir / exe.name).read_bytes(), "installer 1.3.1 unchanged")
     mf = (args.release_dir / "version.txt").read_text(encoding="utf-8")
