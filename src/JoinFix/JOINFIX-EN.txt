@@ -1,0 +1,26 @@
+DOA5LR-JoinFix 0.2 (pack 0.3.10)
+================================
+
+Fixes rooms that nobody can join.
+
+The problem
+-----------
+When you create a room, DOA5LR puts a random network encryption key (24 bytes) in the Steam room
+data, but it stores it as text. If one random byte is 0, Steam cuts the key there. Players who join
+get a broken key: they enter the Steam room, the network link works, but the host's game ignores
+them and they leave after 30 seconds. It happens in about 1 room in 11, at random, and a broken room
+stays broken for EVERYONE until it is closed and created again.
+
+What JoinFix does
+-----------------
+- KeyFix (main fix): just before YOUR room is published, zero bytes of the key are replaced in the
+  game's own key and in the published copy. The game reads the key again for every packet, so
+  everything stays consistent. When the key has no zero byte (10 rooms in 11), nothing is changed.
+  It works on the HOST side: everyone who creates rooms needs the pack 0.3.10 or newer.
+- AcceptMembers: always accepts the network link of players who are in your room.
+- InviteRetry: after you accept an invite, asks Steam again for the room data if it is missing.
+- FastFail (off by default): stops a join at once, with the game's own error message, when Steam
+  reports that the host cannot be reached (instead of waiting up to 90 s).
+
+Settings: scripts\DOA5LR-JoinFix.ini (1 = on, 0 = off). No log file, nothing is sent anywhere.
+Source: scripts\JoinFix-Source (build.cmd, LLVM-MinGW 32-bit). Found and validated on 25/09/2026.
