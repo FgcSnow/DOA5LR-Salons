@@ -18,6 +18,8 @@ Cause, found on 25/09/2026: when a room is created, DOA5LR writes a random netwo
 | **F7 = copy room link** | In a room, press F7: its `steam://joinlobby/...` link is copied to the clipboard (high beep). Paste it on Discord; a click joins your room while the game is running. Private rooms have no "Join game" button in Steam. | F7 |
 | **FastFail** | While joining, stops at once with the game's own error message when Steam reports the host cannot be reached, instead of waiting up to 90 s. Not yet seen in real use. | Off |
 
+**F7 example.** In your room, press F7 and paste: you get a link like `steam://joinlobby/311730/109775240000000000/76561190000000000` (311730 = DOA5LR, then the room number, then the host's SteamID). Friends click it with the game running and join directly, even a private room.
+
 Settings: `scripts\DOA5LR-JoinFix.ini`. No log file, nothing is sent anywhere. Source in `scripts\JoinFix-Source`.
 
 Validated in real play on 25/09/2026: a room whose key contained a zero byte was repaired and a friend joined in 0.25 s; the same situation without the fix had made them leave after 30 s.
