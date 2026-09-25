@@ -1,9 +1,13 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
-version=0.3.9
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-0.3.9.zip
-sha256=d8d9ca313709c15063fc635b2716e5f292d40f5f5a34219c9f8a891fe1610f3b
-size=6605952
-notes=pack 0.3.9: Keyboard / controller settings app (keyboard remapping, Controller Finder), launch from the installer through Steam, in-game update banner (UpdateCheck 1.1), diagnostics export
+version=0.3.10
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-0.3.10.zip
+sha256=0e3e8e135bff271107bef269843e5d3e8c31905fa9c9cdcb370d058fb52ddd31
+size=6629541
+notes=pack 0.3.10: fixes rooms that nobody can join (players enter, then leave after 30 s) - new DOA5LR-JoinFix
+note=0.3.10: the game publishes each room's network encryption key as text; when a random byte is 0, Steam cuts it and nobody can join that room (about 1 room in 11, and it stays broken for everyone until it is created again). DOA5LR-JoinFix repairs the key before your room is published. It works on the HOST side: everyone who creates rooms needs 0.3.10.
+note=0.3.10: JoinFix also always accepts the network link of players in your room and asks Steam again for the room data after an invite if it is missing. Settings in scripts\DOA5LR-JoinFix.ini; no log file, nothing is sent anywhere.
+note=0.3.10: in a room, press F7 to copy its steam://joinlobby link to the clipboard (private rooms have no Join game button in Steam); paste it on Discord, a click joins your room while the game is running.
+note=0.3.10: every other file is byte-identical to 0.3.9 (installer 1.3.1 unchanged).
 note=0.3.9: new Keyboard / controller app, always installed: remap keyboard keys, choose Keyboard or Controller before launch, search connected controllers by name or VID/PID. In-game keyboard remapping is an optional component, OFF by default; new installs use the usual Controller path and your existing choices are kept.
 note=0.3.9: the installer (1.3.1) can launch the game through Steam (it opens Steam first if needed) and create a DOA5LR (Lobby Mods) desktop shortcut that opens the configuration first. Idea by Inyo, thanks!
 note=0.3.9: UpdateCheck 1.1 shows an 8-second banner in game when a newer pack exists (borderless/window mode only; Banner=0 in scripts\DOA5LR-UpdateCheck.ini turns it off). The installer still opens only after you close the game, and installing stays your choice.
@@ -15,7 +19,7 @@ note=Source/signature scope: Lobby 0.9.0 is an unsigned external binary whose so
 note=0.3.8: the installer (1.1.0) now has check boxes: Borderless and 60fps-menus can be left out (their files are not installed, or removed if they were; your .ini settings are kept). Lobby, Steam invites, the wired/Wi-Fi tag, the controller fix and the update check are always installed. Your choice is remembered for every future update.
 note=0.3.8: WiFi-Wired-Detector 0.8.8: the LinkOverride=1 setting (declare yourself wired) is gone; the tag comes from your real adapter (LinkOverride=2 = force wireless still exists). The plugin is part of the pack on purpose: the tag is only worth something if every player shows it.
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Salons-Installer.exe
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-Installer.exe
 installer_version=1.3.1
 installer_sha256=c6e4e36c630bb5bfb0aab80e1571872e7e9d4eda483835ecbe8166d773ef4ee3
 keep=*.ini

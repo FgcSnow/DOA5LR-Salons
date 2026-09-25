@@ -11,7 +11,8 @@ is separate from publishing a release or changing the public update manifest.
 | `Installer` | Installer 1.3.1 (.exe) | Setup, input chooser, backups, local diagnostic export and manifest compatibility |
 | `InputLab/source` | Controls, Finder, inventory, companion, bridge | Optional keyboard remapping and local controller profiles |
 | `UpdateCheck` | UpdateCheck 1.1 (.asi) | New-version banner and installer prompt after game exit |
-| `InviteFix`, `WiFi-Wired-Detector`, `60fps-menus`, `Borderless` | Existing .asi plugins | Unchanged in 0.3.9 |
+| `JoinFix` | JoinFix 0.3 (.asi), pack 0.3.10 | Room join fix: repairs the room encryption key published by the host (see `JOINFIX-EN.txt`) |
+| `InviteFix`, `WiFi-Wired-Detector`, `60fps-menus`, `Borderless` | Existing .asi plugins | Unchanged since 0.3.8 |
 | `tools` | Signing scripts and public certificate | Optional signing for maintained builds |
 
 ## Windows toolchain
@@ -26,6 +27,7 @@ From the repository root, run:
 ```powershell
 & .\src\Installer\build.cmd
 & .\src\UpdateCheck\build.cmd
+& .\src\JoinFix\build.cmd
 & .\src\InputLab\source\build.ps1
 ```
 
