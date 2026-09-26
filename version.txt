@@ -1,8 +1,8 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.10
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-0.3.10.zip
-sha256=0e3e8e135bff271107bef269843e5d3e8c31905fa9c9cdcb370d058fb52ddd31
-size=6629541
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-0.3.10-r2.zip
+sha256=2a441cb3125962910106341ae75b5b3d34805406df1af1c168e744d0d39ab272
+size=6630491
 notes=pack 0.3.10: fixes rooms that nobody can join (players enter, then leave after 30 s) - new DOA5LR-JoinFix
 note=0.3.10: the game publishes each room's network encryption key as text; when a random byte is 0, Steam cuts it and nobody can join that room (about 1 room in 11, and it stays broken for everyone until it is created again). DOA5LR-JoinFix repairs the key before your room is published. It works on the HOST side: everyone who creates rooms needs 0.3.10.
 note=0.3.10: JoinFix also always accepts the network link of players in your room and asks Steam again for the room data after an invite if it is missing. Settings in scripts\DOA5LR-JoinFix.ini; no log file, nothing is sent anywhere.
