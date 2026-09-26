@@ -8,6 +8,10 @@ from pathlib import Path
 import subprocess
 import tempfile
 from zipfile import ZipFile
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pack_docs import GUIDE_COPIES, check_pack_guides  # noqa: E402
 
 
 def require(condition, message):
@@ -38,7 +42,9 @@ def main():
         if sha(final[name]) != digest:
             raise AssertionError("internal checksum: " + name)
     require(len(final["SHA256SUMS.txt"].decode().splitlines()) == len(final) - 1, "internal checksum coverage and values")
-    same = [n for n in base if n not in ("DOA5LR-Salons-VERSION.txt", "SHA256SUMS.txt")]
+    same = [n for n in base if n not in ("DOA5LR-Salons-VERSION.txt", "SHA256SUMS.txt", *GUIDE_COPIES)]
+    check_pack_guides(final, "0.3.10")
+    require(True, "guide copies are the 0.3.10 guide (r2)")
     require(all(final[n] == base[n] for n in same), f"{len(same)} files of 0.3.9 byte-identical")
     require(sorted(set(final) - set(base)) == sorted(["scripts/DOA5LR-JoinFix.asi", "scripts/DOA5LR-JoinFix.ini", "scripts/JOINFIX-EN.txt",
             "scripts/JoinFix-Source/build.cmd", "scripts/JoinFix-Source/joinfix.c", "scripts/JoinFix-Source/version.rc"]), "only JoinFix files added")
