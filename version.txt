@@ -1,6 +1,6 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.10
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-0.3.10-r2.zip
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-0.3.10.zip
 sha256=2a441cb3125962910106341ae75b5b3d34805406df1af1c168e744d0d39ab272
 size=6630491
 notes=pack 0.3.10: fixes rooms that nobody can join (players enter, then leave after 30 s) - new DOA5LR-JoinFix
