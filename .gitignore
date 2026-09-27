@@ -12,3 +12,16 @@ src/**/test/optional-runtime/run-*/
 **/__pycache__/
 preview-output/
 src/**/test/keyboard-startup-*/
+
+# personal / local files (never shared)
+CLAUDE.local.md
+.claude/settings.local.json
+*.log
+*-live.txt
+*.debug-en-cours
+*.pfx
+*.pvk
+
+# release outputs are built by tools/ and published as GitHub release assets, not committed
+*.zip
+*-Release/
