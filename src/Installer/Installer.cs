@@ -24,6 +24,7 @@
 //   optional=id|label|glob;glob...     (0..n, 1.1.0: a component the player may leave out — its files are not extracted and are
 //                                       removed if present; choice saved in DOA5LR-Salons-Components.txt and reused by --update)
 //   optional_v2=id|label|glob;glob...  (1.3.1: same validation; older installers ignore this key and can self-update first)
+//   optional_v3=id|label|glob;glob...  (1.3.2: Replay Takeover; 1.3.1 ignores this key and self-updates first)
 //   file=name|url|fnv32|size            (for Telemetry AutoUpdate, ignored here)
 using System;
 using System.Collections.Generic;
@@ -49,13 +50,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.1.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.1")]
+[assembly: System.Reflection.AssemblyVersion("1.3.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.2.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.2")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.1";
+    public const string AppVersion = "1.3.2";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -107,7 +108,10 @@ class Component
         new Component { Id = "borderless", Label = "Borderless fullscreen window (F11 in game; display mode below)", Globs = new[] { @"scripts\DOA5LR-Borderless.asi", @"scripts\DOA5LR-Borderless.ini", @"scripts\BORDERLESS-EN.txt", @"scripts\Borderless-Source\*" } },
         new Component { Id = "60fps", Label = "60 fps menus, intros, win poses and Story cutscenes (offline only)", Globs = new[] { @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-60fps-menus.ini", @"scripts\60FPS-EN.txt", @"scripts\60fps-Source\*" } } };
     public static readonly Component InputLab = new Component { Id = "inputlab", Label = "Experimental in-game keyboard remapping (settings app always available)", Globs = new[] { "DOA5LR-InputBridge-Xidi.dll", "DOA5LR-InputBridge.ini", "DOA5LR-ControllerProfiles.ini", "DOA5LR-Companion.exe" } };
-    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab }).ToArray();
+    // 1.3.2 : replay tool, only active while a replay plays. The game-folder root like its own installer (the plugin reads
+    // its .ini next to game.exe), so a copy installed by hand is replaced, never loaded twice. On by default.
+    public static readonly Component ReplayTakeover = new Component { Id = "replaytakeover", Label = "Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)", Globs = new[] { "DOA5LR-ReplayTakeover.asi", "DOA5LR-ReplayTakeover.ini", @"scripts\REPLAY-TAKEOVER-EN.txt", @"scripts\ReplayTakeover-Source\*" } };
+    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
     {
@@ -170,7 +174,8 @@ class Manifest
                 // Keep the old key for preview manifests. Public manifests use optional_v2
                 // for InputLab so 1.1 can parse them before offering its own update.
                 case "optional":
-                case "optional_v2": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "optional_v2":
+                case "optional_v3": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");
@@ -1007,7 +1012,7 @@ class MainForm : Form
     {
         this.updateMode = updateMode; this.playMode = playMode && !updateMode;
         Text = Cfg.PackName + " Installer " + Cfg.AppVersion; BackColor = BG; ForeColor = TXT;
-        Font = new Font("Segoe UI", 10f); ClientSize = new Size(760, 844); StartPosition = FormStartPosition.CenterScreen;
+        Font = new Font("Segoe UI", 10f); ClientSize = new Size(760, 870); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
         AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96f, 96f);
         try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
@@ -1058,31 +1063,31 @@ class MainForm : Form
         lblCompSub = L("Always installed: Lobby, invites, network tag, Xidi, updater.", x + 140, 384, w - 140, 9f, false, DIM);
         BuildComponents();
 
-        btnMain = B("CHECKING…", x, 500, w, 56, RED, async (s, e) => await MainAction(), true);
-        bar = new ProgressBar { Left = x, Top = 566, Width = w, Height = 8, Style = ProgressBarStyle.Continuous, Visible = false }; Controls.Add(bar);
-        lblStatus = L("", x, 580, w, 9.5f, false, DIM);
+        btnMain = B("CHECKING…", x, 526, w, 56, RED, async (s, e) => await MainAction(), true);
+        bar = new ProgressBar { Left = x, Top = 592, Width = w, Height = 8, Style = ProgressBarStyle.Continuous, Visible = false }; Controls.Add(bar);
+        lblStatus = L("", x, 606, w, 9.5f, false, DIM);
 
-        lblDisplay = L("Display mode", x, 602, 120, 10f, true); lblDisplay.Top = 605;
-        cbDisplay = new ComboBox { Left = x + 120, Top = 602, Width = 360, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = FIELD, ForeColor = TXT, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f) };
+        lblDisplay = L("Display mode", x, 628, 120, 10f, true); lblDisplay.Top = 631;
+        cbDisplay = new ComboBox { Left = x + 120, Top = 628, Width = 360, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = FIELD, ForeColor = TXT, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f) };
         cbDisplay.Items.AddRange(new object[] { "Fullscreen (game setting)", "Window (with borders)", "Borderless fullscreen (recommended)" });
         cbDisplay.SelectedIndexChanged += (s, e) => { if (!busy && cbDisplay.Enabled && cbDisplay.Tag == null) { try { Util.WriteDisplayMode(game, cbDisplay.SelectedIndex); Status("Display mode: " + cbDisplay.Text + " — applied at the next game launch (F11 in game switches too)."); } catch (Exception ex) { Status("Display mode not saved: " + ex.Message); } } };
         Controls.Add(cbDisplay);
-        btnLaunch = B("▶   LAUNCH GAME", x, 644, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
-        btnShortcut = B("Desktop shortcut", x + 308, 644, 180, 44, BTN, (s, e) => MakeShortcut());   // 1.2.0
-        btnFinder = B("Keyboard / controller", x + 496, 644, 200, 44, BTN, (s, e) => OpenInputSettings());
-        btnRestore = B("Restore backup", x, 700, 150, 40, BTN, async (s, e) => await RestoreAction());
-        btnBackups = B("Backups folder", x + 154, 700, 150, 40, BTN, (s, e) => OpenBackups());
-        btnCheck = B("Check again", x + 308, 700, 130, 40, BTN, async (s, e) => await CheckAsync());
-        btnLog = B("Logs", x + 442, 700, 80, 40, BTN, (s, e) => ShowLogs());
-        btnCredits = B("Credits & Thanks", x + 526, 700, w - 526, 40, BTN, (s, e) => Credits());
+        btnLaunch = B("▶   LAUNCH GAME", x, 670, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
+        btnShortcut = B("Desktop shortcut", x + 308, 670, 180, 44, BTN, (s, e) => MakeShortcut());   // 1.2.0
+        btnFinder = B("Keyboard / controller", x + 496, 670, 200, 44, BTN, (s, e) => OpenInputSettings());
+        btnRestore = B("Restore backup", x, 726, 150, 40, BTN, async (s, e) => await RestoreAction());
+        btnBackups = B("Backups folder", x + 154, 726, 150, 40, BTN, (s, e) => OpenBackups());
+        btnCheck = B("Check again", x + 308, 726, 130, 40, BTN, async (s, e) => await CheckAsync());
+        btnLog = B("Logs", x + 442, 726, 80, 40, BTN, (s, e) => ShowLogs());
+        btnCredits = B("Credits & Thanks", x + 526, 726, w - 526, 40, BTN, (s, e) => Credits());
         if (Cfg.PatreonUrl != "")
         {
             var bp = B("♥  Support us on Patreon", x + w - 230, 44, 230, 36, Color.FromArgb(0xF9, 0x66, 0x54), (s, e) => { try { Process.Start(Cfg.PatreonUrl); } catch { } });
             bp.Font = new Font("Segoe UI", 10f, FontStyle.Bold); bp.BringToFront();
         }
-        L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 760, w, 9f, false, DIM);
-        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 782, w, 9f, false, DIM);
-        L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 808, w, 9f, false, DIM);
+        L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 786, w, 9f, false, DIM);
+        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 808, w, 9f, false, DIM);
+        L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 834, w, 9f, false, DIM);
     }
     // 1.1.0 : one check box per optional component (list = Component.Current, may change once the manifest is read)
     void BuildComponents()
@@ -1477,6 +1482,7 @@ class MainForm : Form
             "Included mods & tools:\r\n" +
             "• Lobby (online rooms) 0.9.0 — community build\r\n" +
             "• InviteFix, WiFi/Wired Detector, 60 fps menus, Borderless, UpdateCheck — FGCsnow\r\n" +
+            "• Replay Takeover — BonuStage & FGCsnow\r\n" +
             "• Ultimate ASI Loader — ThirteenAG (MIT)\r\n" +
             "• Xidi controller layer — Samuel Grossman (BSD)\r\n" +
             "• d3d9 resolution mod — original author credited in Optional-Resolution-Mod\\README-EN.txt\r\n\r\n" +

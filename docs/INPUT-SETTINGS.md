@@ -1,6 +1,12 @@
-# DOA5LR-Salons 0.3.10 — Rooms, controls, installation and updates
+# DOA5LR-Salons 0.3.11 — Rooms, controls, installation and updates
 
-## What's new in 0.3.10
+## What's new in 0.3.11
+
+**Replay Takeover 2.5 (by BonuStage & FGCsnow) is now part of the pack.** While a replay plays, press **L2** (or F5) to take control of P1 or P2, then **Select** to jump back instantly to that moment and try again as many times as you want. Broken walls, tables and benches come back. **Start** jumps back and gives control back to the replay; **L3** (or F7) jumps back with the stage rebuilt. It only acts during replays.
+
+It is an **installer check box, on by default** (Installer 1.3.2): untick "Replay Takeover" to leave it out. It installs next to `game.exe` (`DOA5LR-ReplayTakeover.asi` and `.ini`), like its own installer, so a copy you installed by hand is simply updated and your `DOA5LR-ReplayTakeover.ini` is kept. It writes a local `DOA5LR-ReplayTakeover.log` next to the game (for crash reports) and sends nothing. Full guide: `scripts/REPLAY-TAKEOVER-EN.txt`; source in `scripts/ReplayTakeover-Source`. Every other pack file is identical to 0.3.10. Details: [0.3.11 release notes](RELEASE-NOTES-0.3.11.md).
+
+## Since 0.3.10
 
 **Rooms that nobody could join are fixed.** Sometimes players entered a room, then left on their own after about 30 seconds, and the room stayed broken for everyone until it was created again. The new **DOA5LR-JoinFix** plugin (always installed) repairs the room's network key before the room is published. It works on the **host** side: everyone who creates rooms should update to 0.3.10.
 
@@ -20,24 +26,24 @@ The existing optional Borderless and offline 60 fps features remain available. U
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-Installer.exe) and open it |
+| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.11/DOA5LR-Salons-Installer.exe) and open it |
 | Portable controls app (unchanged since 0.3.9) | First use of the app on an existing compatible pack | Download the [portable ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip), extract its complete `InputLab` folder to a new folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
 The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
 
 **If InputLab is already installed or active, update through the pack installer.** Do not extract a new full pack or portable app over your existing InputLab folder. That can overwrite profiles and default INIs, or replace runtime files without preserving the recorded module state. Keep your profiles and both kinds of backup.
 
-The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8, 0.3.9 or 0.3.10)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
+The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8, 0.3.9, 0.3.10 or 0.3.11)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
 
 ## Install or update the pack
 
 1. Close DOA5LR.
-2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. If an older installer offers its own update, accept Installer 1.3.1 first, then continue with the pack.
+2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. If an older installer offers its own update, accept Installer 1.3.2 first, then continue with the pack.
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
 4. Open **Keyboard / controller**. This button works even with the experimental component unchecked.
 5. Choose a mode and use **Play via Steam** when ready to play.
 
-**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.10 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.10/DOA5LR-Salons-0.3.10.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
+**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.11 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.11/DOA5LR-Salons-0.3.11.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
 
 For every upgrade, including from 0.3.8 or 0.3.9, use the installer to keep personal INIs, saved input choices and module backups. Do not overwrite custom INIs with archive defaults.
 

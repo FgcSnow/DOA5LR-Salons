@@ -1,0 +1,194 @@
+﻿DOA5LR REPLAY TAKEOVER 2.5 — take control of a replay
+=======================================================
+(Version française : LISEZ-MOI.txt)
+
+While a Dead or Alive 5 Last Round replay is playing (PC, Steam), you take control of
+one of the two players and replay the sequence against what the opponent actually did.
+A checkpoint is saved at the moment you take control: you can jump back to it
+instantly, as many times as you want, to try again. The stage comes back as it was
+at the checkpoint: objects broken in the meantime (walls, benches, tables…) come back,
+objects that were already broken stay broken.
+
+The mod works in memory only while the game is running: no game file is modified, and
+removing it leaves the game exactly as it was.
+
+
+WHAT'S NEW
+----------
+2.5  Objects restored properly on the jump back: a broken table comes back visible (the stage
+     is rebuilt as soon as the breakables' state has changed), the last break is no longer
+     replayed by the stage after a jump back, and the fallback fast catch-up follows breaks
+     frame by frame like the replay.
+2.4.1 No more needless stage rebuild on the first jump back when nothing was broken (it could
+     disturb the animated elements of some stages); more detailed log.
+2.4  Checkpoint taken after something broke: objects already broken at the checkpoint stay
+     broken on the jump back (the checkpoint's stage state is given back to the game after
+     the rebuild).
+2.3  Jumping back from another area of the stage (example: the HOME courtyard): the mod
+     asks the game for the checkpoint's area again.
+2.2  Stage objects broken since the checkpoint: the game rebuilds the stage (like the
+     Select + R2 shortcut of Training mode), then the checkpoint is restored. The jump
+     back stays instant (about 3 ms). L3 / F7: same jump back, on demand.
+2.1  "Human players" fix after a fallback restart; faster fallback.
+2.0.1 The P1/P2 window also shows up with a graphics tool in between (ReShade, DXVK…).
+
+
+1. CONTROLS
+-----------
+While the replay is playing normally:
+
+  L2  (or F5)     Take control.
+                  If both players are human, the fight freezes and a window lets you
+                  pick P1 or P2:
+                      directions / other buttons / arrow keys : switch player
+                      L2 / Enter                              : confirm
+                      Start / Esc                             : cancel
+                  Otherwise, control is taken directly.
+  Start, Select   Keep their usual role (menu, hide the interface).
+
+While you are in control:
+
+  Select (or F5)  Instant jump back to the checkpoint; you keep control to try again.
+  Start  (or F6)  Instant jump back to the checkpoint and control is given back: the
+                  replay resumes normally from there.
+  L3     (or F7)  Like Select, and the game also rebuilds the stage. Not needed
+                  normally (see section 2); keep it in mind if an object did not come
+                  back.
+  L2              Sent to your character like any other button (if you use it to
+                  fight, it works normally).
+
+While you are in control, Start and Select do not open the menu or hide the replay
+interface.
+
+
+2. STAGE (BREAKABLE OBJECTS, AREA CHANGES)
+------------------------------------------
+- If an object was broken since the checkpoint, the jump back asks the game to rebuild
+  the stage, then restores the checkpoint for everything else (characters, camera,
+  fight). This is automatic and instant.
+- If the fight moved to another area since the checkpoint (for example: the HOME
+  courtyard), the jump back returns to the checkpoint's area.
+- The stage comes back as it was at the checkpoint: an object already broken at the
+  checkpoint stays broken; what broke afterwards comes back. The game rebuilds the
+  stage, then the mod gives it back the state of the breakable objects at the
+  checkpoint.
+- Tested in detail on HOME, the most interactive stage of the game: walls, basement
+  floor, beds, benches, tables, vases, cart, courtyard and basement. Not every other
+  stage has been tried: please report anything odd.
+
+
+3. END OF ROUND (K.O. OR TIME OUT)
+----------------------------------
+The mod is meant for replaying short sequences within a round.
+
+- As soon as a round ends (K.O. or time out) while you are in control, the checkpoint
+  is erased and jumping back is disabled: Select does nothing, Start just gives
+  control back.
+- When the next round starts, control automatically goes back to the replay.
+- To practice again, press L2 again.
+
+Tip: take control a little before the sequence you want to work on, not right before
+a K.O. If you take control during a K.O., no checkpoint is saved.
+
+Rare case: if the checkpoint cannot be restored in the middle of a round, the mod uses
+a fallback: the replay restarts from the beginning in fast forward (choppy picture,
+this is normal) and a Windows beep signals the arrival.
+
+
+4. INSTALLATION
+---------------
+Requirements:
+- Dead or Alive 5 Last Round, current Steam version. The mod checks the game.exe
+  fingerprint (SHA-256) and stays inactive if it is not the expected version.
+- Ultimate ASI Loader, 32-bit version (Win32), named dinput8.dll:
+      https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases  (dinput8-Win32.zip)
+  If you already use other .asi mods for DOA5LR, it is most likely already installed.
+  If another mod already uses a dinput8.dll file that is NOT the ASI Loader, rename
+  that file to dinput8Hooked.dll, then put the ASI Loader in as dinput8.dll: it will
+  load both.
+
+Close the game, then:
+
+Method A — with the script (recommended when updating)
+  Right-click Installer-ReplayTakeover.ps1 > "Run with PowerShell".
+  The script finds the game folder in your Steam libraries and copies the mod. Your
+  settings are kept and the new settings are added. An old 1.0 .ini is set aside
+  (DOA5LR-ReplayTakeover.ini.v1) and replaced.
+  If Windows refuses to run the script, open PowerShell in this folder and type:
+      powershell -ExecutionPolicy Bypass -File .\Installer-ReplayTakeover.ps1
+  If the game is not found:
+      powershell -ExecutionPolicy Bypass -File .\Installer-ReplayTakeover.ps1 -GameDirectory "D:\...\Dead or Alive 5 Last Round"
+
+Method B — by hand
+  Copy the two files from the "Dossier du jeu - Game folder" folder:
+      DOA5LR-ReplayTakeover.asi
+      DOA5LR-ReplayTakeover.ini
+  into the game folder, next to game.exe (in Steam: right-click the game > Manage >
+  Browse local files). Also replace the .ini if you are updating from an older version.
+
+Check: start the game, wait for the main menu, then open DOA5LR-ReplayTakeover.log
+(game folder). It must contain (the log is in French):
+    Points d accroche : lecteur oui, manettes oui, boucle du combat oui, affichage oui, points de controle oui.
+    Decor : remis a neuf par le jeu au retour si un objet a ete casse (reconstruction de la scene).
+
+
+5. SETTINGS (optional) — DOA5LR-ReplayTakeover.ini
+--------------------------------------------------
+    Enabled=1                0 = mod disabled without uninstalling it
+    SkipPresent=1            0 = smoother but slower fallback
+    ChoixJoueur=1            0 = no P1/P2 window (always the last chosen player)
+    BoutonPrise=0x4000       take control (L2)
+    BoutonRetour=0x200       jump back and keep control (Select)
+    BoutonRendre=0x100       jump back and give control back (Start)
+    BoutonRetourExact=0x400  jump back with the stage rebuilt (L3)
+    PasRattrapage=10         fallback: simulation steps per frame (1 to 16)
+    JournalBoutons=0         1 = log every button press (see section 7)
+Codes measured with a PlayStation pad:
+    L2=0x4000  R2=0x8000  Select=0x200  Start=0x100  L3=0x400  Square=0x40
+Save this file as ANSI / ASCII, never as "UTF-8 with BOM": otherwise the mod no longer
+sees its settings (Windows Notepad is fine).
+
+
+6. UNINSTALLING
+---------------
+With the game closed, delete from the game folder:
+    DOA5LR-ReplayTakeover.asi
+    DOA5LR-ReplayTakeover.ini
+    DOA5LR-ReplayTakeover.log
+or run:
+    powershell -ExecutionPolicy Bypass -File .\Installer-ReplayTakeover.ps1 -Action Remove
+Leave the ASI Loader in place if other mods use it.
+
+
+7. KNOWN LIMITS AND TROUBLESHOOTING
+-----------------------------------
+- A computer-controlled (CPU) player in the replay cannot be taken over (greyed out in
+  the window): its AI is recomputed on every playback.
+- Online replays and tag matches: not tested.
+- Stage: validated in detail on HOME only (see section 2).
+
+Nothing happens, no .log file
+    The ASI Loader is not installed (or not the 32-bit one), or the .asi is not next to
+    game.exe.
+"REFUS : empreinte de game.exe differente" (game.exe fingerprint differs)
+    Your game.exe is not the expected version: the mod stays inactive for safety.
+"Desactive par configuration" (disabled by settings)
+    Enabled=0 in the .ini, or the .ini was saved with a BOM (see section 5).
+"points de controle non" or "REFUS de la reconstruction de la scene"
+    The mod works, but some jumps back use the fallback.
+The P1/P2 window does not show up
+    Send the log: it says whether the window was drawn.
+Buttons do not respond (other controller)
+    Set JournalBoutons=1, start the game, press the button you want several times on
+    its own, then read its "maintenu" code in DOA5LR-ReplayTakeover.log and put it in
+    the setting you want. Set JournalBoutons=0 again afterwards. The F5 / F6 / F7
+    keyboard keys work in every case.
+The game crashes
+    Send DOA5LR-ReplayTakeover.log and, if there is one, the latest game.exe.*.dmp file
+    from %LOCALAPPDATA%\CrashDumps.
+
+
+CREDITS
+-------
+Snow (@FgcSnow): breakable object tests, "stage changed" safety, human players fix
+after a restart.
