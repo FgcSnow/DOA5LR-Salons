@@ -1,0 +1,195 @@
+﻿DOA5LR REPLAY TAKEOVER 2.5 — reprise en main d'un replay
+==========================================================
+(English version: README.txt)
+
+Pendant la lecture d'un replay de Dead or Alive 5 Last Round (PC, Steam), vous prenez
+le contrôle d'un des deux joueurs et rejouez la séquence contre ce que l'adversaire
+avait fait. Un point de contrôle est posé à l'instant où vous prenez la main : vous
+pouvez y revenir instantanément, autant de fois que vous voulez, pour réessayer.
+Le décor revient tel qu'il était au point : les objets cassés entre-temps (murs, bancs,
+tables…) reviennent, ceux qui étaient déjà cassés le restent.
+
+Le module agit uniquement en mémoire pendant que le jeu tourne : aucun fichier du jeu
+n'est modifié, et le retirer rend le jeu exactement à son état d'origine.
+
+
+NOUVEAUTÉS
+----------
+2.5  Objets remis correctement au retour : une table cassée revient visible (le décor est
+     reconstruit dès que l'état des objets cassables a changé), la dernière casse n'est
+     plus rejouée par la scène après un retour, et le retour accéléré de secours suit les
+     casses image par image comme le replay.
+2.4.1 Plus de reconstruction inutile du décor au premier retour quand rien n'a été cassé
+     (elle pouvait perturber les éléments animés de certaines scènes) ; journal plus précis.
+2.4  Point posé après une casse : les objets déjà cassés au moment du point le restent
+     au retour (l'état du décor du point est redonné au jeu après la reconstruction).
+2.3  Retour depuis une autre zone de la scène (exemple : la cour de HOME) : le module
+     redemande au jeu la zone du point de contrôle.
+2.2  Objets du décor cassés depuis le point : le jeu reconstruit la scène (comme le
+     raccourci Select + R2 du mode Entraînement), puis le point est remis. Le retour
+     reste instantané (environ 3 ms). L3 / F7 : même retour, à la demande.
+2.1  Correctif « joueurs humains » après un redémarrage de secours ; secours plus rapide.
+2.0.1 La fenêtre P1/P2 s'affiche aussi avec un outil graphique intercalé (ReShade, DXVK…).
+
+
+1. COMMANDES
+------------
+Pendant la lecture normale du replay :
+
+  L2  (ou F5)     Prendre la main.
+                  Si les deux joueurs sont humains, le combat se fige et une fenêtre
+                  propose P1 ou P2 :
+                      directions / autres boutons / flèches : changer de joueur
+                      L2 / Entrée                            : valider
+                      Start / Échap                          : annuler
+                  Sinon, la main est prise directement.
+  Start, Select   Gardent leur rôle habituel (menu, masquer l'interface).
+
+Pendant la reprise en main (c'est vous qui jouez) :
+
+  Select (ou F5)  Retour instantané au point de contrôle ; vous gardez la main
+                  pour réessayer.
+  Start  (ou F6)  Retour instantané au point de contrôle et main rendue : le replay
+                  reprend normalement à partir de là.
+  L3     (ou F7)  Comme Select, en faisant en plus reconstruire le décor par le jeu.
+                  Inutile en temps normal (voir section 2) ; à garder sous la main si
+                  un objet ne revenait pas.
+  L2              Envoyé à votre personnage comme n'importe quel bouton (si vous
+                  l'utilisez pour combattre, il fonctionne normalement).
+
+Pendant la reprise, Start et Select n'ouvrent pas le menu et ne masquent pas
+l'interface du replay.
+
+
+2. DÉCOR (OBJETS CASSABLES, CHANGEMENTS DE ZONE)
+------------------------------------------------
+- Si un objet a été cassé depuis le point de contrôle, le retour demande au jeu de
+  reconstruire la scène, puis remet le point pour tout le reste (personnages, caméra,
+  combat). C'est automatique et instantané.
+- Si le combat a changé de zone depuis le point (par exemple : passage dans la cour de
+  HOME), le retour ramène dans la zone du point.
+- Le décor revient tel qu'il était au point : si un objet était déjà cassé au moment
+  du point, il reste cassé ; ce qui a cassé après revient. Le jeu reconstruit la
+  scène, puis le module lui redonne l'état des objets cassables au moment du point.
+- Testé en détail sur HOME, la scène la plus interactive du jeu : murs, sol du
+  sous-sol, lits, bancs, tables, vases, charrette, cour et sous-sol. Les autres
+  scènes n'ont pas toutes été essayées : signalez tout comportement étrange.
+
+
+3. FIN DE ROUND (K.O. OU TEMPS ÉCOULÉ)
+--------------------------------------
+Le module sert à rejouer de courtes séquences à l'intérieur d'un round.
+
+- Dès qu'un round se termine (K.O. ou temps écoulé) pendant la reprise, le point de
+  contrôle est effacé et les retours sont désactivés : Select ne fait plus rien,
+  Start rend simplement la main.
+- Au début du round suivant, la main revient automatiquement au replay.
+- Pour vous entraîner à nouveau, appuyez de nouveau sur L2.
+
+Conseil : prenez la main un peu avant la séquence à travailler, pas juste avant un
+K.O. Si vous prenez la main pendant un K.O., aucun point de contrôle n'est posé.
+
+Cas rare : si le point de contrôle ne peut pas être remis en plein round, le module
+utilise un retour de secours : le replay repart du début en accéléré (image saccadée,
+c'est normal) et un bip Windows signale l'arrivée.
+
+
+4. INSTALLATION
+---------------
+Prérequis :
+- Dead or Alive 5 Last Round, version Steam actuelle. Le module vérifie l'empreinte de
+  game.exe (SHA-256) et reste inactif si ce n'est pas la version attendue.
+- Ultimate ASI Loader, version 32 bits (Win32), sous le nom dinput8.dll :
+      https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases  (dinput8-Win32.zip)
+  Si vous utilisez déjà d'autres mods .asi pour DOA5LR, il est très probablement déjà
+  installé.
+  Si un autre mod utilise déjà un fichier dinput8.dll qui n'est PAS l'ASI Loader,
+  renommez ce fichier en dinput8Hooked.dll, puis placez l'ASI Loader sous le nom
+  dinput8.dll : il chargera les deux.
+
+Fermez le jeu, puis :
+
+Méthode A — avec le script (recommandée pour une mise à jour)
+  Clic droit sur Installer-ReplayTakeover.ps1 > « Exécuter avec PowerShell ».
+  Le script trouve le dossier du jeu dans vos bibliothèques Steam et copie le module.
+  Vos réglages sont conservés et les nouveaux réglages sont ajoutés. Un ancien .ini de
+  la 1.0 est mis de côté (DOA5LR-ReplayTakeover.ini.v1) et remplacé.
+  Si Windows refuse d'exécuter le script, ouvrez PowerShell dans ce dossier et tapez :
+      powershell -ExecutionPolicy Bypass -File .\Installer-ReplayTakeover.ps1
+  Si le jeu n'est pas trouvé :
+      powershell -ExecutionPolicy Bypass -File .\Installer-ReplayTakeover.ps1 -GameDirectory "D:\...\Dead or Alive 5 Last Round"
+
+Méthode B — à la main
+  Copiez les deux fichiers du dossier « Dossier du jeu - Game folder » :
+      DOA5LR-ReplayTakeover.asi
+      DOA5LR-ReplayTakeover.ini
+  dans le dossier du jeu, à côté de game.exe (dans Steam : clic droit sur le jeu >
+  Gérer > Parcourir les fichiers locaux). Remplacez aussi le .ini si vous veniez d'une
+  version antérieure.
+
+Vérification : lancez le jeu, attendez le menu principal, puis ouvrez le fichier
+DOA5LR-ReplayTakeover.log (dossier du jeu). Il doit contenir :
+    Points d accroche : lecteur oui, manettes oui, boucle du combat oui, affichage oui, points de controle oui.
+    Decor : remis a neuf par le jeu au retour si un objet a ete casse (reconstruction de la scene).
+
+
+5. RÉGLAGES (facultatif) — DOA5LR-ReplayTakeover.ini
+----------------------------------------------------
+    Enabled=1                0 = module désactivé sans le désinstaller
+    SkipPresent=1            0 = retour de secours fluide mais plus lent
+    ChoixJoueur=1            0 = pas de fenêtre P1/P2 (toujours le dernier joueur choisi)
+    BoutonPrise=0x4000       prendre la main (L2)
+    BoutonRetour=0x200       revenir au point en gardant la main (Select)
+    BoutonRendre=0x100       revenir au point et rendre la main (Start)
+    BoutonRetourExact=0x400  revenir au point avec le décor reconstruit (L3)
+    PasRattrapage=10         retour de secours : pas de simulation par image (1 à 16)
+    JournalBoutons=0         1 = noter chaque bouton dans le journal (voir section 7)
+Codes mesurés avec une manette PlayStation :
+    L2=0x4000  R2=0x8000  Select=0x200  Start=0x100  L3=0x400  Carré=0x40
+Enregistrez ce fichier en ANSI / ASCII, jamais en « UTF-8 avec BOM » : sinon le
+module ne voit plus ses réglages (le Bloc-notes de Windows convient).
+
+
+6. DÉSINSTALLATION
+------------------
+Jeu fermé, supprimez du dossier du jeu :
+    DOA5LR-ReplayTakeover.asi
+    DOA5LR-ReplayTakeover.ini
+    DOA5LR-ReplayTakeover.log
+ou lancez :
+    powershell -ExecutionPolicy Bypass -File .\Installer-ReplayTakeover.ps1 -Action Remove
+Laissez l'ASI Loader en place si d'autres mods s'en servent.
+
+
+7. LIMITES CONNUES ET DÉPANNAGE
+-------------------------------
+- Un joueur piloté par l'ordinateur (CPU) dans le replay ne peut pas être repris
+  (grisé dans la fenêtre) : son IA est recalculée à chaque lecture.
+- Replays en ligne et combats en tag : non testés.
+- Décor : validé en détail sur HOME seulement (voir section 2).
+
+Rien ne se passe, pas de fichier .log
+    L'ASI Loader n'est pas installé (ou pas en 32 bits), ou le .asi n'est pas à côté
+    de game.exe.
+« REFUS : empreinte de game.exe differente »
+    Votre game.exe n'est pas la version attendue : le module reste inactif par sécurité.
+« Desactive par configuration »
+    Enabled=0 dans le .ini, ou le .ini a été enregistré avec un BOM (voir section 5).
+« points de controle non » ou « REFUS de la reconstruction de la scene »
+    Le module fonctionne, mais certains retours passent par le retour de secours.
+La fenêtre P1/P2 ne s'affiche pas
+    Envoyez le journal : il indique si la fenêtre a été dessinée.
+Les boutons ne réagissent pas (autre manette)
+    Mettez JournalBoutons=1, lancez le jeu, appuyez plusieurs fois, seul, sur le bouton
+    voulu, puis lisez son code « maintenu » dans DOA5LR-ReplayTakeover.log et reportez-le
+    dans le réglage voulu. Remettez ensuite JournalBoutons=0. Les touches F5 / F6 / F7 du
+    clavier marchent dans tous les cas.
+Le jeu plante
+    Envoyez DOA5LR-ReplayTakeover.log et, s'il existe, le dernier fichier
+    game.exe.*.dmp de %LOCALAPPDATA%\CrashDumps.
+
+
+REMERCIEMENTS
+-------------
+Snow (@FgcSnow) : tests des objets cassables, sécurité « décor modifié », correctif
+des joueurs humains après un redémarrage.
