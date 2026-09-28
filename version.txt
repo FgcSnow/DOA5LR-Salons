@@ -1,9 +1,11 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
-version=0.3.11
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.11/DOA5LR-Salons-0.3.11.zip
-sha256=0f43be109e04fdd84446853d9aa579b56feebf8864f350eb62d2f44c2c08d59a
-size=6756961
-notes=pack 0.3.11: Replay Takeover 2.5 (by BonuStage & FGCsnow) - take control of P1/P2 in any replay and rewind; installer check box, on by default
+version=0.3.12
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.12/DOA5LR-Salons-0.3.12.zip
+sha256=b41efba380e26c22eeaff03a8177db3c4452799fc9edfa97fb9c4eb433bb9be8
+size=6767483
+notes=pack 0.3.12: fixes crashes in lobbies with Replay Takeover - version 2.6 sleeps completely while you are online
+note=0.3.12: after 0.3.11 some players crashed while browsing lobbies or creating a room. Replay Takeover 2.5 kept hooks in the game's memory and frame code active everywhere, lobbies included. Replay Takeover 2.6 goes fully to sleep while you are online (lobby list, rooms, online matches, spectating): the game runs untouched and F5/F6/F7 are left to other mods (F7 = copy the room link). Offline replays work exactly as before.
+note=0.3.12: every other file is byte-identical to 0.3.11 (installer 1.3.2 unchanged, your check box choices are kept).
 note=0.3.11: Replay Takeover 2.5: while a replay plays, L2 (or F5) takes control of P1 or P2; Select jumps back instantly to that moment and keeps control, Start jumps back and gives control back, L3 (or F7) jumps back with the stage rebuilt. Broken walls, tables and benches come back. Guide: scripts\REPLAY-TAKEOVER-EN.txt.
 note=0.3.11: installer 1.3.2 adds a Replay Takeover check box (on by default; untick it to leave the mod out, your .ini is kept). It installs next to game.exe like its own installer: a copy installed by hand is updated to 2.5 and its settings are kept. It writes a local DOA5LR-ReplayTakeover.log next to the game and sends nothing.
 note=0.3.11: every other file is byte-identical to 0.3.10.
@@ -22,7 +24,7 @@ note=Source/signature scope: Lobby 0.9.0 is an unsigned external binary whose so
 note=0.3.8: the installer (1.1.0) now has check boxes: Borderless and 60fps-menus can be left out (their files are not installed, or removed if they were; your .ini settings are kept). Lobby, Steam invites, the wired/Wi-Fi tag, the controller fix and the update check are always installed. Your choice is remembered for every future update.
 note=0.3.8: WiFi-Wired-Detector 0.8.8: the LinkOverride=1 setting (declare yourself wired) is gone; the tag comes from your real adapter (LinkOverride=2 = force wireless still exists). The plugin is part of the pack on purpose: the tag is only worth something if every player shows it.
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.11/DOA5LR-Salons-Installer.exe
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.12/DOA5LR-Salons-Installer.exe
 installer_version=1.3.2
 installer_sha256=eacd9d62da22997a7082b5f19e3a7217d9b9b577c3e2bbe2781ca4639643dfd6
 keep=*.ini
