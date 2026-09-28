@@ -826,7 +826,6 @@ static DWORD WINAPI Keys(void*) {
     for(;;) {
         Sleep(40);
         InstallUpdateWrapper();
-        CheckGameDevice();
         {   // 2.6 : veille en ligne ; F5/F6/F7 laisses aux autres mods (F7 = lien du salon, JoinFix)
             static bool wasOnline=false; const bool on=Online();
             if(on!=wasOnline) {
@@ -837,6 +836,7 @@ static DWORD WINAPI Keys(void*) {
             }
             if(on) {f5=f6=fl=fr=fe=fx=false; continue;}
         }
+        CheckGameDevice();                                   // 2.6 : hors ligne seulement (aucune ecriture en ligne)
         { static bool f7=false; const bool n7=(GetAsyncKeyState(VK_F7)&0x8000)!=0;
           if(n7&&!f7&&g_takeSlot>=0) ActionPrimary("F7",true); f7=n7; }
         if(g_selecting) {
