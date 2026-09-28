@@ -1,4 +1,4 @@
-﻿DOA5LR REPLAY TAKEOVER 2.5 — reprise en main d'un replay
+﻿DOA5LR REPLAY TAKEOVER 2.6 — reprise en main d'un replay
 ==========================================================
 (English version: README.txt)
 
@@ -15,6 +15,9 @@ n'est modifié, et le retirer rend le jeu exactement à son état d'origine.
 
 NOUVEAUTÉS
 ----------
+2.6  En veille pendant le jeu en ligne (salon, recherche, match, spectateur) : aucune accroche
+     active, F5/F6/F7 laissées aux autres mods (F7 = copier le lien du salon). Vise des
+     plantages en salon signalés avec la 2.5. Replays et hors ligne inchangés.
 2.5  Objets remis correctement au retour : une table cassée revient visible (le décor est
      reconstruit dès que l'état des objets cassables a changé), la dernière casse n'est
      plus rejouée par la scène après un retour, et le retour accéléré de secours suit les

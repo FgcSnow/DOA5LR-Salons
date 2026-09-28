@@ -1,4 +1,4 @@
-﻿DOA5LR REPLAY TAKEOVER 2.5 — take control of a replay
+﻿DOA5LR REPLAY TAKEOVER 2.6 — take control of a replay
 =======================================================
 (Version française : LISEZ-MOI.txt)
 
@@ -15,6 +15,9 @@ removing it leaves the game exactly as it was.
 
 WHAT'S NEW
 ----------
+2.6  Sleeps while you are online (lobby, room search, online match, spectating): no hook is
+     active and F5/F6/F7 are left to other mods (F7 = copy the room link). Aimed at crashes some
+     players had in lobbies with 2.5. Replays and offline play are unchanged.
 2.5  Objects restored properly on the jump back: a broken table comes back visible (the stage
      is rebuilt as soon as the breakables' state has changed), the last break is no longer
      replayed by the stage after a jump back, and the fallback fast catch-up follows breaks

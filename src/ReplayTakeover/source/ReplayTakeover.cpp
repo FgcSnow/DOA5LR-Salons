@@ -145,6 +145,14 @@ static DWORD ReplayMode() {
     return obj?*reinterpret_cast<DWORD*>(static_cast<BYTE*>(obj)+8):0;
 }
 static bool ReplayPlaying() { const DWORD m=ReplayMode(); return m==2u||m==4u; }
+// 2.6 : en ligne (salon, recherche, match, spectateur), le module se met en veille : aucune
+// accroche ne note, n'echange d'adresse de retour ni n'agit. Plantages en salon signales avec
+// la 2.5 (28/09, game.exe+0x85BFC1). Meme porte que le 60fps-menus 0.13c, validee en salon :
+// lecteur reseau [0xF8F208] (type 1 = match a 2, 5 = salon a 3+) ou objet Online::Matching
+// [0xF81898+4], NULL hors ligne. Il n'y a pas de replay en ligne : rien n'est perdu.
+constexpr DWORD RVA_NET_READER=0xF8F208, RVA_MATCHING=0xF8189C;
+static bool Online() { return g_base&&(Read(g_base+RVA_NET_READER)||Read(g_base+RVA_MATCHING)); }
+static volatile LONG g_onlineSkips=0, g_onlineLeaks=0;   // accroches traversees en veille / actions vues en ligne (doit rester 0)
 static DWORD PlayerFrame() { BYTE* o=g_player; return o?*reinterpret_cast<DWORD*>(o+0x2C):0xFFFFFFFFu; }
 static bool CatchingUp() { return g_rewindTarget>=0&&!g_rewindPending; }
 static DWORD& At(DWORD rva) { return *reinterpret_cast<DWORD*>(g_base+rva); }
@@ -231,6 +239,7 @@ static void ActionRelease(const char* from) {
 // ---- lecteur de replay : injection de la manette et detection de l arrivee -------
 static void __cdecl OnFed() {
     if(!g_base) return;
+    if(Online()) {InterlockedIncrement(&g_onlineLeaks); return;}   // pas de replay en ligne
     const LONG target=g_rewindTarget;
     if(target>=0&&!g_rewindPending&&!g_restartAsked) {
         const LONG f=static_cast<LONG>(PlayerFrame());
@@ -304,7 +313,7 @@ static void __cdecl OnPollEnter() {
     if(g_blanked&&g_base) {memcpy(g_base+RVA_DEVICES,g_live,DEVICES_BYTES); g_blanked=false;}
 }
 static void __cdecl OnPollExit() {
-    if(!g_base) return;
+    if(!g_base||Online()) return;
     BYTE* dev=g_base+RVA_DEVICES;
     memcpy(g_live,dev,DEVICES_BYTES);
     DWORD pressed=0,held=0;
@@ -375,6 +384,7 @@ constexpr DWORD RVA_FREEZE=0x313010, RVA_UNFREEZE=0x313030, RVA_FROZEN=0x10879B1
 static DWORD g_humanFlags[2]; static bool g_humanValid=false;
 static void __cdecl OnFightFrame() {
     if(!g_base) return;
+    if(Online()) {g_humanValid=false; InterlockedIncrement(&g_onlineSkips); return;}
     if(!ReplayPlaying()) g_humanValid=false;
     else if(!g_humanValid&&g_rewindTarget<0&&!g_restartAsked) {
         g_humanFlags[0]=At(RVA_PLAYERS); g_humanFlags[1]=At(RVA_PLAYERS+0x6C8); g_humanValid=true;
@@ -497,6 +507,7 @@ static void PlanTicks() {
     InterlockedExchange(&g_extraTicks,extra);
 }
 static void __cdecl UpdateWrapper() {
+    if(Online()) {InterlockedExchange(&g_extraTicks,0); g_origUpdate(); PaceControl(false); return;}
     PlanTicks();
     InterlockedExchange(&g_stepInUpdate,0);
     g_origUpdate();
@@ -669,6 +680,7 @@ static BYTE* g_fightFrameFn=nullptr;
 typedef void(__cdecl* SceneFrameFn)(float);
 static bool g_sceneFrameOk=false;
 static void __cdecl FrameEnd() {
+    if(Online()) {InterlockedIncrement(&g_onlineSkips); return;}
     cp::Frontier(g_player);
     const LONG step=InterlockedIncrement(&g_stepInUpdate);
     if(g_sceneFrameOk && g_extraTicks>0 && step<1+g_extraTicks)
@@ -695,7 +707,7 @@ static __declspec(naked) void FightEndThunk() {
 }
 // Physique secondaire : mise a jour 0x0C64D0 (thiscall), ecx = objet.
 static BYTE* g_resumePhysics=nullptr;
-static void __cdecl PhysicsSeen(DWORD object) {cp::NotePhysics(object);}
+static void __cdecl PhysicsSeen(DWORD object) {if(!Online()) cp::NotePhysics(object);}
 static __declspec(naked) void PhysicsThunk() {
     __asm {
         pushfd
@@ -714,7 +726,7 @@ static __declspec(naked) void PhysicsThunk() {
 }
 // Composants serialisables du decor : 0x59EC00 (chargement) et 0x59ED20 (sauvegarde).
 static BYTE *g_resumeComponentLoad=nullptr,*g_resumeComponentSave=nullptr;
-static void __cdecl ComponentSeen(DWORD component) {cp::NoteComponent(component);}
+static void __cdecl ComponentSeen(DWORD component) {if(!Online()) cp::NoteComponent(component);}
 static __declspec(naked) void ComponentLoadThunk() {
     __asm {
         pushfd
@@ -750,7 +762,7 @@ static __declspec(naked) void ComponentSaveThunk() {
 // contre un relais (pile par fil) qui note (resultat, 1er argument) puis rend la main.
 static __declspec(thread) DWORD g_allocReturns[16],g_allocSizes[16]; static __declspec(thread) int g_allocDepth;
 static DWORD __cdecl AllocationEnter(DWORD ret,DWORD arg) {
-    if(g_allocDepth>=16) return 0;
+    if(g_allocDepth>=16||Online()) return 0;             // 2.6 : en ligne, l adresse de retour n est pas touchee
     g_allocReturns[g_allocDepth]=ret; g_allocSizes[g_allocDepth]=arg; ++g_allocDepth; return 1;
 }
 static DWORD __cdecl AllocationLeave(DWORD result) {
@@ -815,6 +827,16 @@ static DWORD WINAPI Keys(void*) {
         Sleep(40);
         InstallUpdateWrapper();
         CheckGameDevice();
+        {   // 2.6 : veille en ligne ; F5/F6/F7 laisses aux autres mods (F7 = lien du salon, JoinFix)
+            static bool wasOnline=false; const bool on=Online();
+            if(on!=wasOnline) {
+                char l[200];
+                if(on) sprintf_s(l,"En ligne : module en veille (aucune accroche active, touches F5/F6/F7 ignorees).");
+                else sprintf_s(l,"Hors ligne : module actif (%ld passages en veille, %ld actions de replay vues en ligne).",g_onlineSkips,g_onlineLeaks);
+                Log(l); wasOnline=on;
+            }
+            if(on) {f5=f6=fl=fr=fe=fx=false; continue;}
+        }
         { static bool f7=false; const bool n7=(GetAsyncKeyState(VK_F7)&0x8000)!=0;
           if(n7&&!f7&&g_takeSlot>=0) ActionPrimary("F7",true); f7=n7; }
         if(g_selecting) {
@@ -863,7 +885,7 @@ static DWORD WINAPI Worker(void*) {
     strcpy_s(g_root,gamePath); char* s=strrchr(g_root,'\\'); if(!s) return 0; s[1]=0;
     sprintf_s(g_logPath,"%sDOA5LR-ReplayTakeover.log",g_root);
     { FILE* f=nullptr; if(!fopen_s(&f,g_logPath,"w")&&f) fclose(f); }   // journal neuf a chaque lancement
-    Log("=== DOA5LR Replay Takeover 2.5 : tout se fait en memoire, aucun fichier du jeu n est modifie. ===");
+    Log("=== DOA5LR Replay Takeover 2.6 : tout se fait en memoire, aucun fichier du jeu n est modifie. ===");
 
     char ini[MAX_PATH]; sprintf_s(ini,"%sDOA5LR-ReplayTakeover.ini",g_root);
     if(!GetPrivateProfileIntA("ReplayTakeover","Enabled",1,ini)) {Log("Desactive par configuration."); return 0;}
