@@ -1,8 +1,12 @@
-# DOA5LR-Salons 0.3.11 — Rooms, controls, installation and updates
+# DOA5LR-Salons 0.3.12 — Rooms, controls, installation and updates
 
-## What's new in 0.3.11
+## What's new in 0.3.12
 
-**Replay Takeover 2.5 (by BonuStage & FGCsnow) is now part of the pack.** While a replay plays, press **L2** (or F5) to take control of P1 or P2, then **Select** to jump back instantly to that moment and try again as many times as you want. Broken walls, tables and benches come back. **Start** jumps back and gives control back to the replay; **L3** (or F7) jumps back with the stage rebuilt. It only acts during replays.
+**Fix: crashes in lobbies with Replay Takeover.** After 0.3.11, some players crashed while browsing lobbies or creating a room; going back to 0.3.10 stopped it. Replay Takeover 2.5 kept some of its hooks in the game's memory and frame code active everywhere, lobbies included, even though it only works in replays. **Replay Takeover 2.6** now goes fully to sleep while you are online (lobby list, rooms, online matches, spectating): every hook lets the game run untouched, and F5/F6/F7 are left to the other mods (F7 = copy the room link). Offline replays work exactly as before. Tested in a real lobby session by the player who had the crashes (log: 0 replay actions seen online). Every other pack file is identical to 0.3.11. Details: [0.3.12 release notes](RELEASE-NOTES-0.3.12.md).
+
+## Since 0.3.11
+
+**Replay Takeover (by BonuStage & FGCsnow) is now part of the pack.** While a replay plays, press **L2** (or F5) to take control of P1 or P2, then **Select** to jump back instantly to that moment and try again as many times as you want. Broken walls, tables and benches come back. **Start** jumps back and gives control back to the replay; **L3** (or F7) jumps back with the stage rebuilt. It only acts during replays.
 
 It is an **installer check box, on by default** (Installer 1.3.2): untick "Replay Takeover" to leave it out. It installs next to `game.exe` (`DOA5LR-ReplayTakeover.asi` and `.ini`), like its own installer, so a copy you installed by hand is simply updated and your `DOA5LR-ReplayTakeover.ini` is kept. It writes a local `DOA5LR-ReplayTakeover.log` next to the game (for crash reports) and sends nothing. Full guide: `scripts/REPLAY-TAKEOVER-EN.txt`; source in `scripts/ReplayTakeover-Source`. Every other pack file is identical to 0.3.10. Details: [0.3.11 release notes](RELEASE-NOTES-0.3.11.md).
 
@@ -26,14 +30,14 @@ The existing optional Borderless and offline 60 fps features remain available. U
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.11/DOA5LR-Salons-Installer.exe) and open it |
+| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.12/DOA5LR-Salons-Installer.exe) and open it |
 | Portable controls app (unchanged since 0.3.9) | First use of the app on an existing compatible pack | Download the [portable ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip), extract its complete `InputLab` folder to a new folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
 The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
 
 **If InputLab is already installed or active, update through the pack installer.** Do not extract a new full pack or portable app over your existing InputLab folder. That can overwrite profiles and default INIs, or replace runtime files without preserving the recorded module state. Keep your profiles and both kinds of backup.
 
-The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8, 0.3.9, 0.3.10 or 0.3.11)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
+The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8, 0.3.9, 0.3.10, 0.3.11 or 0.3.12)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
 
 ## Install or update the pack
 
@@ -43,7 +47,7 @@ The portable remapping module requires **the verified DOA5LR-Salons input setup 
 4. Open **Keyboard / controller**. This button works even with the experimental component unchecked.
 5. Choose a mode and use **Play via Steam** when ready to play.
 
-**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.11 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.11/DOA5LR-Salons-0.3.11.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
+**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.12 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.12/DOA5LR-Salons-0.3.12.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
 
 For every upgrade, including from 0.3.8 or 0.3.9, use the installer to keep personal INIs, saved input choices and module backups. Do not overwrite custom INIs with archive defaults.
 
