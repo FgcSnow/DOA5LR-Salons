@@ -1,0 +1,39 @@
+DOA5LR-Salons - DANGER ZONE + THE CRIMSON 1 & 2 (PS4 stages)
+=============================================================
+
+WHAT
+- Danger Zone, The Crimson 1 and The Crimson 2 (PS4 versions) are added to DOA5LR PC.
+- Pick them by hand in the stage select (proper thumbnails; Crimson 1 and 2 share one slot,
+  switch the variant in Solo), or tick them in the game's Random filter (three check boxes).
+- Offline and online. The original stages are all still there.
+
+ONLINE
+- EVERYONE in the room (players AND spectators) needs the maps: update to 0.3.13 or later.
+
+INSTALL / REMOVE
+- Installer check box "Maps", on by default. Untick it and click Update/Reinstall to leave the
+  maps out: their files are removed, your .ini settings are kept. Tick it again to get them back.
+- The installer's "Restore backup" also brings back the files from before an update.
+
+AUTOLINK (costume mods)
+- Works with the maps. Only put character folders inside AutoLink (AYANE, KASUMI...) plus
+  _Movie, _Texture, _Sound, _Stages. Modding tools stored in AutoLink (_Modding) made a tester's
+  game crash after the first fight; after moving them out, no more crashes.
+
+IF IT CRASHES OR FREEZES
+- Open DOA5LR-Diagnostic\DOA5LR Diagnostic.cmd and click "Send my logs" (if the game is frozen,
+  click it BEFORE closing the game). You see the content of the ZIP; nothing is sent unless you
+  confirm. Keep the ".dmp" box ticked: it shows where the game crashed.
+- "Play (with the probe)" starts the game with a small read-only observer that records the stage,
+  fight and how the game exited. "Detailed crash reports" (optional, admin rights once) makes
+  Windows keep a .dmp when the game crashes.
+- Never sent: IP, SteamID, chat, controller inputs, saves. The .dmp holds a piece of the game's
+  memory and may include your Steam name (untick it if you prefer).
+
+FILES
+- DOA5LR-DangerZone / DNZ-* / Crimson* / ExtraStages / RandomStages / DebugArchive .asi (+ .ini)
+  next to game.exe, stage data in CodexDangerZone, CodexCrimson and PS4Stages.
+- These modules write local logs next to the game (DOA5LR-Crimson-VFX.log, ...). The Diagnostic
+  tool resets the Crimson effects log when it goes over 20 MB.
+
+Stages ported by FGCsnow & the DOA5LR community mod team.

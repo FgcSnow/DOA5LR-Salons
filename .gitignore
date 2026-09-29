@@ -13,6 +13,8 @@ src/**/test/optional-runtime/run-*/
 preview-output/
 src/**/test/keyboard-startup-*/
 
+# Discord webhook of the log button: shipped in the release ZIP, never committed
+src/Diagnostic/envoi-logs.txt
 # personal / local files (never shared)
 CLAUDE.local.md
 .claude/settings.local.json

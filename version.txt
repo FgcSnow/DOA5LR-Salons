@@ -1,9 +1,15 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
-version=0.3.12
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.12/DOA5LR-Salons-0.3.12.zip
-sha256=b41efba380e26c22eeaff03a8177db3c4452799fc9edfa97fb9c4eb433bb9be8
-size=6767483
-notes=pack 0.3.12: fixes crashes in lobbies with Replay Takeover - version 2.6 sleeps completely while you are online
+version=0.3.13
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.13/DOA5LR-Salons-0.3.13.zip
+sha256=33e58048085a6da515c599545742be2192aea7fd99f50fb75fa738f6e5dd3875
+size=266604222
+notes=pack 0.3.13: new stages Danger Zone + The Crimson 1 & 2 (PS4), offline and online, Random included - installer check box on by default; everyone in a room needs them
+note=0.3.13: Danger Zone, The Crimson 1 and The Crimson 2 (PS4 versions): pick them by hand with proper thumbnails or tick them in the game's Random filter (three new check boxes). Offline and online; the original stages stay.
+note=0.3.13: ONLINE, EVERYONE IN THE ROOM (players and spectators) NEEDS THE MAPS: update before joining rooms that use them. Installer 1.3.3 adds a Maps check box, on by default (untick it to leave them out; your .ini settings are kept).
+note=0.3.13: AutoLink costumes work with the maps, but only put character folders inside AutoLink (+ _Movie, _Texture, _Sound, _Stages): modding tools stored in AutoLink\_Modding made a tester crash after the first fight.
+note=0.3.13: new DOA5LR-Diagnostic tool (DOA5LR-Diagnostic\DOA5LR Diagnostic.cmd): checks maps, lobby modules and AutoLink, plays with a read-only probe, and 'Send my logs' sends a ZIP to FGCsnow's Discord ONLY after you confirm (no IP, SteamID, chat or inputs). The maps modules write local logs next to the game for crash reports.
+note=0.3.13: the installer now also checks JoinFix and the main maps modules; if an antivirus removed one, it offers the repair when you close the game. The download is bigger (about 270 MB) because it contains the stages.
+note=0.3.13: pre-release testers (dz-crimson-test-r4/r5): do not use its 'Remove the maps' button any more, untick Maps in the installer instead. Every other file is byte-identical to 0.3.12.
 note=0.3.12: after 0.3.11 some players crashed while browsing lobbies or creating a room. Replay Takeover 2.5 kept hooks in the game's memory and frame code active everywhere, lobbies included. Replay Takeover 2.6 goes fully to sleep while you are online (lobby list, rooms, online matches, spectating): the game runs untouched and F5/F6/F7 are left to other mods (F7 = copy the room link). Offline replays work exactly as before.
 note=0.3.12: every other file is byte-identical to 0.3.11 (installer 1.3.2 unchanged, your check box choices are kept).
 note=0.3.11: Replay Takeover 2.5: while a replay plays, L2 (or F5) takes control of P1 or P2; Select jumps back instantly to that moment and keeps control, Start jumps back and gives control back, L3 (or F7) jumps back with the stage rebuilt. Broken walls, tables and benches come back. Guide: scripts\REPLAY-TAKEOVER-EN.txt.
@@ -24,18 +30,20 @@ note=Source/signature scope: Lobby 0.9.0 is an unsigned external binary whose so
 note=0.3.8: the installer (1.1.0) now has check boxes: Borderless and 60fps-menus can be left out (their files are not installed, or removed if they were; your .ini settings are kept). Lobby, Steam invites, the wired/Wi-Fi tag, the controller fix and the update check are always installed. Your choice is remembered for every future update.
 note=0.3.8: WiFi-Wired-Detector 0.8.8: the LinkOverride=1 setting (declare yourself wired) is gone; the tag comes from your real adapter (LinkOverride=2 = force wireless still exists). The plugin is part of the pack on purpose: the tag is only worth something if every player shows it.
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.12/DOA5LR-Salons-Installer.exe
-installer_version=1.3.2
-installer_sha256=eacd9d62da22997a7082b5f19e3a7217d9b9b577c3e2bbe2781ca4639643dfd6
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.13/DOA5LR-Salons-Installer.exe
+installer_version=1.3.3
+installer_sha256=485b34afda6ec85f07227b8f9b956852c7246dab4216192eb25316e7b04f0b2c
 keep=*.ini
 optional=borderless|Borderless fullscreen window (F11 in game; display mode below)|scripts\DOA5LR-Borderless.asi;scripts\DOA5LR-Borderless.ini;scripts\BORDERLESS-EN.txt;scripts\Borderless-Source\*
 optional=60fps|60 fps menus, intros, win poses and Story cutscenes (offline only)|scripts\DOA5LR-60fps-menus.asi;scripts\DOA5LR-60fps-menus.ini;scripts\60FPS-EN.txt;scripts\60fps-Source\*
 optional_v2=inputlab|Experimental in-game keyboard remapping (settings app always available)|DOA5LR-InputBridge-Xidi.dll;DOA5LR-InputBridge.ini;DOA5LR-ControllerProfiles.ini;DOA5LR-Companion.exe
 optional_v3=replaytakeover|Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)|DOA5LR-ReplayTakeover.asi;DOA5LR-ReplayTakeover.ini;scripts\REPLAY-TAKEOVER-EN.txt;scripts\ReplayTakeover-Source\*
+optional_v4=maps|Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)|DOA5LR-Crimson.asi;DOA5LR-Crimson-Audio.asi;DOA5LR-Crimson-Audio.ini;DOA5LR-Crimson-BackendProbe.asi;DOA5LR-Crimson-EventLog.asi;DOA5LR-Crimson-VFX.asi;DOA5LR-Crimson-VFX.ini;DOA5LR-DangerZone.asi;DOA5LR-DangerZone.ini;DOA5LR-DebugArchive.asi;DOA5LR-DNZ-Complete.asi;DOA5LR-DNZ-Complete.ini;DOA5LR-DNZ-Name.asi;DOA5LR-DNZ-Preview.asi;DOA5LR-DNZ-SharedAudio.asi;DOA5LR-DNZ-SharedAudio.ini;DOA5LR-DNZ-Thumbnail.asi;DOA5LR-ExtraStages.asi;DOA5LR-ExtraStages.ini;DOA5LR-RandomStages.asi;DOA5LR-RandomStages.ini;CodexCrimson\*;CodexDangerZone\*;PS4Stages\*;scripts\MAPS-DZ-CRIMSON-EN.txt
 move=DOA5LR-60fps-menus.ini|scripts\DOA5LR-60fps-menus.ini
 move=DOA5LR-Borderless.ini|scripts\DOA5LR-Borderless.ini
 move=DOA5LR-UpdateCheck.ini|scripts\DOA5LR-UpdateCheck.ini
 move=DOA5LR-WiFi-Wired-Detector.ini|scripts\DOA5LR-WiFi-Wired-Detector.ini
+delete=DOA5LR-DNZ-Menu.asi
 delete=60FPS-EN.txt
 delete=BORDERLESS-EN.txt
 delete=CONTROLLER-FIX-EN.txt
