@@ -1,0 +1,22 @@
+[
+  {
+    "path": "scripts/DOA5LR-Lobby.asi",
+    "sha256": "559b409e9deb011f5c51ec0bf82f737d33317fadd9b2372de05c327cb0ed76ff"
+  },
+  {
+    "path": "scripts/DOA5LR-JoinFix.asi",
+    "sha256": "e8befe93cca7928407d3a41a9afa64abbd7f18c222da9cd1530562f894de7ed3"
+  },
+  {
+    "path": "scripts/DOA5LR-InviteFix.asi",
+    "sha256": "e3c61f4bc4285e27cce2026058c8038cfeec21b480ead510a17dc753eefb2fb5"
+  },
+  {
+    "path": "scripts/DOA5LR-WiFi-Wired-Detector.asi",
+    "sha256": "08dbc3782391f3dc4e226059ad1a96c9825d992a28b620e76a293841fce3aec9"
+  },
+  {
+    "path": "scripts/DOA5LR-UpdateCheck.asi",
+    "sha256": "36968253124fecd7334912e0fefa1f74d8d7752c6285a34c90ade0f48caa5bd0"
+  }
+]

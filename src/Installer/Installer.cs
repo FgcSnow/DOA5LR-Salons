@@ -1,4 +1,4 @@
-// DOA5LR-Salons Installer / Updater — single-file WinForms app, .NET Framework 4.8 (built with the csc.exe shipped in Windows).
+﻿// DOA5LR-Salons Installer / Updater — single-file WinForms app, .NET Framework 4.8 (built with the csc.exe shipped in Windows).
 // Community Mod Pack by FGCsnow & BonuStage. Original Auto Installer concept by BRG Hades.
 //
 // What it does:
@@ -25,6 +25,7 @@
 //                                       removed if present; choice saved in DOA5LR-Salons-Components.txt and reused by --update)
 //   optional_v2=id|label|glob;glob...  (1.3.1: same validation; older installers ignore this key and can self-update first)
 //   optional_v3=id|label|glob;glob...  (1.3.2: Replay Takeover; 1.3.1 ignores this key and self-updates first)
+//   optional_v4=id|label|glob;glob...  (1.3.3: DZ / Crimson maps; 1.3.2 ignores this key and self-updates first)
 //   file=name|url|fnv32|size            (for Telemetry AutoUpdate, ignored here)
 using System;
 using System.Collections.Generic;
@@ -50,13 +51,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.2.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.2.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.2")]
+[assembly: System.Reflection.AssemblyVersion("1.3.3.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.3.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.3")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.2";
+    public const string AppVersion = "1.3.3";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -90,7 +91,9 @@ static class Cfg
     public static readonly string[] RequiredFiles = {
         "dinput8.dll", "dinput8Hooked.dll", "DInput8.ini", "dinput8ex.bin", "Xidi.32.dll",
         @"scripts\DOA5LR-Lobby.asi", @"scripts\DOA5LR-InviteFix.asi", @"scripts\DOA5LR-Borderless.asi",
-        @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-WiFi-Wired-Detector.asi", @"scripts\DOA5LR-UpdateCheck.asi" };
+        @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-WiFi-Wired-Detector.asi", @"scripts\DOA5LR-UpdateCheck.asi",
+        // 1.3.3 : JoinFix (room join fix) was not checked; maps modules (only when the Maps box is ticked, see Owns())
+        @"scripts\DOA5LR-JoinFix.asi", "DOA5LR-ExtraStages.asi", "DOA5LR-DangerZone.asi", "DOA5LR-Crimson.asi", "DOA5LR-RandomStages.asi" };
     // Files the pack must never contain / the installer must never write (same rule as build_pack.py).
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
 }
@@ -111,7 +114,9 @@ class Component
     // 1.3.2 : replay tool, only active while a replay plays. The game-folder root like its own installer (the plugin reads
     // its .ini next to game.exe), so a copy installed by hand is replaced, never loaded twice. On by default.
     public static readonly Component ReplayTakeover = new Component { Id = "replaytakeover", Label = "Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)", Globs = new[] { "DOA5LR-ReplayTakeover.asi", "DOA5LR-ReplayTakeover.ini", @"scripts\REPLAY-TAKEOVER-EN.txt", @"scripts\ReplayTakeover-Source\*" } };
-    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover }).ToArray();
+    // 1.3.3 : PS4 stages Danger Zone / The Crimson 1-2 (+ Random). On by default: in a room everyone needs the same stages.
+    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
+    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
     {
@@ -175,7 +180,8 @@ class Manifest
                 // for InputLab so 1.1 can parse them before offering its own update.
                 case "optional":
                 case "optional_v2":
-                case "optional_v3": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "optional_v3":
+                case "optional_v4": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");
@@ -253,7 +259,9 @@ static class Util
         var miss = new List<string>();
         var selection = Component.Read(game);
         var left = Component.LeftOut(selection);   // 1.1.0 : a component the player left out is not required
-        try { foreach (var rel in Cfg.RequiredFiles) if (!left.Any(c => c.Owns(rel)) && !File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
+        // 1.3.3 : maps files are only required once a 0.3.13+ manifest lists the Maps component and the box is ticked
+        bool mapsOn = Component.Current.Any(c => c.Id == "maps") && Component.Selected(selection, "maps");
+        try { foreach (var rel in Cfg.RequiredFiles) if (!left.Any(c => c.Owns(rel)) && (mapsOn || !Component.Maps.Owns(rel)) && !File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
         if (Component.Current.Any(c => c.Id == "inputlab"))
             try {
                 var required = Cfg.InputLabAppFiles.AsEnumerable();
@@ -963,7 +971,7 @@ static class DiagnosticBundle
             string version = SmallText(game, Cfg.VersionFile).Trim();
             report.AppendLine("Pack version: " + (Regex.IsMatch(version, @"\A[0-9A-Za-z.+_-]{1,64}\z") ? version : "missing or invalid"));
             string components = SmallText(game, Cfg.ComponentsFile);
-            foreach (string component in new[] { "borderless", "60fps", "inputlab" }) { string value = IniValue(components, null, component); report.AppendLine("Component " + component + ": " + (value == "0" || value == "1" ? value : "not recorded")); }
+            foreach (string component in new[] { "borderless", "60fps", "inputlab", "replaytakeover", "maps" }) { string value = IniValue(components, null, component); report.AppendLine("Component " + component + ": " + (value == "0" || value == "1" ? value : "not recorded")); }
             string mode = IniValue(SmallText(game, "DOA5LR-InputBridge.ini"), "Input", "Mode");
             report.AppendLine("Saved input mode: " + (new[] { "Keyboard", "Controller", "Hybrid" }.Contains(mode, StringComparer.OrdinalIgnoreCase) ? mode : "not recorded") + " (only relevant when inputlab is enabled)");
             report.AppendLine("\r\nExisting logs (up to the last 2 MiB each):");
@@ -1012,7 +1020,7 @@ class MainForm : Form
     {
         this.updateMode = updateMode; this.playMode = playMode && !updateMode;
         Text = Cfg.PackName + " Installer " + Cfg.AppVersion; BackColor = BG; ForeColor = TXT;
-        Font = new Font("Segoe UI", 10f); ClientSize = new Size(760, 870); StartPosition = FormStartPosition.CenterScreen;
+        Font = new Font("Segoe UI", 10f); ClientSize = new Size(760, 896); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
         AutoScaleMode = AutoScaleMode.Dpi; AutoScaleDimensions = new SizeF(96f, 96f);
         try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
@@ -1063,31 +1071,31 @@ class MainForm : Form
         lblCompSub = L("Always installed: Lobby, invites, network tag, Xidi, updater.", x + 140, 384, w - 140, 9f, false, DIM);
         BuildComponents();
 
-        btnMain = B("CHECKING…", x, 526, w, 56, RED, async (s, e) => await MainAction(), true);
-        bar = new ProgressBar { Left = x, Top = 592, Width = w, Height = 8, Style = ProgressBarStyle.Continuous, Visible = false }; Controls.Add(bar);
-        lblStatus = L("", x, 606, w, 9.5f, false, DIM);
+        btnMain = B("CHECKING…", x, 552, w, 56, RED, async (s, e) => await MainAction(), true);
+        bar = new ProgressBar { Left = x, Top = 618, Width = w, Height = 8, Style = ProgressBarStyle.Continuous, Visible = false }; Controls.Add(bar);
+        lblStatus = L("", x, 632, w, 9.5f, false, DIM);
 
-        lblDisplay = L("Display mode", x, 628, 120, 10f, true); lblDisplay.Top = 631;
-        cbDisplay = new ComboBox { Left = x + 120, Top = 628, Width = 360, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = FIELD, ForeColor = TXT, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f) };
+        lblDisplay = L("Display mode", x, 654, 120, 10f, true); lblDisplay.Top = 657;
+        cbDisplay = new ComboBox { Left = x + 120, Top = 654, Width = 360, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = FIELD, ForeColor = TXT, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10f) };
         cbDisplay.Items.AddRange(new object[] { "Fullscreen (game setting)", "Window (with borders)", "Borderless fullscreen (recommended)" });
         cbDisplay.SelectedIndexChanged += (s, e) => { if (!busy && cbDisplay.Enabled && cbDisplay.Tag == null) { try { Util.WriteDisplayMode(game, cbDisplay.SelectedIndex); Status("Display mode: " + cbDisplay.Text + " — applied at the next game launch (F11 in game switches too)."); } catch (Exception ex) { Status("Display mode not saved: " + ex.Message); } } };
         Controls.Add(cbDisplay);
-        btnLaunch = B("▶   LAUNCH GAME", x, 670, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
-        btnShortcut = B("Desktop shortcut", x + 308, 670, 180, 44, BTN, (s, e) => MakeShortcut());   // 1.2.0
-        btnFinder = B("Keyboard / controller", x + 496, 670, 200, 44, BTN, (s, e) => OpenInputSettings());
-        btnRestore = B("Restore backup", x, 726, 150, 40, BTN, async (s, e) => await RestoreAction());
-        btnBackups = B("Backups folder", x + 154, 726, 150, 40, BTN, (s, e) => OpenBackups());
-        btnCheck = B("Check again", x + 308, 726, 130, 40, BTN, async (s, e) => await CheckAsync());
-        btnLog = B("Logs", x + 442, 726, 80, 40, BTN, (s, e) => ShowLogs());
-        btnCredits = B("Credits & Thanks", x + 526, 726, w - 526, 40, BTN, (s, e) => Credits());
+        btnLaunch = B("▶   LAUNCH GAME", x, 696, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
+        btnShortcut = B("Desktop shortcut", x + 308, 696, 180, 44, BTN, (s, e) => MakeShortcut());   // 1.2.0
+        btnFinder = B("Keyboard / controller", x + 496, 696, 200, 44, BTN, (s, e) => OpenInputSettings());
+        btnRestore = B("Restore backup", x, 752, 150, 40, BTN, async (s, e) => await RestoreAction());
+        btnBackups = B("Backups folder", x + 154, 752, 150, 40, BTN, (s, e) => OpenBackups());
+        btnCheck = B("Check again", x + 308, 752, 130, 40, BTN, async (s, e) => await CheckAsync());
+        btnLog = B("Logs", x + 442, 752, 80, 40, BTN, (s, e) => ShowLogs());
+        btnCredits = B("Credits & Thanks", x + 526, 752, w - 526, 40, BTN, (s, e) => Credits());
         if (Cfg.PatreonUrl != "")
         {
             var bp = B("♥  Support us on Patreon", x + w - 230, 44, 230, 36, Color.FromArgb(0xF9, 0x66, 0x54), (s, e) => { try { Process.Start(Cfg.PatreonUrl); } catch { } });
             bp.Font = new Font("Segoe UI", 10f, FontStyle.Bold); bp.BringToFront();
         }
-        L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 786, w, 9f, false, DIM);
-        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 808, w, 9f, false, DIM);
-        L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 834, w, 9f, false, DIM);
+        L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 812, w, 9f, false, DIM);
+        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 834, w, 9f, false, DIM);
+        L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 860, w, 9f, false, DIM);
     }
     // 1.1.0 : one check box per optional component (list = Component.Current, may change once the manifest is read)
     void BuildComponents()

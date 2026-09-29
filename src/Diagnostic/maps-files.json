@@ -1,0 +1,347 @@
+[
+  {
+    "path": "CodexCrimson/CRIMSON1_EFF.TMC",
+    "sha256": "923d958c76709cedd2fbd39f7567325037d619814fb4a135614f97ffbc751fb3",
+    "size": 158416
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1_EFF.TMCL",
+    "sha256": "d5e1d19602c5c459384bd5bcd56cd822b544ba9a31e2be9d919d7be88ce38143",
+    "size": 6050560
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1_EXTRA.CHARDATPC",
+    "sha256": "2db8271ff57c833b5c2036b713fb7baa8a316ebedc00bb6f1e6cb7c542339c03",
+    "size": 700864
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1_EXTRA.TMC",
+    "sha256": "2dca5e46869d010e6a26bcabb77a2529e93d0575aeeeb200914dff6d83d99853",
+    "size": 1118576
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1_EXTRA.TMCL",
+    "sha256": "48150e889059c932ffd78dc7a4d940666f23fba7ad4702d0be950ac7b3e3bbae",
+    "size": 1838592
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.CHARDATPC",
+    "sha256": "38b5c9f82aaebcaa3f9dcd51b95799c966e588bea7ffe8ac3ca8c8baba1cfc1f",
+    "size": 132352
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.CLIP",
+    "sha256": "96eb4aaf60108a029c7ce763e92a29bd84b0b185d2dcc4ec679d66462c403d82",
+    "size": 120832
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.COL10",
+    "sha256": "090b104e9919b9cd59c7d9e397e9b9166db6218c56881235e45fbab1a5a6c382",
+    "size": 20928
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.PHYBIND",
+    "sha256": "fc33e3a34298f46630d8c94826174004c9a0e3c0df783b73c599cde9ff424ae8",
+    "size": 482
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.PHYD",
+    "sha256": "e0cae73afcbabaab1c201e64ecb673db93308e657965bae5f702da0fd82dda7f",
+    "size": 14016
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.SCENEPC",
+    "sha256": "4512d4d520ccad1726b224464834665fafcad67ac010b9de10137e59032a8dd8",
+    "size": 3680
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.TMC",
+    "sha256": "28885f0d1084150352c861f1e00d790351eb4987dcaafbca54c8761234fd0260",
+    "size": 51473616
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.TMCL",
+    "sha256": "cba6fd47fdcb0abf692d352e30fbc07adddc904787d88ac1da3276ff610147cd",
+    "size": 116373376
+  },
+  {
+    "path": "CodexCrimson/CRIMSON1.UNDD",
+    "sha256": "681a8b7b3c1bf8205e38c18d20381f7ce1c1f7bb6d1495657a7da8ceab2aba07",
+    "size": 38640
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2_EFF.TMC",
+    "sha256": "46d84af48f53d23971bb5848301ae3921fb7a60c2148076564e346104af6f276",
+    "size": 348032
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2_EFF.TMCL",
+    "sha256": "2ea6375347a577dcd5f00e6fd88a3f95f707eb8b4a7fd5fe3ffed6e2cf47b33e",
+    "size": 10466944
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2_EXTRA.CHARDATPC",
+    "sha256": "0dc48a525310427e1b5f9d487cd9e7bf63edb9f9a0e2c8fa1b68e6f786888cd0",
+    "size": 588576
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2_EXTRA.TMC",
+    "sha256": "43cbfe0930814c20f7b7f5a37982ca6ad8b5274c93dedcb1f357cff6ba5f3fb2",
+    "size": 961440
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2_EXTRA.TMCL",
+    "sha256": "e07e9e29ccbc119fa368dc392aac27e7b00b6f59167d72e952855831cc1842ce",
+    "size": 1663744
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.CHARDATPC",
+    "sha256": "fba8ff33539c41890cab6630b638d7093d7281ce22a648178b057239036b4bed",
+    "size": 473760
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.CLIP",
+    "sha256": "98736bc3f135706c9f9753d0d1447fdb4ecafcab8216a3ff4b33a40500a1a1db",
+    "size": 120896
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.COL10",
+    "sha256": "415b9cba278d20866aee27398569906bf1531ad94c18addaebfa0d41e982e66e",
+    "size": 20928
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.PHYBIND",
+    "sha256": "507b049a4f5ec77cab0bf250bc6ceef1ed22160884c12ba8462e4a4553c37fd1",
+    "size": 1074
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.PHYD",
+    "sha256": "8c36fba4f5d92078732b97f1b34c08c5fea2938f44533fd59820cccdbac8d079",
+    "size": 31408
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.SCENEPC",
+    "sha256": "2de61eaa732e805aba570f1fa7902d6961f55fafe021b7011ef8ca0dea66c7f4",
+    "size": 3680
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.TMC",
+    "sha256": "44d843a31189989ee2b709bd1cf0f81873e4ea69336585a81e035094547eb52f",
+    "size": 38436352
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.TMCL",
+    "sha256": "ffe540fb73f92ea6b236ebee8e93f6e8777828e729d33d00b3d6569c8be21458",
+    "size": 162566784
+  },
+  {
+    "path": "CodexCrimson/CRIMSON2.UNDD",
+    "sha256": "2390d1d9f3c7ac8c9b9fb6b02a72266397723a919b1de23eaea73a40257a6217",
+    "size": 19584
+  },
+  {
+    "path": "CodexCrimson/CRM-audio-22741.xws",
+    "sha256": "f3fe4dad433a59491284d5a94a12c45147450f2af7e66a6da148037f4c507a91",
+    "size": 3278848
+  },
+  {
+    "path": "CodexCrimson/CRM2-audio-22742.xws",
+    "sha256": "968fe195c0d7a8f5217329fe721fbf610523389b9c4d8b971a698a965011d0f9",
+    "size": 3858432
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE_EFF.TMC",
+    "sha256": "1a52b738a0843f3a6d0e5a6977091b30dfdef29c8ecd6b0ab6e5914f7bd3a377",
+    "size": 470096
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE_EFF.TMCL",
+    "sha256": "2a34316044c4f133bf5d2882f4f8bd0c5220bf41fcb97abd38d35338315bbc72",
+    "size": 4309120
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.CHARDATPC",
+    "sha256": "29fa515a4e27322aba9deb7b83e2d60171aa1115dfafc1caaa7752cfc4ac9bf9",
+    "size": 195104
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.CLIP",
+    "sha256": "7f970ee9ac05bbbd7cf68a3acd97218af87e0d5c843d6d137b1943f9fa927c7b",
+    "size": 8528
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.COL10",
+    "sha256": "4b2b9778800aadfe7527a7e7806cb0d7f6b8a5d575e0839ac96835994d4f8828",
+    "size": 20928
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.PHYD",
+    "sha256": "fbf702bf42332119b2510577f671deb5a5f71cea41be94667ac4d992dfeb7273",
+    "size": 1168
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.SCENEPC",
+    "sha256": "df8e4f3ad7391836d7d6ed4f1836ea317dcac00a7c2d14e31deea6ecd8877707",
+    "size": 3680
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.TMC",
+    "sha256": "925f8fed02a3c11567aef1ebe95213b5584859db496b3cc7bba318dd1111a8ec",
+    "size": 18574624
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.TMCL",
+    "sha256": "093f7af5dd4551c93d89db3c10092aaa67bf44c2a82cffc3147f52a4b8b98dea",
+    "size": 13131904
+  },
+  {
+    "path": "CodexDangerZone/DANGER_ZONE.UNDD",
+    "sha256": "703776d62eb3079aa4e666571cf7663e0231ab7cc8b3e2a41f88e836422813c7",
+    "size": 64928
+  },
+  {
+    "path": "CodexDangerZone/DNZ-ambience.xws",
+    "sha256": "514f335210fa37889931d3cdba099a0021682bb95ff6c6ee82662e86b7071a11",
+    "size": 5214208
+  },
+  {
+    "path": "CodexDangerZone/DNZ-explosions-doa6-adpcm.xws",
+    "sha256": "40778db24117828cf3413a8fa92bdb043553c8a1dba27bb8b88ad522b13d4213",
+    "size": 299008
+  },
+  {
+    "path": "CodexDangerZone/DNZ-explosions-optimized.xws",
+    "sha256": "99100e661984236b516622e1725882705237781cad89334c7d4bb019da9df8f2",
+    "size": 299008
+  },
+  {
+    "path": "CodexDangerZone/DNZ-menu-original-size.textures",
+    "sha256": "bde5183d51e346d59230bab54b39f8b5b13a7725d7f628b0f36cc7b5aa08908a",
+    "size": 5237504
+  },
+  {
+    "path": "CodexDangerZone/DNZ-original-ps4.xws",
+    "sha256": "8c902761e6173a572058aeeeb70710cc754c4ef39a428efd74792ea5b4d724f6",
+    "size": 1478656
+  },
+  {
+    "path": "DOA5LR-Crimson-Audio.asi",
+    "sha256": "803e91e3f8a823f3f446a4c57eb39ff3eaf5c1f8c261c52161ccf6551a8c2b51",
+    "size": 13312
+  },
+  {
+    "path": "DOA5LR-Crimson-Audio.ini",
+    "sha256": "360fb6d341cfdcd0a09771498e75d9a4f13d7bf8c7c955f25d8a5638c6b2b384",
+    "size": 109
+  },
+  {
+    "path": "DOA5LR-Crimson-BackendProbe.asi",
+    "sha256": "3308f20d14fb2941bdfdbd96bd2640000dabd625e3ebfe7a62f9a86128aa4d37",
+    "size": 12800
+  },
+  {
+    "path": "DOA5LR-Crimson-EventLog.asi",
+    "sha256": "b70724196200e20bf197991ead23f091ebdf9a6f282f9affb2f3575b50a181ea",
+    "size": 24064
+  },
+  {
+    "path": "DOA5LR-Crimson-VFX.asi",
+    "sha256": "b6a651486e022205d5c3623c6f12f13ff39ad42e7ae7fd6c56c31037b55cef32",
+    "size": 307200
+  },
+  {
+    "path": "DOA5LR-Crimson-VFX.ini",
+    "sha256": "469bb9ae57eea43b95ed8c0aa8f3e61a31e1e36f4ad293db3731eb58b320ab0f",
+    "size": 855
+  },
+  {
+    "path": "DOA5LR-Crimson.asi",
+    "sha256": "b4d505e76e4600c5d8b3cb0c01f89ba1f900cced594ed82e0c89ea17cfcb74b7",
+    "size": 21504
+  },
+  {
+    "path": "DOA5LR-DangerZone.asi",
+    "sha256": "afcba8892baa5941e4bc053bf7047531d332ef416516c66bdd55f924decd4a6c",
+    "size": 138240
+  },
+  {
+    "path": "DOA5LR-DangerZone.ini",
+    "sha256": "f0c98ddf53ea80d757663122703be93c8015261a1a455b883ab8c85af78ab5c4",
+    "size": 710
+  },
+  {
+    "path": "DOA5LR-DebugArchive.asi",
+    "sha256": "00c05dec59a60960ea39e5fbf54887091d2258de651d86c998e0b2e4a1d7d5e0",
+    "size": 12288
+  },
+  {
+    "path": "DOA5LR-DNZ-Complete.asi",
+    "sha256": "ab3b5dff2ca8644ae8e2166d91502889cd582a6138cd32a04eb32555a391236c",
+    "size": 17408
+  },
+  {
+    "path": "DOA5LR-DNZ-Complete.ini",
+    "sha256": "da5c1575f5392647eff0c936939c5c3fa710d055a90724be61a1ebbf265d92a2",
+    "size": 354
+  },
+  {
+    "path": "DOA5LR-DNZ-Name.asi",
+    "sha256": "7fabc673e3c46175aa7398a1182afb4231646232bc586e6cf0d78cbe07714533",
+    "size": 11776
+  },
+  {
+    "path": "DOA5LR-DNZ-Preview.asi",
+    "sha256": "262ac74476bdf18a2117a8a4411dcb80446637fcd860419ca2c1c23114dba108",
+    "size": 12288
+  },
+  {
+    "path": "DOA5LR-DNZ-SharedAudio.asi",
+    "sha256": "bd838f8b3ca31ff9280bf4851637aba245f72cfc9d3545146d4ee8260c573879",
+    "size": 13312
+  },
+  {
+    "path": "DOA5LR-DNZ-SharedAudio.ini",
+    "sha256": "cfcd60e7a4b139c039e37b9c2d23b2279f9f55a60aacb185125f84e6655f8bc1",
+    "size": 188
+  },
+  {
+    "path": "DOA5LR-DNZ-Thumbnail.asi",
+    "sha256": "51a3ffc924c6d7d13fcc6d816a501d017f2d3d932360156084c7f78c81cbc382",
+    "size": 13312
+  },
+  {
+    "path": "DOA5LR-ExtraStages.asi",
+    "sha256": "59394e519b57353cd706504bd8d8c13ba3a585d4fe51666c492acad0415e4f49",
+    "size": 56832
+  },
+  {
+    "path": "DOA5LR-ExtraStages.ini",
+    "sha256": "de7842c2133703d7c91d7234d89a68e895a4bbcec8506dbcc70dd7528cd5f5a5",
+    "size": 777
+  },
+  {
+    "path": "DOA5LR-RandomStages.asi",
+    "sha256": "0bfee24fedeb17a2cf90a7dcb27705d9d0b4ab6ebc3c3f22c0f0b88c38cb522a",
+    "size": 15360
+  },
+  {
+    "path": "DOA5LR-RandomStages.ini",
+    "sha256": "445bb2d6bbce12d5a97a44dfec5684cfb956ade70c77ea857ef86a74d532402d",
+    "size": 216
+  },
+  {
+    "path": "PS4Stages/CRIMSON/CRIMSON.CAM",
+    "sha256": "ab67284432b249591a6f7e39826418c723c3803c326dfcb1e5b6f29e997cf53e",
+    "size": 784
+  },
+  {
+    "path": "PS4Stages/CRIMSON/CRIMSON2.CAM",
+    "sha256": "45ad98e73d3b99758432db925fdfe9e388725b742addc991f96a8b9247b70806",
+    "size": 784
+  },
+  {
+    "path": "PS4Stages/MENU/STAGESELECT-THUMBS.textures",
+    "sha256": "d6aa467cf256c470e460d0c4f725f03abb864de7d484e4e71d15bb57c8d27364",
+    "size": 5237504
+  }
+]

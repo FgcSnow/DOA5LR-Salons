@@ -1,0 +1,9 @@
+{
+  "version": "1.1",
+  "observer_version": "1.0",
+  "collector_version": "1.1",
+  "exe_sha256": "5d6ff581d2ce164a63e93a9ca19e188415b8bb810c48afeb200423b0ea661cd9",
+  "game_modification": false,
+  "selftest": "PASS: observer self-test and 12 crash XML assertions",
+  "test_mode": "external passive process observer; optional local Windows crash event report"
+}
