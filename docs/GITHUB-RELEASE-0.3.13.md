@@ -6,7 +6,7 @@
 
 - **Three PS4 stages:** pick them by hand in the stage select (proper thumbnails; Crimson 1 and 2 share one slot, switch the variant in Solo), or tick them in the game's **Random** filter (three new check boxes). The original stages are all still there.
 - **Installer 1.3.3 adds a "Maps" check box, on by default.** Untick it to leave the stages out (their files are removed, your .ini settings are kept); tick it again to get them back.
-- **⚠️ Online, everyone in the room (players and spectators) needs the maps.** Update before joining rooms that use them.
+- **⚠️ Online, everyone in the room (players and spectators) needs the maps.** Update before joining rooms that use them. A player without the maps loads another stage (the Dojo) instead: no crash expected, but the match will very likely desync (not tested).
 - **AutoLink works with the maps**, but only put character folders in the `AutoLink` folder (plus `_Movie`, `_Texture`, `_Sound`, `_Stages`). During the tests, a player crashed after the first fight because of modding tools stored in `AutoLink\_Modding`; once they were moved out of the game folder, the crashes stopped.
 
 ## New: DOA5LR-Diagnostic
