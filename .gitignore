@@ -15,3 +15,15 @@ src/**/test/keyboard-startup-*/
 
 # Discord webhook of the log button: shipped in the release ZIP, never committed
 src/Diagnostic/envoi-logs.txt
+# personal / local files (never shared)
+CLAUDE.local.md
+.claude/settings.local.json
+*.log
+*-live.txt
+*.debug-en-cours
+*.pfx
+*.pvk
+
+# release outputs are built by tools/ and published as GitHub release assets, not committed
+*.zip
+*-Release/
