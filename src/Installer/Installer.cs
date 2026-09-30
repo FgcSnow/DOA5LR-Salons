@@ -117,7 +117,7 @@ class Component
     // its .ini next to game.exe), so a copy installed by hand is replaced, never loaded twice. On by default.
     public static readonly Component ReplayTakeover = new Component { Id = "replaytakeover", Label = "Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)", Globs = new[] { "DOA5LR-ReplayTakeover.asi", "DOA5LR-ReplayTakeover.ini", @"scripts\REPLAY-TAKEOVER-EN.txt", @"scripts\ReplayTakeover-Source\*" } };
     // 1.3.3 : PS4 stages Danger Zone / The Crimson 1-2 (+ Random). On by default: in a room everyone needs the same stages.
-    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
+    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
     public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
@@ -370,10 +370,12 @@ static class Util
     }
     // 1.3.4 : AutoLink [PATCH] ResolutionMod=1 with WindowResolution/FullscreenResolution=desktop (the pack's DInput8.ini) forces
     // the desktop resolution: needed by Borderless (render at the monitor size), but without Borderless it overrides the
-    // resolution/window chosen in the game's launcher. keep=*.ini never updates the file, so the installer sets only this key:
-    // 1 with Borderless, 0 without — and only while both resolutions are still the pack's "desktop" (a custom value is the
-    // player's own choice). The file is edited in place: same encoding and BOM, only the digit changes.
-    public static string SyncResolutionMod(string game, bool borderless)
+    // resolution/window chosen in the game's launcher. keep=*.ini never updates the file, so the installer sets only this key,
+    // and only while both resolutions are still the pack's "desktop" (a custom value is the player's own choice):
+    //   fresh install or Borderless ticked/unticked in this run -> follows the box (1 with Borderless, 0 without);
+    //   otherwise -> only 1 -> 0 when Borderless is off; a 0 the player set by hand is never turned back to 1.
+    // The file is edited in place: same encoding and BOM, only the digit changes.
+    public static string SyncResolutionMod(string game, bool borderless, bool boxChanged)
     {
         var p = Path.Combine(game, "DInput8.ini"); if (!File.Exists(p)) return null;
         var raw = File.ReadAllBytes(p);
@@ -399,6 +401,7 @@ static class Util
         if (!line.Success || line.Groups[1].Value.Trim().Length != 1 || !char.IsDigit(line.Groups[1].Value.Trim()[0])) return null;
         var want = borderless ? "1" : "0";
         if (line.Groups[1].Value.Trim() == want) return null;
+        if (!boxChanged && borderless) return null;   // Borderless unchanged and on: keep the player's value
         int at = start + line.Groups[1].Index + line.Groups[1].Value.IndexOf(line.Groups[1].Value.Trim()[0]);
         txt = txt.Substring(0, at) + want + txt.Substring(at + 1);
         var head = new byte[skip]; Array.Copy(raw, head, skip);
@@ -647,6 +650,7 @@ class Engine
         var bman = new List<string> { "# " + Cfg.PackName + " backup " + stamp + " — previous version: " + (prev == "" ? "(none)" : prev) + (m != null ? " — installed: " + m.Version : "") };
         int replaced = 0, added = 0, kept = 0, deleted = 0, skipped = 0, moved = 0, leftOut = 0;
         var selection = Component.Read(Game);
+        bool borderlessBefore = !FreshInstall && Component.Selected(selection, "borderless");   // 1.3.4 : ResolutionMod rule
         bool wasInputLabOn = Component.Current.Any(c => c.Id == "inputlab") && Component.Selected(selection, "inputlab");
         if (sel != null) foreach (var choice in sel) selection[choice.Key] = choice.Value;
         sel = selection;
@@ -796,7 +800,11 @@ class Engine
         }
         foreach (var d in leftDirs.OrderByDescending(d => d.Length)) try { if (Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
         Component.Write(Game, sel);
-        try { var rm = Util.SyncResolutionMod(Game, Component.Current.Any(c => c.Id == "borderless") && Component.Selected(sel, "borderless")); if (rm != null) Line(rm); }
+        try
+        {
+            bool borderlessNow = Component.Current.Any(c => c.Id == "borderless") && Component.Selected(sel, "borderless");
+            var rm = Util.SyncResolutionMod(Game, borderlessNow, FreshInstall || borderlessNow != borderlessBefore); if (rm != null) Line(rm);
+        }
         catch (Exception ex) { Line("DInput8.ini ResolutionMod not updated: " + ex.Message); }
         // folders emptied by the delete list
         if (m != null) foreach (var d in m.Delete.Select(r => Path.GetDirectoryName(Abs(r))).Where(d => d != null).Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(d => d.Length))
@@ -1563,7 +1571,7 @@ class MainForm : Form
             "• Ultimate ASI Loader — ThirteenAG (MIT)\r\n" +
             "• Xidi controller layer — Samuel Grossman (BSD)\r\n" +
             "• d3d9 resolution mod — original author credited in Optional-Resolution-Mod\\README-EN.txt\r\n\r\n" +
-            "Installer " + Cfg.AppVersion + " (optional components since 1.1.0, LAUNCH GAME + desktop shortcut since 1.2.0 — idea by Inyo) — source in the pack repository: " + Cfg.ProjectUrl + "\r\n" +
+            "Installer " + Cfg.AppVersion + " (optional components since 1.1.0, LAUNCH GAME + desktop shortcut since 1.2.0, PLAY / Set controls since 1.3.4 — ideas by Inyo) — source in the pack repository: " + Cfg.ProjectUrl + "\r\n" +
             "Testers and everyone in the DOA5LR lobbies: thank you.\r\n\r\n" +
             "Privacy: diagnostics are exported locally; nothing is uploaded automatically. UpdateCheck reads the public version manifest; the installer downloads updates. Lobby/network modules communicate with other players. Lobby writes a local log.\r\n" +
             (Cfg.PatreonUrl != "" ? "Support the project: " + Cfg.PatreonUrl : ""),
