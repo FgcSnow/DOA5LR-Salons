@@ -61,13 +61,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.7.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.7.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.7")]
+[assembly: System.Reflection.AssemblyVersion("1.3.10.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.10.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.10")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.7";
+    public const string AppVersion = "1.3.10";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -130,7 +130,65 @@ static class Ps4Skins
         int p = BitConverter.ToInt32(b, 60);
         if (p < 64 || p > b.Length - 6 || b[p] != 'P' || b[p + 1] != 'E' || b[p + 2] != 0 || b[p + 3] != 0 || BitConverter.ToUInt16(b, p + 4) != 0x14c) return false;
         var text = Encoding.ASCII.GetString(b);
-        return text.Contains("SteamAPI_Init") && (!proxy || text.Contains("cream_api.ini"));
+        // Loader variants may omit the literal configuration filename. Configuration and x86 checks remain mandatory.
+        return text.Contains("SteamAPI_Init");
+    }
+    // Legacy loaders enumerate DLC IDs separately from subscription flags.
+    static string RegisterLegacy(string text, bool unlockAll)
+    {
+        var sections = new Dictionary<string, Dictionary<int, string>>(StringComparer.OrdinalIgnoreCase);
+        string current = "";
+        foreach (Match line in Regex.Matches(text, @"[^\r\n]*(?:\r\n|\r|\n|$)"))
+        {
+            string value = line.Value.Trim();
+            var header = Regex.Match(value, @"^\[([^\]]+)\]\s*(?:[;#].*)?$");
+            if (header.Success) {
+                current = header.Groups[1].Value.Trim().ToLowerInvariant();
+                if (current == "dlc_subscription" || current == "dlc_index" || current == "dlc_names") {
+                    if (sections.ContainsKey(current)) throw new InvalidDataException("PS4 skins: duplicate legacy DLC section; configuration unchanged.");
+                    sections[current] = new Dictionary<int, string>();
+                }
+                continue;
+            }
+            if (!sections.ContainsKey(current) || value.Length == 0 || value[0] == ';' || value[0] == '#') continue;
+            int eq = value.IndexOf('='), key;
+            if (eq <= 0 || !int.TryParse(value.Substring(0, eq).Trim(), out key) || key < 0 || sections[current].ContainsKey(key))
+                throw new InvalidDataException("PS4 skins: invalid or duplicate legacy DLC key; configuration unchanged.");
+            sections[current][key] = value.Substring(eq + 1).Split(';', '#')[0].Trim();
+        }
+        if (!sections.ContainsKey("dlc_subscription") && !sections.ContainsKey("dlc_index")) return null;
+        if (!sections.ContainsKey("dlc_subscription") || !sections.ContainsKey("dlc_index"))
+            throw new InvalidDataException("PS4 skins: incomplete legacy DLC configuration; both dlc_subscription and dlc_index are required.");
+        var subscriptions = sections["dlc_subscription"]; var indices = sections["dlc_index"];
+        int target = -1; var ids = new HashSet<int>();
+        foreach (var pair in indices) {
+            int id;
+            if (!int.TryParse(pair.Value, out id) || id <= 0 || !ids.Add(id)) throw new InvalidDataException("PS4 skins: invalid or duplicate legacy DLC ID.");
+            if (id == 990015) target = pair.Key;
+        }
+        for (int i = 0; i < indices.Count; i++) if (!indices.ContainsKey(i)) throw new InvalidDataException("PS4 skins: legacy DLC indices are not contiguous; configuration unchanged.");
+        string subscription;
+        bool subscribed = subscriptions.TryGetValue(990015, out subscription);
+        if (subscribed && subscription != "1" && !subscription.Equals("true", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("PS4 skins: 990015 is explicitly disabled or invalid in dlc_subscription; configuration unchanged.");
+        if (subscribed && target >= 0) return text;
+        if (unlockAll) throw new InvalidDataException("PS4 skins: cannot expand legacy registration with unlockall=true.");
+        bool addIndex = target < 0;
+        if (addIndex) target = indices.Count;
+        if (addIndex && sections.ContainsKey("dlc_names") && sections["dlc_names"].ContainsKey(target))
+            throw new InvalidDataException("PS4 skins: the next DLC index already has a name; configuration unchanged.");
+        if (!subscribed) text = InsertLegacy(text, "dlc_subscription", "990015=true");
+        if (addIndex) text = InsertLegacy(text, "dlc_index", target + "=990015");
+        if (!sections.ContainsKey("dlc_names") || !sections["dlc_names"].ContainsKey(target)) text = InsertLegacy(text, "dlc_names", target + "=PS4 costumes");
+        return text;
+    }
+    static string InsertLegacy(string text, string section, string entry)
+    {
+        string nl = text.Contains("\r\n") ? "\r\n" : text.Contains("\n") ? "\n" : text.Contains("\r") ? "\r" : "\r\n";
+        var header = Regex.Match(text, @"(?im)^\[" + Regex.Escape(section) + @"\][^\r\n]*(?:\r\n|\r|\n|$)");
+        if (!header.Success) return text + (text.Length > 0 && text[text.Length-1] != '\n' && text[text.Length-1] != '\r' ? nl : "") + "[" + section + "]" + nl + entry + nl;
+        int pos = header.Index + header.Length;
+        return text.Insert(pos, (pos > 0 && text[pos-1] != '\n' && text[pos-1] != '\r' ? nl : "") + entry + nl);
     }
     public static ConfigChange Preflight(string game)
     {
@@ -166,11 +224,15 @@ static class Ps4Skins
             if (section == "steam" && key.Equals("unlockall", StringComparison.OrdinalIgnoreCase) && (val.Equals("true", StringComparison.OrdinalIgnoreCase) || val == "1")) unlockAll = true;
             if (section == "dlc" && key == "990015") registration++;
         }
-        if (steam != 1 || dlc > 1 || orgKeys != 1 || appKeys != 1 || appid != "311730" || registration > 1 ||
+        // Missing keys use the existing loader defaults; explicit invalid values still fail.
+        if (orgKeys == 0) original = "steam_api_o.dll";
+        if (steam > 1 || dlc > 1 || orgKeys > 1 || appKeys > 1 || (appKeys == 1 && appid != "311730") || registration > 1 ||
             original.Length == 0 || original != Path.GetFileName(original) || original.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
             !original.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || original.Equals("steam_api.dll", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("PS4 skins: cream_api.ini has an unsupported or ambiguous configuration. Check appid=311730 and the configured original DLL name; duplicate [steam]/[dlc] sections or duplicate 990015 entries are not supported. Leave PS4 skins unticked to install the rest of the pack.");
         if (!Dll(Path.Combine(game, "steam_api.dll"), true)) throw new InvalidDataException("PS4 skins: steam_api.dll is missing or is not recognized as a compatible 32-bit costume loader. AutoLink alone does not provide this setup. Leave PS4 skins unticked to install the rest of the pack.");
         if (!Dll(Path.Combine(game, original), false)) throw new InvalidDataException("PS4 skins: the original Steam DLL configured by orgapi is missing or is not a compatible 32-bit Steam API DLL. Check your existing loader setup. Leave PS4 skins unticked to install the rest of the pack.");
+        string legacy = RegisterLegacy(text, unlockAll);
+        if (legacy != null) return new ConfigChange { Before = before, After = before.Take(bom).Concat(enc.GetBytes(legacy)).ToArray() };
         if (registration == 1) return new ConfigChange { Before = before, After = before };
         if (unlockAll) throw new InvalidDataException("PS4 skins cannot add their registration while the existing loader uses unlockall=true. Leave PS4 skins unticked; your current loader settings are kept.");
         string nl = text.Contains("\r\n") ? "\r\n" : text.Contains("\n") ? "\n" : text.Contains("\r") ? "\r" : "\r\n";

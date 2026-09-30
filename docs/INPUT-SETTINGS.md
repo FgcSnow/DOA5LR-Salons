@@ -1,6 +1,13 @@
-# DOA5LR-Salons 0.3.14 — Rooms, controls, installation and updates
+# DOA5LR-Salons 0.3.15 — Rooms, controls, installation and updates
 
-## What's new in 0.3.14
+## What's new in 0.3.15
+
+- **Emergency online Random fix (RandomStages 2.2):** 0.3.14 misdetected online lobbies. With Online=0 (default), extra stages are now excluded unless every lobby member reports map support; ranked/no lobby uses native Random. Online=1 explicitly bypasses this check.
+- **PS4 hairstyles:** corrected choices/order for 13 of the 15 costumes. Menu tests passed for Miyama Ageha, Teacher and Ayane/Kasumi 054; not all combinations combat-tested.
+- **Installer 1.3.8:** missing appid/orgapi no longer reject a compatible existing loader. DLL checks and personal settings are preserved.
+- Mixed-lobby exclusion was tested in game. Drawing extra stages between two updated players still needs confirmation.
+
+## Previous changes in 0.3.14
 
 **Local build, not published:** the optional PS4 skins addition below uses Installer 1.3.6. On 2026-09-30, the user confirmed all 15 costumes and their variants work in combat and reported already playing online with this set. Installer checks are recorded separately in `validation-report.json` in the local release folder.
 
@@ -9,14 +16,13 @@ Fixes from your reports on 0.3.13 (included in Installer 1.3.6):
 - **The game no longer forces your desktop resolution / a full-size window.** The pack's AutoLink settings (`DInput8.ini`, `ResolutionMod=1`) forced the desktop resolution for everyone. That is only needed with **Borderless**, which renders at your monitor size. The installer now sets `ResolutionMod=0` when Borderless is unticked, so the resolution and window mode you choose in the game's launcher apply again. With Borderless ticked, rendering stays at the desktop size (untick Borderless to play at a lower resolution). A value you changed by hand is not turned back on, and a custom `WindowResolution` / `FullscreenResolution` is never touched.
 - **Your `d3d9.dll` is no longer deleted.** Older installers removed any `d3d9.dll` (it was meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. If an earlier update removed yours, it is in `DOA5LR-Salons-Backups\<date>\`.
 - **PLAY starts the game directly; "Set controls" opens the controls app** (idea from Inyo). PLAY only goes through the controls app when experimental keyboard remapping is on in Keyboard mode, because that app checks that no controller is connected first.
-- **Random: the new stages are offline only.** Danger Zone and The Crimson 1/2 were also added to online Random (ranked, lobbies), where a player without the maps could get a stage they do not have. Online Random is now the game's own; pick the new stages by hand in lobbies. Everyone in a room still needs the maps for a manual pick. (`[RandomStages] Online=1` in `DOA5LR-RandomStages.ini` brings back online Random, only if everyone you play with has the maps.)
 - **Danger Zone no longer removed by Windows Defender:** Defender started flagging `DOA5LR-DangerZone.asi` of 0.3.13 (a false positive) and quarantined it, which also stopped The Crimson and the stage menu additions. It is rebuilt without its own crash handler and is no longer flagged; updating puts it back.
 - **Much smaller updates:** the stage data (about 260 MB) is a separate download now. The optional PS4 skin data has its own archive too. When the selected data files are installed and intact, an update needs only the remaining pack files. This local build uses **Installer 1.3.6**.
 - **Smaller logs:** the Crimson effects log (42 MB seen) now only records startup and errors, is capped at 512 KB, and an oversized old log is set aside at startup (`[Log] Level=0` in `DOA5LR-Crimson-VFX.ini` turns it off, `Level=2` records every effect for a bug report). Two diagnostic modules used while porting the stages (`DOA5LR-Crimson-EventLog.asi`, `DOA5LR-Crimson-BackendProbe.asi`) are removed.
 
 **Windows 11 "Unable to load ... Error: 4551"** comes from **Smart App Control**, not from Defender: it blocks unsigned DLLs. Turning Defender off changes nothing. See the Troubleshooting table at the end. Do not use tools that disable Windows Defender.
 
-Details: [0.3.14 release notes](RELEASE-NOTES-0.3.14.md).
+Details: [0.3.15 release notes](RELEASE-NOTES-0.3.15.md).
 
 ## Optional PS4 skins - local test build
 
@@ -68,7 +74,7 @@ The existing optional Borderless and offline 60 fps features remain available. U
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe) and open it |
+| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-Installer.exe) and open it |
 | Portable controls app (unchanged since 0.3.9) | First use of the app on an existing compatible pack | Download the [portable ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip), extract its complete `InputLab` folder to a new folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
 The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
@@ -84,7 +90,7 @@ The portable remapping module requires **the verified DOA5LR-Salons input setup 
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
 4. Click **PLAY** to start the game, or **Set controls** to open the controls app (it works even with the experimental component unchecked; its **Play via Steam** applies the chosen mode and launches).
 
-**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.14 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
+**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.15 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-0.3.15.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
 
 For every upgrade, including from 0.3.8 or 0.3.9, use the installer to keep personal INIs, saved input choices and module backups. Do not overwrite custom INIs with archive defaults.
 
