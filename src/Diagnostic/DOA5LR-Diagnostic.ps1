@@ -62,6 +62,7 @@ function Invoke-Check([string]$game) {
         foreach ($e in $list) {
             $p = Join-Path $game ($e.path -replace '/', '\')
             if (!(Test-Path -LiteralPath $p -PathType Leaf)) { $bad += "$($e.path) (absent)" }
+            elseif ($e.path -like '*.ini') { }   # reglages du joueur : l installateur les garde (keep=*.ini), seule la presence compte
             elseif ((Get-Item -LiteralPath $p).Length -ne [long]$e.size -or (Get-Sha $p) -ine $e.sha256) { $bad += "$($e.path) (modifie)" }
         }
         if ($bad.Count) { $out.Add("ATTENTION : maps DZ / Crimson incompletes ou modifiees ($($bad.Count)) : " + (($bad | Select-Object -First 8) -join ', ') + '. Relance l installateur DOA5LR-Salons (Reinstall). / Maps incomplete: run the installer (Reinstall).') }

@@ -1,4 +1,4 @@
-﻿// DOA5LR-Salons Installer / Updater — single-file WinForms app, .NET Framework 4.8 (built with the csc.exe shipped in Windows).
+// DOA5LR-Salons Installer / Updater — single-file WinForms app, .NET Framework 4.8 (built with the csc.exe shipped in Windows).
 // Community Mod Pack by FGCsnow & BonuStage. Original Auto Installer concept by BRG Hades.
 //
 // What it does:
@@ -10,7 +10,8 @@
 //   - 1.2.0 : LAUNCH GAME button - starts DOA5LR through Steam (steam://rungameid), opens Steam first if it is not running
 //             --play = explicit launcher mode: checks for updates, then opens input selection when InputLab is installed
 //   - desktop shortcut opens the installer and configuration; the player chooses when to launch
-//   - never writes steam_api / cream / DLC files; diagnostics only write the ZIP explicitly chosen by the user
+//   - never supplies Steam/proxy DLLs; PS4 skins own four DLC/990015 files and add only their registration to an existing
+//     compatible local loader configuration (backed up); diagnostics only write the ZIP explicitly chosen by the user
 //
 // version.txt format (one key per line, unknown keys ignored — same file DOA5LR-Telemetry 0.3 reads):
 //   version=0.3.3
@@ -18,6 +19,8 @@
 //   sha256=<sha256 of the zip>          size=<bytes>
 //   notes=one-line summary (Telemetry shows this one)      note=detail line (0..n, installer shows these)
 //   delete=relative\path                (0..n, files removed by this version — cumulative)
+//   delete_if=relative\path|sha256      (0..n, 1.3.4: removed ONLY when the file on disk is exactly that old file; a file of
+//                                       the same name from another mod is kept. Older installers ignore this key)
 //   move=old\path|new\path              (0..n, migrations: e.g. root .ini -> scripts\ ; the user file is moved before extraction)
 //   keep=*.ini                          (0..n, existing files never overwritten on update; default *.ini)
 //   installer=https://.../DOA5LR-Salons-Installer.exe   installer_version=1.0.0   installer_sha256=<sha>
@@ -26,6 +29,13 @@
 //   optional_v2=id|label|glob;glob...  (1.3.1: same validation; older installers ignore this key and can self-update first)
 //   optional_v3=id|label|glob;glob...  (1.3.2: Replay Takeover; 1.3.1 ignores this key and self-updates first)
 //   optional_v4=id|label|glob;glob...  (1.3.3: DZ / Crimson maps; 1.3.2 ignores this key and self-updates first)
+//   optional_v5=id|label|glob;glob...  (1.3.5: maps modules in scripts; older installers ignore this key)
+//   optional_v6=id|label|glob;glob...  (1.3.6: optional native PS4 costumes; older installers ignore this key)
+//   skins_data=url|sha256|size         independent four-file costume archive; downloaded only when selected and needed
+//   core=url|sha256|size                (1.3.4: the pack WITHOUT the stage data; with data= below, a player whose stage data is
+//   data=maps|url|sha256|size            already installed and intact downloads only the core. url= stays the full pack for older
+//                                        installers; core + data = full pack, entry for entry. The data files are the entries of
+//                                        DOA5LR-Diagnostic\maps-files.json that are not in the core; each is checked by SHA-256)
 //   file=name|url|fnv32|size            (for Telemetry AutoUpdate, ignored here)
 using System;
 using System.Collections.Generic;
@@ -51,13 +61,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.3.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.3.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.3")]
+[assembly: System.Reflection.AssemblyVersion("1.3.6.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.6.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.6")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.3";
+    public const string AppVersion = "1.3.6";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -93,9 +103,80 @@ static class Cfg
         @"scripts\DOA5LR-Lobby.asi", @"scripts\DOA5LR-InviteFix.asi", @"scripts\DOA5LR-Borderless.asi",
         @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-WiFi-Wired-Detector.asi", @"scripts\DOA5LR-UpdateCheck.asi",
         // 1.3.3 : JoinFix (room join fix) was not checked; maps modules (only when the Maps box is ticked, see Owns())
-        @"scripts\DOA5LR-JoinFix.asi", "DOA5LR-ExtraStages.asi", "DOA5LR-DangerZone.asi", "DOA5LR-Crimson.asi", "DOA5LR-RandomStages.asi" };
+        @"scripts\DOA5LR-JoinFix.asi",
+        // 1.3.5 : the maps modules moved from the game root to scripts\ (like every other module of the pack)
+        @"scripts\DOA5LR-ExtraStages.asi", @"scripts\DOA5LR-DangerZone.asi", @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-RandomStages.asi" };
     // Files the pack must never contain / the installer must never write (same rule as build_pack.py).
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
+    // Only these four native costume assets are allowed. Steam/proxy binaries and other DLC stay forbidden.
+    public static readonly string[] Ps4SkinFiles = { @"DLC\990015\990015.bcm", @"DLC\990015\data\990015.bin", @"DLC\990015\data\990015.blp", @"DLC\990015\data\990015.lnk" };
+    public static bool IsPs4Skin(string rel) { return Ps4SkinFiles.Contains(rel.Replace('/', '\\'), StringComparer.OrdinalIgnoreCase); }
+    public static bool IsForbidden(string rel) { return Forbidden.IsMatch(rel) && !IsPs4Skin(rel); }
+    public static bool Ps4LoaderCompatible(string game) { try { Ps4Skins.Preflight(game); return true; } catch { return false; } }
+}
+
+// Native costumes use an existing local loader. The installer never supplies or replaces Steam DLLs.
+// INI editing inserts one registration only; all original bytes and any existing label are retained.
+static class Ps4Skins
+{
+    public const string Config = "cream_api.ini";
+    public const string BackupMarker = "ps4skins-config|cream_api.ini";
+    public class ConfigChange { public byte[] Before, After; }
+    static bool Dll(string path, bool proxy)
+    {
+        if (!File.Exists(path)) return false;
+        var b = File.ReadAllBytes(path);
+        if (b.Length < 64 || b[0] != 'M' || b[1] != 'Z') return false;
+        int p = BitConverter.ToInt32(b, 60);
+        if (p < 64 || p > b.Length - 6 || b[p] != 'P' || b[p + 1] != 'E' || b[p + 2] != 0 || b[p + 3] != 0 || BitConverter.ToUInt16(b, p + 4) != 0x14c) return false;
+        var text = Encoding.ASCII.GetString(b);
+        return text.Contains("SteamAPI_Init") && (!proxy || text.Contains("cream_api.ini"));
+    }
+    public static ConfigChange Preflight(string game)
+    {
+        const string error = "PS4 skins require an existing compatible local costume loader (cream_api.ini for game 311730, [dlc], steam_api.dll and its configured original DLL). Leave PS4 skins unticked on this PC.";
+        if (string.IsNullOrEmpty(game)) throw new InvalidDataException(error);
+        var path = Path.Combine(game, Config);
+        if (!File.Exists(path)) throw new InvalidDataException(error);
+        var before = File.ReadAllBytes(path);
+        int bom = 0; Encoding enc = Encoding.GetEncoding(28591);
+        if (before.Length >= 2 && before[0] == 255 && before[1] == 254) { enc = new UnicodeEncoding(false, false, true); bom = 2; }
+        else if (before.Length >= 2 && before[0] == 254 && before[1] == 255) { enc = new UnicodeEncoding(true, false, true); bom = 2; }
+        else if (before.Length >= 3 && before[0] == 239 && before[1] == 187 && before[2] == 191) bom = 3;
+        string text = enc.GetString(before, bom, before.Length - bom), section = "", original = "", appid = "";
+        int steam = 0, dlc = 0, registration = 0, orgKeys = 0, appKeys = 0, insert = text.Length;
+        bool foundDlc = false, unlockAll = false;
+        foreach (Match line in Regex.Matches(text, @"[^\r\n]*(?:\r\n|\r|\n|$)"))
+        {
+            string value = line.Value.Trim();
+            var header = Regex.Match(value, @"^\[([^\]]+)\]\s*(?:[;#].*)?$");
+            if (header.Success)
+            {
+                if (section == "dlc") insert = line.Index;
+                section = header.Groups[1].Value.Trim().ToLowerInvariant();
+                if (section == "steam") steam++;
+                if (section == "dlc") { dlc++; foundDlc = true; insert = text.Length; }
+                continue;
+            }
+            if (value.Length == 0 || value[0] == ';' || value[0] == '#') continue;
+            int eq = value.IndexOf('='); if (eq <= 0) continue;
+            string key = value.Substring(0, eq).Trim(), val = value.Substring(eq + 1).Split(';', '#')[0].Trim();
+            if (section == "steam" && key.Equals("orgapi", StringComparison.OrdinalIgnoreCase)) { original = val; orgKeys++; }
+            if (section == "steam" && key.Equals("appid", StringComparison.OrdinalIgnoreCase)) { appid = val; appKeys++; }
+            if (section == "steam" && key.Equals("unlockall", StringComparison.OrdinalIgnoreCase) && (val.Equals("true", StringComparison.OrdinalIgnoreCase) || val == "1")) unlockAll = true;
+            if (section == "dlc" && key == "990015") registration++;
+        }
+        if (steam != 1 || dlc != 1 || !foundDlc || orgKeys != 1 || appKeys != 1 || appid != "311730" || registration > 1 ||
+            original.Length == 0 || original != Path.GetFileName(original) || original.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+            !original.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || original.Equals("steam_api.dll", StringComparison.OrdinalIgnoreCase) ||
+            !Dll(Path.Combine(game, "steam_api.dll"), true) || !Dll(Path.Combine(game, original), false)) throw new InvalidDataException(error);
+        if (registration == 1) return new ConfigChange { Before = before, After = before };
+        if (unlockAll) throw new InvalidDataException("PS4 skins cannot add their registration while the existing loader uses unlockall=true. Leave PS4 skins unticked; your current loader settings are kept.");
+        string nl = text.Contains("\r\n") ? "\r\n" : text.Contains("\n") ? "\n" : text.Contains("\r") ? "\r" : "\r\n";
+        string prefix = insert > 0 && text[insert - 1] != '\n' && text[insert - 1] != '\r' ? nl : "";
+        string edited = text.Insert(insert, prefix + "990015=PS4 costumes" + nl);
+        return new ConfigChange { Before = before, After = before.Take(bom).Concat(enc.GetBytes(edited)).ToArray() };
+    }
 }
 
 // ---------------------------------------------------------------- optional components (1.1.0)
@@ -115,15 +196,19 @@ class Component
     // its .ini next to game.exe), so a copy installed by hand is replaced, never loaded twice. On by default.
     public static readonly Component ReplayTakeover = new Component { Id = "replaytakeover", Label = "Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)", Globs = new[] { "DOA5LR-ReplayTakeover.asi", "DOA5LR-ReplayTakeover.ini", @"scripts\REPLAY-TAKEOVER-EN.txt", @"scripts\ReplayTakeover-Source\*" } };
     // 1.3.3 : PS4 stages Danger Zone / The Crimson 1-2 (+ Random). On by default: in a room everyone needs the same stages.
-    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
-    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps }).ToArray();
+    // 1.3.3 : maps component of 0.3.13/0.3.14 (optional_v4 = modules at the game root); kept to read those manifests
+    public static readonly Component MapsRoot = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
+    // 1.3.5 : modules in scripts\ (optional_v5); the old root names are listed too, so leaving the maps out removes them
+    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"scripts\DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"scripts\DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"scripts\DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"scripts\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"scripts\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"scripts\DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt", @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-DangerZone.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-RandomStages.asi" } };
+    public static readonly Component Ps4Skin = new Component { Id = "ps4skins", Label = "PS4 skins: 15 costumes (existing local costume loader required)", Globs = new[] { @"DLC\990015\990015.bcm", @"DLC\990015\data\990015.bin", @"DLC\990015\data\990015.blp", @"DLC\990015\data\990015.lnk", @"scripts\PS4-SKINS-EN.txt" } };
+    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps, MapsRoot, Ps4Skin }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
     {
         var p = v.Split('|'); if (p.Length != 3) return null;
         var c = new Component { Id = p[0].Trim().ToLowerInvariant(), Label = p[1].Trim(), Globs = p[2].Split(';').Select(g => g.Trim().Replace('/', '\\')).Where(g => g.Length > 0 && !g.Contains("..")).ToArray() };
-        var known = Known.FirstOrDefault(item => item.Id == c.Id);
-        if (known == null || !c.Globs.SequenceEqual(known.Globs, StringComparer.OrdinalIgnoreCase))
+        var known = Known.FirstOrDefault(item => item.Id == c.Id && c.Globs.SequenceEqual(item.Globs, StringComparer.OrdinalIgnoreCase));
+        if (known == null)
             throw new InvalidDataException("Refused: unsupported optional component: " + c.Id);
         return known;
     }
@@ -133,6 +218,7 @@ class Component
         var d = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         d["borderless"] = game != "" && (Util.InstalledVersion(game) != "" || File.Exists(Path.Combine(game, @"scripts\DOA5LR-Borderless.asi")) || File.Exists(Path.Combine(game, "DOA5LR-Borderless.asi")));
         d["inputlab"] = false;
+        d["ps4skins"] = Cfg.Ps4LoaderCompatible(game);
         try { if (game != "") foreach (var ln in File.ReadAllLines(Path.Combine(game, Cfg.ComponentsFile))) { var i = ln.IndexOf('='); if (i > 0 && ln[0] != '#') d[ln.Substring(0, i).Trim()] = ln.Substring(i + 1).Trim() != "0"; } } catch { }
         return d;
     }
@@ -152,8 +238,13 @@ class Manifest
     public string Version = "", Url = "", Sha256 = "", Notes = "", InstallerUrl = "", InstallerVersion = "", InstallerSha256 = "";
     public long Size;
     public List<string> NoteLines = new List<string>(), Delete = new List<string>(), Keep = new List<string>();
+    public List<KeyValuePair<string, string>> DeleteIf = new List<KeyValuePair<string, string>>();   // 1.3.4 : path -> sha256
     public List<KeyValuePair<string, string>> Move = new List<KeyValuePair<string, string>>();
     public List<Component> Optional = new List<Component>();   // 1.1.0
+    public string CoreUrl = "", CoreSha256 = "", DataId = "", DataUrl = "", DataSha256 = "";   // 1.3.4 : split download
+    public long CoreSize, DataSize;
+    public string SkinsUrl = "", SkinsSha256 = "";
+    public long SkinsSize;
     public static Manifest Parse(string text)
     {
         var m = new Manifest();
@@ -172,16 +263,22 @@ class Manifest
                 case "note": m.NoteLines.Add(v); break;
                 case "delete": if (v.Length > 0) m.Delete.Add(v.Replace('/', '\\')); break;
                 case "keep": if (v.Length > 0) m.Keep.Add(v); break;
+                case "delete_if": { var d = v.Split('|'); if (d.Length == 2 && d[0].Trim().Length > 0 && Regex.IsMatch(d[1].Trim(), "^[0-9a-fA-F]{64}$")) m.DeleteIf.Add(new KeyValuePair<string, string>(d[0].Trim().Replace('/', '\\'), d[1].Trim().ToLowerInvariant())); break; }
                 case "move": { var mv = v.Split('|'); if (mv.Length == 2 && mv[0].Length > 0 && mv[1].Length > 0) m.Move.Add(new KeyValuePair<string, string>(mv[0].Trim().Replace('/', '\\'), mv[1].Trim().Replace('/', '\\'))); break; }
                 case "installer": m.InstallerUrl = v; break;
                 case "installer_version": m.InstallerVersion = v; break;
                 case "installer_sha256": m.InstallerSha256 = v.ToLowerInvariant(); break;
+                case "core": { var c = v.Split('|'); long n; if (c.Length == 3 && Regex.IsMatch(c[1].Trim(), "^[0-9a-fA-F]{64}$") && long.TryParse(c[2].Trim(), out n) && n > 0) { m.CoreUrl = c[0].Trim(); m.CoreSha256 = c[1].Trim().ToLowerInvariant(); m.CoreSize = n; } break; }
+                case "data": { var c = v.Split('|'); long n; if (c.Length == 4 && c[0].Trim().ToLowerInvariant() == "maps" && Regex.IsMatch(c[2].Trim(), "^[0-9a-fA-F]{64}$") && long.TryParse(c[3].Trim(), out n) && n > 0) { m.DataId = "maps"; m.DataUrl = c[1].Trim(); m.DataSha256 = c[2].Trim().ToLowerInvariant(); m.DataSize = n; } break; }
                 // Keep the old key for preview manifests. Public manifests use optional_v2
                 // for InputLab so 1.1 can parse them before offering its own update.
                 case "optional":
                 case "optional_v2":
                 case "optional_v3":
-                case "optional_v4": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "optional_v4":
+                case "optional_v5":
+                case "optional_v6": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "skins_data": { var c = v.Split('|'); long n; if (c.Length != 3 || !Regex.IsMatch(c[1].Trim(), "^[0-9a-fA-F]{64}$") || !long.TryParse(c[2].Trim(), out n) || n <= 0 || m.SkinsUrl != "") throw new InvalidDataException("Refused: invalid PS4 skins archive in manifest."); m.SkinsUrl = c[0].Trim(); m.SkinsSha256 = c[1].Trim().ToLowerInvariant(); m.SkinsSize = n; break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");
@@ -262,6 +359,8 @@ static class Util
         // 1.3.3 : maps files are only required once a 0.3.13+ manifest lists the Maps component and the box is ticked
         bool mapsOn = Component.Current.Any(c => c.Id == "maps") && Component.Selected(selection, "maps");
         try { foreach (var rel in Cfg.RequiredFiles) if (!left.Any(c => c.Owns(rel)) && (mapsOn || !Component.Maps.Owns(rel)) && !File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
+        if (Component.Current.Any(c => c.Id == "ps4skins") && Component.Selected(selection, "ps4skins"))
+            foreach (var rel in Cfg.Ps4SkinFiles) if (!File.Exists(Path.Combine(game, rel))) miss.Add(rel);
         if (Component.Current.Any(c => c.Id == "inputlab"))
             try {
                 var required = Cfg.InputLabAppFiles.AsEnumerable();
@@ -363,6 +462,52 @@ static class Util
             if (Regex.IsMatch(g, @"^SCREEN_TYPE=", RegexOptions.Multiline)) { g = Regex.Replace(g, @"^SCREEN_TYPE=[^\r\n]*", "SCREEN_TYPE=" + want, RegexOptions.Multiline); File.WriteAllText(gi, g, enc); }
         }
         Log("display mode set to " + mode + " (" + (mode == 2 ? "borderless" : mode == 1 ? "window" : "fullscreen") + ")");
+    }
+    // 1.3.4 : AutoLink [PATCH] ResolutionMod=1 with WindowResolution/FullscreenResolution=desktop (the pack's DInput8.ini) forces
+    // the desktop resolution: needed by Borderless (render at the monitor size), but without Borderless it overrides the
+    // resolution/window chosen in the game's launcher. keep=*.ini never updates the file, so the installer sets only this key,
+    // and only while both resolutions are still the pack's "desktop" (a custom value is the player's own choice):
+    //   fresh install or Borderless ticked/unticked in this run -> follows the box (1 with Borderless, 0 without);
+    //   otherwise -> only 1 -> 0 when Borderless is off; a 0 the player set by hand is never turned back to 1.
+    // The file is edited in place: same encoding and BOM, only the digit changes.
+    public static string SyncResolutionMod(string game, bool borderless, bool boxChanged)
+    {
+        var p = Path.Combine(game, "DInput8.ini"); if (!File.Exists(p)) return null;
+        var raw = File.ReadAllBytes(p);
+        bool wide = raw.Length >= 2 && raw[0] == 0xFF && raw[1] == 0xFE;
+        var enc = wide ? (Encoding)new UnicodeEncoding(false, false) : Encoding.GetEncoding(28591);   // Latin-1: lossless byte <-> char
+        int skip = wide ? 2 : raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF ? 3 : 0;
+        var txt = enc.GetString(raw, skip, raw.Length - skip);
+        // [PATCH] section, line by line (the file also has "ResolutionMod=0" inside a comment block of [NEWS])
+        int start = -1, end = txt.Length;
+        foreach (Match ln in Regex.Matches(txt, @"^[^\r\n]*", RegexOptions.Multiline))
+        {
+            var t = ln.Value.Trim();
+            if (!t.StartsWith("[")) continue;
+            if (start >= 0) { end = ln.Index; break; }
+            if (t.Equals("[PATCH]", StringComparison.OrdinalIgnoreCase)) start = ln.Index + ln.Length;
+        }
+        if (start < 0) return null;
+        var body = txt.Substring(start, end - start);
+        Func<string, Match> key = k => Regex.Match(body, @"^[ \t]*" + k + @"[ \t]*=[ \t]*([^\r\n;]*)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        Func<string, string> val = k => { var mm = key(k); return mm.Success ? mm.Groups[1].Value.Trim() : null; };
+        if (!string.Equals(val("WindowResolution"), "desktop", StringComparison.OrdinalIgnoreCase) || !string.Equals(val("FullscreenResolution"), "desktop", StringComparison.OrdinalIgnoreCase)) return null;
+        var line = key("ResolutionMod");
+        if (!line.Success || line.Groups[1].Value.Trim().Length != 1 || !char.IsDigit(line.Groups[1].Value.Trim()[0])) return null;
+        var want = borderless ? "1" : "0";
+        if (line.Groups[1].Value.Trim() == want) return null;
+        if (!boxChanged && borderless) return null;   // Borderless unchanged and on: keep the player's value
+        int at = start + line.Groups[1].Index + line.Groups[1].Value.IndexOf(line.Groups[1].Value.Trim()[0]);
+        txt = txt.Substring(0, at) + want + txt.Substring(at + 1);
+        var head = new byte[skip]; Array.Copy(raw, head, skip);
+        File.WriteAllBytes(p, head.Concat(enc.GetBytes(txt)).ToArray());
+        return "DInput8.ini: ResolutionMod=" + want + (borderless ? " (Borderless renders at the desktop size)" : " (Borderless off: the resolution and window mode of the game's launcher apply)");
+    }
+    // ERROR_VIRUS_INFECTED (225) / ERROR_VIRUS_DELETED (226): the antivirus blocked this file
+    public static bool IsVirusError(Exception ex)
+    {
+        int code = ex.HResult & 0xFFFF;
+        return (ex.HResult >> 16 & 0x1FFF) == 7 && (code == 225 || code == 226);
     }
     public static bool CanWrite(string dir)
     {
@@ -560,8 +705,162 @@ class Engine
         }
     }
 
+    // 1.3.4 : the archive to install. Without core=/data= in the manifest (or when the maps are left out / their data is already
+    // installed and intact) this is one download; otherwise core + stage data are merged into one full pack before InstallZip,
+    // so InstallZip sees exactly what the full ZIP would give (same backup, same checks).
+    public string PreparePack(Manifest m, Dictionary<string, bool> choice)
+    {
+        Game = Path.GetFullPath(Game);
+        var sel = Component.Read(Game); if (choice != null) foreach (var c in choice) sel[c.Key] = c.Value;
+        bool skinsOn = Component.Current.Any(c => c.Id == "ps4skins") && Component.Selected(sel, "ps4skins");
+        if (skinsOn) Ps4Skins.Preflight(Game); // before downloading or changing any game files
+        string pack = PrepareMapsPack(m, choice);
+        if (!skinsOn) { if (m.SkinsUrl != "") Line("PS4 skins left out: costume data not downloaded"); return pack; }
+        try
+        {
+            List<KeyValuePair<string, string>> want;
+            using (var z = ZipFile.OpenRead(pack))
+            {
+                want = SkinList(z);
+                if (ValidateSkinEntries(z.Entries.ToList(), want)) return pack; // complete offline archive
+            }
+            var bad = want.Where(d => !File.Exists(Abs(d.Key)) || Util.Sha256(Abs(d.Key)) != d.Value).ToList();
+            if (bad.Count == 0) { Line("PS4 skins up to date (4 files checked): costume data not downloaded"); return pack; }
+            if (m.SkinsUrl == "") throw new InvalidDataException("PS4 skins files are missing or different and the manifest has no skins_data archive.");
+            Line("PS4 skins data to download: " + bad.Count + " of 4 files missing or different");
+            string data = Fetch(m.SkinsUrl, m.SkinsSha256, m.SkinsSize, Cfg.PackName + "-ps4skins-data-" + m.SkinsSha256.Substring(0, 16) + ".zip", "PS4 skins data");
+            string merged = Path.Combine(Path.GetDirectoryName(pack), Cfg.PackName + "-" + m.Version + "-skins-merged.zip");
+            using (var core = ZipFile.OpenRead(pack)) using (var skins = ZipFile.OpenRead(data))
+            {
+                var skinEntries = skins.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList();
+                if (skinEntries.Count != Cfg.Ps4SkinFiles.Length || !ValidateSkinEntries(skinEntries, want))
+                    throw new InvalidDataException("Refused: PS4 skins archive must contain exactly the four listed costume files.");
+                if (File.Exists(merged)) File.Delete(merged);
+                using (var output = ZipFile.Open(merged, ZipArchiveMode.Create))
+                    foreach (var e in core.Entries.Concat(skinEntries))
+                    {
+                        if (string.IsNullOrEmpty(e.Name)) continue;
+                        var added = output.CreateEntry(e.FullName, CompressionLevel.NoCompression);
+                        using (var input = e.Open()) using (var dest = added.Open()) input.CopyTo(dest);
+                    }
+            }
+            DropMerged(pack);
+            Line("core + PS4 skins data merged into " + merged);
+            return merged;
+        }
+        catch { DropMerged(pack); throw; }
+    }
+    static List<KeyValuePair<string, string>> SkinList(ZipArchive zip)
+    {
+        var entry = ExactlyOneEntry(zip.Entries.ToList(), @"DOA5LR-Diagnostic\ps4skins-files.json");
+        string json; using (var reader = new StreamReader(entry.Open(), Encoding.UTF8)) json = reader.ReadToEnd();
+        var list = new List<KeyValuePair<string, string>>();
+        foreach (Match m in Regex.Matches(json, "\"path\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"sha256\"\\s*:\\s*\"([0-9a-fA-F]{64})\""))
+        {
+            string rel = m.Groups[1].Value.Replace("\\\\", "\\").Replace('/', '\\');
+            if (!Cfg.IsPs4Skin(rel) || list.Any(d => d.Key.Equals(rel, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidDataException("Refused: invalid or duplicate PS4 skins file in the pack's list.");
+            list.Add(new KeyValuePair<string, string>(rel, m.Groups[2].Value.ToLowerInvariant()));
+        }
+        if (list.Count != Cfg.Ps4SkinFiles.Length) throw new InvalidDataException("Refused: PS4 skins list must describe exactly four costume files.");
+        return list;
+    }
+    static bool ValidateSkinEntries(List<ZipArchiveEntry> entries, List<KeyValuePair<string, string>> want)
+    {
+        int count = entries.Count(e => Cfg.IsPs4Skin(e.FullName));
+        if (count == 0) return false;
+        if (count != Cfg.Ps4SkinFiles.Length) throw new InvalidDataException("Refused: incomplete PS4 skins archive.");
+        foreach (var d in want)
+            if (ArchiveSha256(ExactlyOneEntry(entries, d.Key)) != d.Value)
+                throw new InvalidDataException("Refused: PS4 skins file differs from the pack's list: " + d.Key);
+        return true;
+    }
+    string PrepareMapsPack(Manifest m, Dictionary<string, bool> choice)
+    {
+        Game = Path.GetFullPath(Game);
+        CleanCache(m);
+        if (m.CoreUrl == "" || ((m.DataUrl == "" || m.DataId != "maps") && m.SkinsUrl == "")) return DownloadPack(m);
+        var core = Fetch(m.CoreUrl, m.CoreSha256, m.CoreSize, Cfg.PackName + "-core-" + m.CoreSha256.Substring(0, 16) + ".zip", Cfg.PackName + " " + m.Version);
+        if (m.DataUrl == "" || m.DataId != "maps") return core; // skins-only split pack
+        var sel = Component.Read(Path.GetFullPath(Game)); if (choice != null) foreach (var c in choice) sel[c.Key] = c.Value;
+        if (!Component.Current.Any(c => c.Id == "maps") || !Component.Selected(sel, "maps")) { Line("maps left out: stage data not downloaded"); return core; }
+        List<KeyValuePair<string, string>> data;
+        using (var z = ZipFile.OpenRead(core)) data = DataList(z);
+        if (data.Count == 0) throw new InvalidDataException("Refused: the core pack has no stage data list.");
+        Status("Checking the installed stage files...");
+        var bad = data.Where(d => { var a = Abs(d.Key); return !Inside(a) || !File.Exists(a) || Util.Sha256(a) != d.Value; }).Select(d => d.Key).ToList();
+        if (bad.Count == 0) { Line("stage data up to date (" + data.Count + " files checked): only the core pack downloaded"); return core; }
+        Line("stage data to download: " + bad.Count + " of " + data.Count + " files missing or different (" + bad[0] + (bad.Count > 1 ? ", ..." : "") + ")");
+        var dz = Fetch(m.DataUrl, m.DataSha256, m.DataSize, Cfg.PackName + "-maps-data-" + m.DataSha256.Substring(0, 16) + ".zip", "stage data");
+        var merged = Path.Combine(Path.GetDirectoryName(core), Cfg.PackName + "-" + m.Version + "-merged.zip");
+        Status("Preparing the pack...");
+        if (File.Exists(merged)) File.Delete(merged);
+        using (var zc = ZipFile.OpenRead(core)) using (var zd = ZipFile.OpenRead(dz))
+        {
+            var want = data.ToDictionary(d => d.Key.Replace('\\', '/'), d => d.Value, StringComparer.OrdinalIgnoreCase);
+            var dataEntries = zd.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList();
+            if (dataEntries.Count != want.Count || dataEntries.Any(e => !want.ContainsKey(e.FullName)))
+                throw new InvalidDataException("Refused: the stage data archive does not match the pack's list.");
+            if (zc.Entries.Any(e => want.ContainsKey(e.FullName))) throw new InvalidDataException("Refused: core and stage data overlap.");
+            using (var outz = ZipFile.Open(merged, ZipArchiveMode.Create))
+            {
+                foreach (var e in zc.Entries.Concat(dataEntries))
+                {
+                    if (string.IsNullOrEmpty(e.Name)) continue;
+                    var ne = outz.CreateEntry(e.FullName, CompressionLevel.NoCompression);
+                    using (var i = e.Open()) using (var o = ne.Open()) i.CopyTo(o);
+                }
+            }
+        }
+        using (var z = ZipFile.OpenRead(merged))
+            foreach (var d in data)
+            {
+                var e = z.GetEntry(d.Key.Replace('\\', '/'));
+                using (var h = SHA256.Create()) using (var st = e.Open())
+                    if (BitConverter.ToString(h.ComputeHash(st)).Replace("-", "").ToLowerInvariant() != d.Value) throw new InvalidDataException("Refused: stage file differs from the pack's list: " + d.Key);
+            }
+        Line("core + stage data merged into " + merged);
+        return merged;
+    }
+    // 1.3.4 : downloads of older versions stayed in %TEMP%\DOA5LR-Salons (270 MB each since 0.3.13): keep only this version's
+    public static void CleanCache(Manifest m)
+    {
+        try
+        {
+            var dir = Path.Combine(Path.GetTempPath(), Cfg.PackName); if (!Directory.Exists(dir)) return;
+            var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Cfg.PackName + "-" + m.Version + ".zip" };
+            if (m.CoreSha256.Length == 64) keep.Add(Cfg.PackName + "-core-" + m.CoreSha256.Substring(0, 16) + ".zip");
+            if (m.DataSha256.Length == 64) keep.Add(Cfg.PackName + "-maps-data-" + m.DataSha256.Substring(0, 16) + ".zip");
+            if (m.SkinsSha256.Length == 64) keep.Add(Cfg.PackName + "-ps4skins-data-" + m.SkinsSha256.Substring(0, 16) + ".zip");
+            foreach (var f in Directory.GetFiles(dir, Cfg.PackName + "-*.zip*"))
+                if (!keep.Contains(Path.GetFileName(f))) try { File.Delete(f); } catch { }
+        }
+        catch { }
+    }
+    public static void DropMerged(string zip) { try { if (zip != null && zip.EndsWith("-merged.zip", StringComparison.OrdinalIgnoreCase)) File.Delete(zip); } catch { } }
+    // data files = entries of DOA5LR-Diagnostic/maps-files.json that are not in the core archive
+    static List<KeyValuePair<string, string>> DataList(ZipArchive core)
+    {
+        var list = new List<KeyValuePair<string, string>>();
+        var e = core.GetEntry("DOA5LR-Diagnostic/maps-files.json"); if (e == null) return list;
+        string json; using (var r = new StreamReader(e.Open(), Encoding.UTF8)) json = r.ReadToEnd();
+        var inCore = new HashSet<string>(core.Entries.Select(x => x.FullName), StringComparer.OrdinalIgnoreCase);
+        foreach (Match m in Regex.Matches(json, "\"path\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"sha256\"\\s*:\\s*\"([0-9a-fA-F]{64})\""))
+        {
+            var rel = m.Groups[1].Value.Replace("\\\\", "\\").Replace('/', '\\');
+            if (rel.Contains("..") || Path.IsPathRooted(rel) || Cfg.IsForbidden(rel)) throw new InvalidDataException("Refused: unsafe stage data path: " + rel);
+            if (!inCore.Contains(rel.Replace('\\', '/'))) list.Add(new KeyValuePair<string, string>(rel, m.Groups[2].Value.ToLowerInvariant()));
+        }
+        return list;
+    }
+
     public string DownloadPack(Manifest m)
     {
+        return Fetch(m.Url, m.Sha256, m.Size, Cfg.PackName + "-" + m.Version + ".zip", Cfg.PackName + " " + m.Version);
+    }
+    string Fetch(string url, string sha256, long size, string cacheName, string label)
+    {
+        var m = new { Url = url, Sha256 = sha256 ?? "", Size = size, Version = label };
         bool local = !m.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase);
         string source = m.Url;
         // An explicitly selected local manifest may use a sibling ZIP filename,
@@ -572,10 +871,10 @@ class Engine
         if (local && (!Cfg.AllowLocalPack || !Path.IsPathRooted(source) || !File.Exists(source) || m.Sha256.Length != 64 || m.Size <= 0))
             throw new InvalidDataException("Local packs require --manifest <local file>, an absolute ZIP path or sibling ZIP filename, SHA256 and size.");
         var dir = Path.Combine(Path.GetTempPath(), Cfg.PackName); Directory.CreateDirectory(dir);
-        var zip = Path.Combine(dir, Cfg.PackName + "-" + m.Version + ".zip");
+        var zip = Path.Combine(dir, cacheName);
         if (File.Exists(zip) && m.Sha256.Length == 64 && Util.Sha256(zip) == m.Sha256) { Line("using cached download " + zip); return zip; }
-        Status("Downloading " + Cfg.PackName + " " + m.Version + "...");
-        Util.Download(source, zip + ".part", (d, t) => { if (t > 0) Progress((int)(d * 100 / t)); Status("Downloading " + Cfg.PackName + " " + m.Version + "  " + Util.Human(d) + (t > 0 ? " / " + Util.Human(t) : "")); });
+        Status("Downloading " + m.Version + "...");
+        Util.Download(source, zip + ".part", (d, t) => { if (t > 0) Progress((int)(d * 100 / t)); Status("Downloading " + m.Version + "  " + Util.Human(d) + (t > 0 ? " / " + Util.Human(t) : "")); });
         if (File.Exists(zip)) File.Delete(zip);
         File.Move(zip + ".part", zip);
         if (m.Size > 0 && new FileInfo(zip).Length != m.Size) throw new Exception("Download size mismatch (" + new FileInfo(zip).Length + " vs " + m.Size + " bytes). Try again.");
@@ -606,11 +905,17 @@ class Engine
         var bman = new List<string> { "# " + Cfg.PackName + " backup " + stamp + " — previous version: " + (prev == "" ? "(none)" : prev) + (m != null ? " — installed: " + m.Version : "") };
         int replaced = 0, added = 0, kept = 0, deleted = 0, skipped = 0, moved = 0, leftOut = 0;
         var selection = Component.Read(Game);
+        bool borderlessBefore = !FreshInstall && Component.Selected(selection, "borderless");   // 1.3.4 : ResolutionMod rule
         bool wasInputLabOn = Component.Current.Any(c => c.Id == "inputlab") && Component.Selected(selection, "inputlab");
         if (sel != null) foreach (var choice in sel) selection[choice.Key] = choice.Value;
         sel = selection;
         var left = Component.LeftOut(sel); var leftFiles = new List<string>(); var leftDirs = new List<string>();
         bool inputLabOn = Component.Current.Any(c => c.Id == "inputlab") && Component.Selected(sel, "inputlab");
+        bool skinsPresent = Component.Current.Any(c => c.Id == "ps4skins");
+        bool skinsOn = skinsPresent && Component.Selected(sel, "ps4skins");
+        var skinsConfig = skinsOn ? Ps4Skins.Preflight(Game) : null;
+        bool changeSkinsConfig = skinsConfig != null && !skinsConfig.Before.SequenceEqual(skinsConfig.After);
+        if (changeSkinsConfig) bman.Add(Ps4Skins.BackupMarker);
         if (wasInputLabOn) InputLabSettings.VerifyExisting(Game); // fail before changing files if the old values cannot be restored
         else if (inputLabOn && File.Exists(Path.Combine(Game, InputLabSettings.SnapshotRel))) InputLabSettings.VerifyExisting(Game);
         string inputLabBridgeHash = null;
@@ -624,12 +929,20 @@ class Engine
             {
                 var rel = e.FullName.Replace('/', '\\');
                 if (rel.Contains("..") || Path.IsPathRooted(rel) || !Inside(Abs(rel))) throw new Exception("Refused: unsafe path in archive: " + e.FullName);
-                if (Cfg.Forbidden.IsMatch(rel)) throw new Exception("Refused: the archive contains a forbidden file (" + e.FullName + "). This is not an official pack.");
+                if (Cfg.IsForbidden(rel)) throw new Exception("Refused: the archive contains a forbidden file (" + e.FullName + "). This is not an official pack.");
             }
             if (Component.Current.Any(c => c.Id == "inputlab")) inputLabBridgeHash = ValidateInputLabArchive(entries); // app/payload must be complete even with runtime OFF
+            if (skinsPresent || entries.Any(e => Cfg.IsPs4Skin(e.FullName)))
+            {
+                if (!skinsPresent) throw new InvalidDataException("Refused: native PS4 skins need the optional_v6 component.");
+                var skinList = SkinList(z);
+                bool inArchive = ValidateSkinEntries(entries, skinList);
+                if (skinsOn && !inArchive && skinList.Any(d => !File.Exists(Abs(d.Key)) || Util.Sha256(Abs(d.Key)) != d.Value))
+                    throw new InvalidDataException("Refused: PS4 skins are selected but costume files are missing or different.");
+            }
             if (!entries.Any(e => e.FullName.Equals(Cfg.VersionFile, StringComparison.OrdinalIgnoreCase))) throw new Exception("Refused: archive has no " + Cfg.VersionFile + " at its root (wrong zip?).");
             Status("Backing up files that will be replaced...");
-            if (m != null) foreach (var rel in m.Delete)
+            if (m != null) foreach (var rel in m.Delete.Concat(m.DeleteIf.Select(d => d.Key)))
                 if (Path.IsPathRooted(rel) || rel.Contains("..") || !Inside(Abs(rel)))
                     throw new InvalidDataException("Refused: unsafe delete in version.txt: " + rel);
             Progress(0);
@@ -638,7 +951,7 @@ class Engine
             foreach (var mv in moves)
             {
                 var a = Abs(mv.Key); var b2 = Abs(mv.Value);
-                if (!Inside(a) || !Inside(b2) || mv.Key.Contains("..") || mv.Value.Contains("..") || Cfg.Forbidden.IsMatch(mv.Key) || Cfg.Forbidden.IsMatch(mv.Value))
+                if (!Inside(a) || !Inside(b2) || mv.Key.Contains("..") || mv.Value.Contains("..") || Cfg.IsForbidden(mv.Key) || Cfg.IsForbidden(mv.Value))
                     throw new Exception("Refused: unsafe move in version.txt: " + mv.Key + " -> " + mv.Value);
             }
             // 1.1.0 : files on disk that belong to a component left out (a dir\* glob covers the whole folder, whatever is in it)
@@ -648,8 +961,9 @@ class Engine
                 else if (g.IndexOf('*') < 0 && Inside(Abs(g)) && File.Exists(Abs(g))) leftFiles.Add(g);
             }
             var keptDefaults = entries.Select(e => e.FullName.Replace('/', '\\')).Where(rel => File.Exists(Abs(rel)) && keep.Any(k => Util.Glob(k, Path.GetFileName(rel)))).Select(rel => rel + ".new");
-            var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(keptDefaults).Concat(m != null ? m.Delete : new List<string>()).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Concat(new[] { Cfg.ComponentsFile })
+            var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(keptDefaults).Concat(m != null ? m.Delete : new List<string>()).Concat(m != null ? m.DeleteIf.Select(d => d.Key) : new string[0]).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Concat(new[] { Cfg.ComponentsFile })
                 .Concat(Component.Current.Any(c => c.Id == "inputlab") ? new[] { "Xidi.ini", InputLabSettings.SnapshotRel } : new string[0])
+                .Concat(changeSkinsConfig ? new[] { Ps4Skins.Config } : new string[0])
                 .Concat(leftFiles).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             Directory.CreateDirectory(BackupFolder);
             foreach (var rel in touched)
@@ -658,7 +972,13 @@ class Engine
                 if (File.Exists(abs))
                 {
                     var b = Path.Combine(BackupFolder, rel); Directory.CreateDirectory(Path.GetDirectoryName(b));
-                    File.Copy(abs, b, true); bman.Add("had|" + rel);
+                    try { File.Copy(abs, b, true); bman.Add("had|" + rel); }
+                    catch (IOException ex)
+                    {   // 1.3.4 : an antivirus refuses to read a file it flags (0.3.13 DangerZone.asi, Defender ML false positive).
+                        // Without this the whole update failed, although the update is what replaces that file.
+                        if (!Util.IsVirusError(ex)) throw;
+                        bman.Add("new|" + rel); Line("not backed up " + rel + " (blocked by the antivirus); it is replaced by this version");
+                    }
                 }
                 else bman.Add("new|" + rel);
             }
@@ -693,20 +1013,42 @@ class Engine
                     e.ExtractToFile(abs + ".new", true); SelfReplaced = true; Line("installer itself updated (applied on exit)"); continue;
                 }
                 try { e.ExtractToFile(abs, true); }
-                catch (IOException ex) { throw new Exception("Cannot write " + rel + " (" + ex.Message + "). Is the game or a launcher still open?"); }
+                catch (IOException ex)
+                {
+                    // 1.3.4 : the old copy is blocked by the antivirus: remove it, then write the new one
+                    bool retried = false;
+                    if (Util.IsVirusError(ex)) try { if (File.Exists(abs)) File.Delete(abs); e.ExtractToFile(abs, true); retried = true; Line("replaced " + rel + " (old copy blocked by the antivirus)"); } catch { }
+                    if (!retried) throw new Exception("Cannot write " + rel + " (" + ex.Message + "). Is the game or a launcher still open?");
+                }
                 if (exists) replaced++; else added++;
             }
             // 4. delete list
             if (m != null) foreach (var rel in m.Delete)
             {
                 var abs = Abs(rel);
-                if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel) && !rel.Equals("DLC Unlocker.txt", StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
+                if (!Inside(abs) || Cfg.IsForbidden(rel) && !rel.Equals("DLC Unlocker.txt", StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
                 if (File.Exists(abs)) { try { File.Delete(abs); deleted++; Line("removed obsolete " + rel); } catch (Exception ex) { Line("could not remove " + rel + ": " + ex.Message); } }
+            }
+            // 4b. 1.3.4 : conditional deletes — only the exact old file (a same-named file of another mod stays)
+            if (m != null) foreach (var d in m.DeleteIf)
+            {
+                var abs = Abs(d.Key);
+                if (!Inside(abs) || Cfg.IsForbidden(d.Key) || !File.Exists(abs)) continue;
+                if (Util.Sha256(abs) != d.Value) { Line("kept your " + d.Key + " (not the old pack file)"); continue; }
+                try { File.Delete(abs); deleted++; Line("removed obsolete " + d.Key); } catch (Exception ex) { Line("could not remove " + d.Key + ": " + ex.Message); }
             }
         }
         // InputLab is opt-in: the mandatory archive frontend remains the original Xidi when unchecked.
         // Both frontend copies were verified in the archive before backup/extraction; check disk again
         // before placing the bridge so an unexpected delete or partial extraction cannot be hidden.
+        if (changeSkinsConfig)
+        {
+            string path = Abs(Ps4Skins.Config);
+            if (!File.ReadAllBytes(path).SequenceEqual(skinsConfig.Before))
+                throw new IOException("The local costume loader configuration changed during installation. Use Restore backup before trying again.");
+            File.WriteAllBytes(path, skinsConfig.After);
+            Line("registered PS4 costume package 990015 in the existing local loader; other configuration bytes kept");
+        }
         if (inputLabOn)
         {
             var active = Abs("dinput8ex.bin");
@@ -741,12 +1083,18 @@ class Engine
         // remembered (read back by --update, the file check and the next run of this installer)
         foreach (var rel in leftFiles.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            var abs = Abs(rel); if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel) || !File.Exists(abs)) continue;
+            var abs = Abs(rel); if (!Inside(abs) || Cfg.IsForbidden(rel) || !File.Exists(abs)) continue;
             if (rel.EndsWith(".ini", StringComparison.OrdinalIgnoreCase)) { Line("kept your " + rel + " (settings of a component left out)"); continue; }
             File.Delete(abs); Line("removed " + rel + " (component left out)");
         }
         foreach (var d in leftDirs.OrderByDescending(d => d.Length)) try { if (Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
         Component.Write(Game, sel);
+        try
+        {
+            bool borderlessNow = Component.Current.Any(c => c.Id == "borderless") && Component.Selected(sel, "borderless");
+            var rm = Util.SyncResolutionMod(Game, borderlessNow, FreshInstall || borderlessNow != borderlessBefore); if (rm != null) Line(rm);
+        }
+        catch (Exception ex) { Line("DInput8.ini ResolutionMod not updated: " + ex.Message); }
         // folders emptied by the delete list
         if (m != null) foreach (var d in m.Delete.Select(r => Path.GetDirectoryName(Abs(r))).Where(d => d != null).Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(d => d.Length))
             try { if (Inside(d + "\\") && Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
@@ -774,7 +1122,8 @@ class Engine
             Progress(++n * 100 / Math.Max(1, lines.Length));
             var p = ln.Split(new[] { '|' }, 2); if (p.Length != 2) continue;
             var rel = p[1]; var abs = Abs(rel);
-            if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel)) continue;
+            bool skinConfig = rel.Equals(Ps4Skins.Config, StringComparison.OrdinalIgnoreCase) && p[0] == "had" && lines.Contains(Ps4Skins.BackupMarker);
+            if (!Inside(abs) || (Cfg.IsForbidden(rel) && !skinConfig)) continue;
             if (p[0] == "had")
             {
                 var src = Path.Combine(backup, rel); if (!File.Exists(src)) continue;
@@ -833,11 +1182,29 @@ static class InputLauncher
         catch { return false; }
     }
 
+    // 1.3.4 (idea from Inyo): PLAY starts the game directly; "Set controls" opens the app. The app is only needed before
+    // play when the experimental in-game remapping is ON in Keyboard/combined mode: its Play button checks that no
+    // controller is connected (a connected controller can block keyboard input). Controller mode or runtime OFF = direct.
+    public static bool RequiresChooser(string game)
+    {
+        if (string.IsNullOrEmpty(game)) return false;
+        bool runtimeOn;
+        try { runtimeOn = File.ReadLines(Path.Combine(game, Cfg.ComponentsFile)).Any(line => Regex.IsMatch(line, @"^\s*inputlab\s*=\s*1\s*$", RegexOptions.IgnoreCase)); }
+        catch { runtimeOn = false; }
+        if (!runtimeOn) return false;
+        try
+        {
+            var m = Regex.Match(File.ReadAllText(Path.Combine(game, "DOA5LR-InputBridge.ini")), @"^\s*Mode\s*=\s*(\w+)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            return !(m.Success && m.Groups[1].Value.Equals("Controller", StringComparison.OrdinalIgnoreCase));
+        }
+        catch { return true; }
+    }
+
     public static bool TryOpen(string game, Action<ProcessStartInfo> open = null)
     {
         if (!Enabled(game)) return false;
         var exe = Path.GetFullPath(Path.Combine(game, @"InputLab\DOA5LR-Commandes.exe"));
-        if (!File.Exists(exe)) throw new FileNotFoundException("The Keyboard / controller app is missing. Repair the mod pack, or restore the InputLab folder from the pack ZIP before playing. The experimental runtime may remain unchecked.", exe);
+        if (!File.Exists(exe)) throw new FileNotFoundException("The Set controls app is missing. Repair the mod pack, or restore the InputLab folder from the pack ZIP before playing. The experimental runtime may remain unchecked.", exe);
         var start = new ProcessStartInfo(exe) { WorkingDirectory = Path.GetDirectoryName(exe), UseShellExecute = true };
         if (open == null) StartOrActivate(start); else open(start);
         return true;
@@ -971,7 +1338,7 @@ static class DiagnosticBundle
             string version = SmallText(game, Cfg.VersionFile).Trim();
             report.AppendLine("Pack version: " + (Regex.IsMatch(version, @"\A[0-9A-Za-z.+_-]{1,64}\z") ? version : "missing or invalid"));
             string components = SmallText(game, Cfg.ComponentsFile);
-            foreach (string component in new[] { "borderless", "60fps", "inputlab", "replaytakeover", "maps" }) { string value = IniValue(components, null, component); report.AppendLine("Component " + component + ": " + (value == "0" || value == "1" ? value : "not recorded")); }
+            foreach (string component in new[] { "borderless", "60fps", "inputlab", "replaytakeover", "maps", "ps4skins" }) { string value = IniValue(components, null, component); report.AppendLine("Component " + component + ": " + (value == "0" || value == "1" ? value : "not recorded")); }
             string mode = IniValue(SmallText(game, "DOA5LR-InputBridge.ini"), "Input", "Mode");
             report.AppendLine("Saved input mode: " + (new[] { "Keyboard", "Controller", "Hybrid" }.Contains(mode, StringComparer.OrdinalIgnoreCase) ? mode : "not recorded") + " (only relevant when inputlab is enabled)");
             report.AppendLine("\r\nExisting logs (up to the last 2 MiB each):");
@@ -1080,9 +1447,9 @@ class MainForm : Form
         cbDisplay.Items.AddRange(new object[] { "Fullscreen (game setting)", "Window (with borders)", "Borderless fullscreen (recommended)" });
         cbDisplay.SelectedIndexChanged += (s, e) => { if (!busy && cbDisplay.Enabled && cbDisplay.Tag == null) { try { Util.WriteDisplayMode(game, cbDisplay.SelectedIndex); Status("Display mode: " + cbDisplay.Text + " — applied at the next game launch (F11 in game switches too)."); } catch (Exception ex) { Status("Display mode not saved: " + ex.Message); } } };
         Controls.Add(cbDisplay);
-        btnLaunch = B("▶   LAUNCH GAME", x, 696, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
+        btnLaunch = B("▶   PLAY", x, 696, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
         btnShortcut = B("Desktop shortcut", x + 308, 696, 180, 44, BTN, (s, e) => MakeShortcut());   // 1.2.0
-        btnFinder = B("Keyboard / controller", x + 496, 696, 200, 44, BTN, (s, e) => OpenInputSettings());
+        btnFinder = B("Set controls", x + 496, 696, 200, 44, BTN, (s, e) => OpenInputSettings());
         btnRestore = B("Restore backup", x, 752, 150, 40, BTN, async (s, e) => await RestoreAction());
         btnBackups = B("Backups folder", x + 154, 752, 150, 40, BTN, (s, e) => OpenBackups());
         btnCheck = B("Check again", x + 308, 752, 130, 40, BTN, async (s, e) => await CheckAsync());
@@ -1094,7 +1461,7 @@ class MainForm : Form
             bp.Font = new Font("Segoe UI", 10f, FontStyle.Bold); bp.BringToFront();
         }
         L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 812, w, 9f, false, DIM);
-        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 834, w, 9f, false, DIM);
+        L("No Steam DLLs supplied. PS4 skins use your existing loader. Other .ini settings are kept.", x, 834, w, 9f, false, DIM);
         L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 860, w, 9f, false, DIM);
     }
     // 1.1.0 : one check box per optional component (list = Component.Current, may change once the manifest is read)
@@ -1104,9 +1471,9 @@ class MainForm : Form
         int x = 32, top = 408;
         foreach (var comp in Component.Current)
         {
-            var cb = new CheckBox { Text = comp.Label, Tag = comp.Id, Left = x + 8, Top = top, AutoSize = true, ForeColor = TXT, BackColor = Color.Transparent, Font = new Font("Segoe UI", 10f), Checked = Component.Selected(sel, comp.Id), Cursor = Cursors.Hand };
+            var cb = new CheckBox { Text = comp.Label, Tag = comp.Id, Left = x + 8, Top = top, AutoSize = true, ForeColor = TXT, BackColor = Color.Transparent, Font = new Font("Segoe UI", Component.Current.Length > 5 ? 9.5f : 10f), Checked = Component.Selected(sel, comp.Id), Cursor = Cursors.Hand };
             cb.CheckedChanged += (s, e) => { if (busy) return; sel[(string)cb.Tag] = cb.Checked; if (cbDisplay != null && (string)cb.Tag == "borderless") { cbDisplay.Enabled = cb.Checked && cbDisplay.Tag == null; lblDisplay.ForeColor = cbDisplay.Enabled ? TXT : DIM; } UpdateState(); };
-            Controls.Add(cb); chkComp.Add(cb); top += 26;
+            Controls.Add(cb); chkComp.Add(cb); top += Component.Current.Length > 5 ? 24 : 26;
         }
         if (lblComp != null) lblComp.Visible = lblCompSub.Visible = chkComp.Count > 0;
     }
@@ -1194,7 +1561,7 @@ class MainForm : Form
     void UpdateState()
     {
         bool ok = game != "" && File.Exists(Path.Combine(game, Cfg.GameExe));
-        if (btnLaunch != null) { btnLaunch.Enabled = ok && !busy; btnLaunch.Text = InputLauncher.Enabled(game) ? "▶   CHOOSE INPUT / PLAY" : "▶   LAUNCH GAME"; }   // works offline too (no manifest needed)
+        if (btnLaunch != null) { btnLaunch.Enabled = ok && !busy; btnLaunch.Text = "▶   PLAY"; }   // works offline too (no manifest needed)
         if (btnFinder != null) btnFinder.Enabled = ok && !busy && InputLauncher.Available(game);
         if (manifest == null) { btnMain.Text = "CHECKING…"; btnMain.Enabled = false; return; }
         btnMain.Enabled = ok && !busy && manifest.Url != "";
@@ -1284,9 +1651,9 @@ class MainForm : Form
         SetBusy(true);
         try
         {
-            var zip = await Task.Run(() => eng.DownloadPack(manifest));
             var choice = new Dictionary<string, bool>(sel, StringComparer.OrdinalIgnoreCase);
-            await Task.Run(() => eng.InstallZip(zip, manifest, choice));
+            var zip = await Task.Run(() => eng.PreparePack(manifest, choice));
+            try { await Task.Run(() => eng.InstallZip(zip, manifest, choice)); } finally { Engine.DropMerged(zip); }
             await Task.Delay(1500);   // 1.0.3 : give a real-time antivirus the time to react before we check the files
             LoadSelection(); RefreshInstalled();
             if (missing.Count > 0)
@@ -1303,9 +1670,9 @@ class MainForm : Form
             msg += (eng.FreshInstall ? "\r\n\r\nRead READ-ME-FIRST-EN.txt in the game folder once (controller setup, lobby key)." : "") + "\r\n\r\nYou can start the game.";
             bool play = false;
             if (updateMode || eng.SelfReplaced) MessageBox.Show(this, msg.Trim(), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            else play = MessageBox.Show(this, msg.Trim() + (InputLauncher.Enabled(game) ? "\r\n\r\nOpen Keyboard / controller to choose your input before playing?" : "\r\n\r\nLaunch the game now (through Steam)?"), "Success", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes;
+            else play = MessageBox.Show(this, msg.Trim() + (InputLauncher.RequiresChooser(game) ? "\r\n\r\nOpen Set controls (keyboard remapping is on) before playing?" : "\r\n\r\nLaunch the game now (through Steam)?"), "Success", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes;
             if (eng.FreshInstall && !updateMode && !File.Exists(ShortcutPath) &&   // first install -> offer the configuration shortcut
-                MessageBox.Show(this, "Add a \"" + Path.GetFileNameWithoutExtension(ShortcutPath) + "\" shortcut to your desktop?\r\n\r\nDouble-click it to open the installer and review your settings. Choose Keyboard / controller or launch through Steam when you are ready.", "Desktop shortcut", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                MessageBox.Show(this, "Add a \"" + Path.GetFileNameWithoutExtension(ShortcutPath) + "\" shortcut to your desktop?\r\n\r\nDouble-click it to open the installer and review your settings. Click PLAY to start the game, or Set controls to change keyboard / controller settings.", "Desktop shortcut", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 MakeShortcut(false);
             if (play) { SetBusy(false); await LaunchAction(true); return; }
             if (eng.SelfReplaced) Engine.ApplySelfReplaceAndRestart("");
@@ -1336,10 +1703,10 @@ class MainForm : Form
                 if (r == DialogResult.Yes) { await MainAction(); return; }   // MainAction offers to launch when it succeeds
             }
         }
-        if (InputLauncher.Enabled(game))
+        if (InputLauncher.RequiresChooser(game))
         {
             if (OpenInputSettings() && playMode) Close();
-            return; // A missing/broken app must not silently bypass the input choice and start the game.
+            return; // keyboard remapping ON: its app checks the controllers first; a missing app must not be bypassed silently.
         }
         SetBusy(true); bar.Visible = false;
         try
@@ -1411,7 +1778,7 @@ class MainForm : Form
                 "Opens " + Cfg.PackName + " installer and configuration; choose your settings before launching");
             Util.Log("shortcut created: " + lnk + " -> " + Application.ExecutablePath + " " + args);
             Status("Desktop shortcut created: " + Path.GetFileName(lnk));
-            if (explain) MessageBox.Show(this, "Shortcut \"" + Path.GetFileNameWithoutExtension(lnk) + "\" added to your desktop.\r\n\r\nDouble-click it to open the installer and review your settings. Choose Keyboard / controller or launch through Steam when you are ready.\r\n\r\nKeep this installer where it is now:\r\n" + Application.ExecutablePath + "\r\n(if you move it, click Desktop shortcut again).", "Desktop shortcut", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (explain) MessageBox.Show(this, "Shortcut \"" + Path.GetFileNameWithoutExtension(lnk) + "\" added to your desktop.\r\n\r\nDouble-click it to open the installer and review your settings. Click PLAY to start the game, or Set controls to change keyboard / controller settings.\r\n\r\nKeep this installer where it is now:\r\n" + Application.ExecutablePath + "\r\n(if you move it, click Desktop shortcut again).", "Desktop shortcut", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex) { Status("Shortcut failed: " + ex.Message); Util.Log("shortcut FAILED: " + ex.Message); }
     }
@@ -1469,15 +1836,15 @@ class MainForm : Form
     {
         try
         {
-            if (!InputLauncher.TryOpen(game)) { Status("Install or repair the mod pack to add Keyboard / controller settings."); return false; }
+            if (!InputLauncher.TryOpen(game)) { Status("Install or repair the mod pack to add the Set controls app."); return false; }
             Status("Choose Keyboard or Controller, then click Play via Steam when you are ready.");
-            Util.Log("launch: opened Keyboard / controller; waiting for the player's choice");
+            Util.Log("launch: opened Set controls; waiting for the player's choice");
             return true;
         }
         catch (Exception ex)
         {
-            Status("Could not open Keyboard / controller: " + ex.Message); Util.Log("input settings FAILED: " + ex);
-            MessageBox.Show(this, ex.Message, "Keyboard / controller", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Status("Could not open Set controls: " + ex.Message); Util.Log("input settings FAILED: " + ex);
+            MessageBox.Show(this, ex.Message, "Set controls", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return false;
         }
     }
@@ -1494,7 +1861,7 @@ class MainForm : Form
             "• Ultimate ASI Loader — ThirteenAG (MIT)\r\n" +
             "• Xidi controller layer — Samuel Grossman (BSD)\r\n" +
             "• d3d9 resolution mod — original author credited in Optional-Resolution-Mod\\README-EN.txt\r\n\r\n" +
-            "Installer " + Cfg.AppVersion + " (optional components since 1.1.0, LAUNCH GAME + desktop shortcut since 1.2.0 — idea by Inyo) — source in the pack repository: " + Cfg.ProjectUrl + "\r\n" +
+            "Installer " + Cfg.AppVersion + " (optional components since 1.1.0, LAUNCH GAME + desktop shortcut since 1.2.0, PLAY / Set controls since 1.3.4 — ideas by Inyo) — source in the pack repository: " + Cfg.ProjectUrl + "\r\n" +
             "Testers and everyone in the DOA5LR lobbies: thank you.\r\n\r\n" +
             "Privacy: diagnostics are exported locally; nothing is uploaded automatically. UpdateCheck reads the public version manifest; the installer downloads updates. Lobby/network modules communicate with other players. Lobby writes a local log.\r\n" +
             (Cfg.PatreonUrl != "" ? "Support the project: " + Cfg.PatreonUrl : ""),
@@ -1527,7 +1894,7 @@ static class Program
             {
                 var m = Manifest.Parse(Util.HttpGetText(Cfg.VersionUrl));
                 var eng = new Engine { Game = g, Status = s => Util.Log("  " + s), Confirm = (t, s) => false };
-                var zip = eng.DownloadPack(m); eng.InstallZip(zip, m, compArg);
+                var zip = eng.PreparePack(m, compArg); try { eng.InstallZip(zip, m, compArg); } finally { Engine.DropMerged(zip); }
                 Util.Log("auto: OK " + m.Version); Environment.Exit(0);
             }
             catch (Exception ex) { Util.Log("auto: FAILED " + ex.Message); Environment.Exit(1); }

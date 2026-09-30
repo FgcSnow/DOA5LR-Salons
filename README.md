@@ -100,7 +100,7 @@ The pack does use the network: UpdateCheck reads a public version manifest, the 
 
 Maintained plugin release builds generally disable their diagnostic logs. **Lobby 0.9.0 is an external exception and writes a local log.** Configuration files, profiles, installer logs and backups are also written locally. This is not a blanket claim of no file writes or no network traffic.
 
-Sources for maintained components are in [`src/`](src/). The external Lobby binary is shipped as received; its source is not included and it is outside the project's source/reproducibility claims. See the [build instructions](src/README.md) for the supported components and toolchain. The pack contains no game content or Steam API/DLC files.
+Sources for maintained components are in [`src/`](src/). The external Lobby binary is shipped as received; its source is not included and it is outside the project's source/reproducibility claims. See the [build instructions](src/README.md) for the supported components and toolchain. Later pack builds include optional stage assets; the local 0.3.14 test build also packages 15 PS4 costumes as optional native costume data. It supplies or replaces no Steam DLL. The costume component requires an existing compatible local loader; disabling it keeps the loader configuration and its `990015` entry while removing the four costume data files and component guide. On 2026-09-30, the user confirmed the full costume/variant set in combat and reported online use. Installer checks are recorded separately in `validation-report.json` in the local release folder. See the [0.3.14 release notes](docs/RELEASE-NOTES-0.3.14.md).
 
 ## Credits and license
 
