@@ -28,6 +28,10 @@
 //   optional_v2=id|label|glob;glob...  (1.3.1: same validation; older installers ignore this key and can self-update first)
 //   optional_v3=id|label|glob;glob...  (1.3.2: Replay Takeover; 1.3.1 ignores this key and self-updates first)
 //   optional_v4=id|label|glob;glob...  (1.3.3: DZ / Crimson maps; 1.3.2 ignores this key and self-updates first)
+//   core=url|sha256|size                (1.3.4: the pack WITHOUT the stage data; with data= below, a player whose stage data is
+//   data=maps|url|sha256|size            already installed and intact downloads only the core. url= stays the full pack for older
+//                                        installers; core + data = full pack, entry for entry. The data files are the entries of
+//                                        DOA5LR-Diagnostic\maps-files.json that are not in the core; each is checked by SHA-256)
 //   file=name|url|fnv32|size            (for Telemetry AutoUpdate, ignored here)
 using System;
 using System.Collections.Generic;
@@ -157,6 +161,8 @@ class Manifest
     public List<KeyValuePair<string, string>> DeleteIf = new List<KeyValuePair<string, string>>();   // 1.3.4 : path -> sha256
     public List<KeyValuePair<string, string>> Move = new List<KeyValuePair<string, string>>();
     public List<Component> Optional = new List<Component>();   // 1.1.0
+    public string CoreUrl = "", CoreSha256 = "", DataId = "", DataUrl = "", DataSha256 = "";   // 1.3.4 : split download
+    public long CoreSize, DataSize;
     public static Manifest Parse(string text)
     {
         var m = new Manifest();
@@ -180,6 +186,8 @@ class Manifest
                 case "installer": m.InstallerUrl = v; break;
                 case "installer_version": m.InstallerVersion = v; break;
                 case "installer_sha256": m.InstallerSha256 = v.ToLowerInvariant(); break;
+                case "core": { var c = v.Split('|'); long n; if (c.Length == 3 && Regex.IsMatch(c[1].Trim(), "^[0-9a-fA-F]{64}$") && long.TryParse(c[2].Trim(), out n) && n > 0) { m.CoreUrl = c[0].Trim(); m.CoreSha256 = c[1].Trim().ToLowerInvariant(); m.CoreSize = n; } break; }
+                case "data": { var c = v.Split('|'); long n; if (c.Length == 4 && c[0].Trim().ToLowerInvariant() == "maps" && Regex.IsMatch(c[2].Trim(), "^[0-9a-fA-F]{64}$") && long.TryParse(c[3].Trim(), out n) && n > 0) { m.DataId = "maps"; m.DataUrl = c[1].Trim(); m.DataSha256 = c[2].Trim().ToLowerInvariant(); m.DataSize = n; } break; }
                 // Keep the old key for preview manifests. Public manifests use optional_v2
                 // for InputLab so 1.1 can parse them before offering its own update.
                 case "optional":
@@ -610,8 +618,93 @@ class Engine
         }
     }
 
+    // 1.3.4 : the archive to install. Without core=/data= in the manifest (or when the maps are left out / their data is already
+    // installed and intact) this is one download; otherwise core + stage data are merged into one full pack before InstallZip,
+    // so InstallZip sees exactly what the full ZIP would give (same backup, same checks).
+    public string PreparePack(Manifest m, Dictionary<string, bool> choice)
+    {
+        Game = Path.GetFullPath(Game);
+        CleanCache(m);
+        if (m.CoreUrl == "" || m.DataUrl == "" || m.DataId != "maps") return DownloadPack(m);
+        var core = Fetch(m.CoreUrl, m.CoreSha256, m.CoreSize, Cfg.PackName + "-core-" + m.CoreSha256.Substring(0, 16) + ".zip", Cfg.PackName + " " + m.Version);
+        var sel = Component.Read(Path.GetFullPath(Game)); if (choice != null) foreach (var c in choice) sel[c.Key] = c.Value;
+        if (!Component.Current.Any(c => c.Id == "maps") || !Component.Selected(sel, "maps")) { Line("maps left out: stage data not downloaded"); return core; }
+        List<KeyValuePair<string, string>> data;
+        using (var z = ZipFile.OpenRead(core)) data = DataList(z);
+        if (data.Count == 0) throw new InvalidDataException("Refused: the core pack has no stage data list.");
+        Status("Checking the installed stage files...");
+        var bad = data.Where(d => { var a = Abs(d.Key); return !Inside(a) || !File.Exists(a) || Util.Sha256(a) != d.Value; }).Select(d => d.Key).ToList();
+        if (bad.Count == 0) { Line("stage data up to date (" + data.Count + " files checked): only the core pack downloaded"); return core; }
+        Line("stage data to download: " + bad.Count + " of " + data.Count + " files missing or different (" + bad[0] + (bad.Count > 1 ? ", ..." : "") + ")");
+        var dz = Fetch(m.DataUrl, m.DataSha256, m.DataSize, Cfg.PackName + "-maps-data-" + m.DataSha256.Substring(0, 16) + ".zip", "stage data");
+        var merged = Path.Combine(Path.GetDirectoryName(core), Cfg.PackName + "-" + m.Version + "-merged.zip");
+        Status("Preparing the pack...");
+        if (File.Exists(merged)) File.Delete(merged);
+        using (var zc = ZipFile.OpenRead(core)) using (var zd = ZipFile.OpenRead(dz))
+        {
+            var want = data.ToDictionary(d => d.Key.Replace('\\', '/'), d => d.Value, StringComparer.OrdinalIgnoreCase);
+            var dataEntries = zd.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList();
+            if (dataEntries.Count != want.Count || dataEntries.Any(e => !want.ContainsKey(e.FullName)))
+                throw new InvalidDataException("Refused: the stage data archive does not match the pack's list.");
+            if (zc.Entries.Any(e => want.ContainsKey(e.FullName))) throw new InvalidDataException("Refused: core and stage data overlap.");
+            using (var outz = ZipFile.Open(merged, ZipArchiveMode.Create))
+            {
+                foreach (var e in zc.Entries.Concat(dataEntries))
+                {
+                    if (string.IsNullOrEmpty(e.Name)) continue;
+                    var ne = outz.CreateEntry(e.FullName, CompressionLevel.NoCompression);
+                    using (var i = e.Open()) using (var o = ne.Open()) i.CopyTo(o);
+                }
+            }
+        }
+        using (var z = ZipFile.OpenRead(merged))
+            foreach (var d in data)
+            {
+                var e = z.GetEntry(d.Key.Replace('\\', '/'));
+                using (var h = SHA256.Create()) using (var st = e.Open())
+                    if (BitConverter.ToString(h.ComputeHash(st)).Replace("-", "").ToLowerInvariant() != d.Value) throw new InvalidDataException("Refused: stage file differs from the pack's list: " + d.Key);
+            }
+        Line("core + stage data merged into " + merged);
+        return merged;
+    }
+    // 1.3.4 : downloads of older versions stayed in %TEMP%\DOA5LR-Salons (270 MB each since 0.3.13): keep only this version's
+    public static void CleanCache(Manifest m)
+    {
+        try
+        {
+            var dir = Path.Combine(Path.GetTempPath(), Cfg.PackName); if (!Directory.Exists(dir)) return;
+            var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Cfg.PackName + "-" + m.Version + ".zip" };
+            if (m.CoreSha256.Length == 64) keep.Add(Cfg.PackName + "-core-" + m.CoreSha256.Substring(0, 16) + ".zip");
+            if (m.DataSha256.Length == 64) keep.Add(Cfg.PackName + "-maps-data-" + m.DataSha256.Substring(0, 16) + ".zip");
+            foreach (var f in Directory.GetFiles(dir, Cfg.PackName + "-*.zip*"))
+                if (!keep.Contains(Path.GetFileName(f))) try { File.Delete(f); } catch { }
+        }
+        catch { }
+    }
+    public static void DropMerged(string zip) { try { if (zip != null && zip.EndsWith("-merged.zip", StringComparison.OrdinalIgnoreCase)) File.Delete(zip); } catch { } }
+    // data files = entries of DOA5LR-Diagnostic/maps-files.json that are not in the core archive
+    static List<KeyValuePair<string, string>> DataList(ZipArchive core)
+    {
+        var list = new List<KeyValuePair<string, string>>();
+        var e = core.GetEntry("DOA5LR-Diagnostic/maps-files.json"); if (e == null) return list;
+        string json; using (var r = new StreamReader(e.Open(), Encoding.UTF8)) json = r.ReadToEnd();
+        var inCore = new HashSet<string>(core.Entries.Select(x => x.FullName), StringComparer.OrdinalIgnoreCase);
+        foreach (Match m in Regex.Matches(json, "\"path\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"sha256\"\\s*:\\s*\"([0-9a-fA-F]{64})\""))
+        {
+            var rel = m.Groups[1].Value.Replace("\\\\", "\\").Replace('/', '\\');
+            if (rel.Contains("..") || Path.IsPathRooted(rel) || Cfg.Forbidden.IsMatch(rel)) throw new InvalidDataException("Refused: unsafe stage data path: " + rel);
+            if (!inCore.Contains(rel.Replace('\\', '/'))) list.Add(new KeyValuePair<string, string>(rel, m.Groups[2].Value.ToLowerInvariant()));
+        }
+        return list;
+    }
+
     public string DownloadPack(Manifest m)
     {
+        return Fetch(m.Url, m.Sha256, m.Size, Cfg.PackName + "-" + m.Version + ".zip", Cfg.PackName + " " + m.Version);
+    }
+    string Fetch(string url, string sha256, long size, string cacheName, string label)
+    {
+        var m = new { Url = url, Sha256 = sha256 ?? "", Size = size, Version = label };
         bool local = !m.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase);
         string source = m.Url;
         // An explicitly selected local manifest may use a sibling ZIP filename,
@@ -622,10 +715,10 @@ class Engine
         if (local && (!Cfg.AllowLocalPack || !Path.IsPathRooted(source) || !File.Exists(source) || m.Sha256.Length != 64 || m.Size <= 0))
             throw new InvalidDataException("Local packs require --manifest <local file>, an absolute ZIP path or sibling ZIP filename, SHA256 and size.");
         var dir = Path.Combine(Path.GetTempPath(), Cfg.PackName); Directory.CreateDirectory(dir);
-        var zip = Path.Combine(dir, Cfg.PackName + "-" + m.Version + ".zip");
+        var zip = Path.Combine(dir, cacheName);
         if (File.Exists(zip) && m.Sha256.Length == 64 && Util.Sha256(zip) == m.Sha256) { Line("using cached download " + zip); return zip; }
-        Status("Downloading " + Cfg.PackName + " " + m.Version + "...");
-        Util.Download(source, zip + ".part", (d, t) => { if (t > 0) Progress((int)(d * 100 / t)); Status("Downloading " + Cfg.PackName + " " + m.Version + "  " + Util.Human(d) + (t > 0 ? " / " + Util.Human(t) : "")); });
+        Status("Downloading " + m.Version + "...");
+        Util.Download(source, zip + ".part", (d, t) => { if (t > 0) Progress((int)(d * 100 / t)); Status("Downloading " + m.Version + "  " + Util.Human(d) + (t > 0 ? " / " + Util.Human(t) : "")); });
         if (File.Exists(zip)) File.Delete(zip);
         File.Move(zip + ".part", zip);
         if (m.Size > 0 && new FileInfo(zip).Length != m.Size) throw new Exception("Download size mismatch (" + new FileInfo(zip).Length + " vs " + m.Size + " bytes). Try again.");
@@ -1379,9 +1472,9 @@ class MainForm : Form
         SetBusy(true);
         try
         {
-            var zip = await Task.Run(() => eng.DownloadPack(manifest));
             var choice = new Dictionary<string, bool>(sel, StringComparer.OrdinalIgnoreCase);
-            await Task.Run(() => eng.InstallZip(zip, manifest, choice));
+            var zip = await Task.Run(() => eng.PreparePack(manifest, choice));
+            try { await Task.Run(() => eng.InstallZip(zip, manifest, choice)); } finally { Engine.DropMerged(zip); }
             await Task.Delay(1500);   // 1.0.3 : give a real-time antivirus the time to react before we check the files
             LoadSelection(); RefreshInstalled();
             if (missing.Count > 0)
@@ -1622,7 +1715,7 @@ static class Program
             {
                 var m = Manifest.Parse(Util.HttpGetText(Cfg.VersionUrl));
                 var eng = new Engine { Game = g, Status = s => Util.Log("  " + s), Confirm = (t, s) => false };
-                var zip = eng.DownloadPack(m); eng.InstallZip(zip, m, compArg);
+                var zip = eng.PreparePack(m, compArg); try { eng.InstallZip(zip, m, compArg); } finally { Engine.DropMerged(zip); }
                 Util.Log("auto: OK " + m.Version); Environment.Exit(0);
             }
             catch (Exception ex) { Util.Log("auto: FAILED " + ex.Message); Environment.Exit(1); }
