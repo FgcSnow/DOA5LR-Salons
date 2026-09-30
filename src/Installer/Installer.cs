@@ -166,15 +166,16 @@ static class Ps4Skins
             if (section == "steam" && key.Equals("unlockall", StringComparison.OrdinalIgnoreCase) && (val.Equals("true", StringComparison.OrdinalIgnoreCase) || val == "1")) unlockAll = true;
             if (section == "dlc" && key == "990015") registration++;
         }
-        if (steam != 1 || dlc != 1 || !foundDlc || orgKeys != 1 || appKeys != 1 || appid != "311730" || registration > 1 ||
+        if (steam != 1 || dlc > 1 || orgKeys != 1 || appKeys != 1 || appid != "311730" || registration > 1 ||
             original.Length == 0 || original != Path.GetFileName(original) || original.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
-            !original.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || original.Equals("steam_api.dll", StringComparison.OrdinalIgnoreCase) ||
-            !Dll(Path.Combine(game, "steam_api.dll"), true) || !Dll(Path.Combine(game, original), false)) throw new InvalidDataException(error);
+            !original.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || original.Equals("steam_api.dll", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("PS4 skins: cream_api.ini has an unsupported or ambiguous configuration. Check appid=311730 and the configured original DLL name; duplicate [steam]/[dlc] sections or duplicate 990015 entries are not supported. Leave PS4 skins unticked to install the rest of the pack.");
+        if (!Dll(Path.Combine(game, "steam_api.dll"), true)) throw new InvalidDataException("PS4 skins: steam_api.dll is missing or is not recognized as a compatible 32-bit costume loader. AutoLink alone does not provide this setup. Leave PS4 skins unticked to install the rest of the pack.");
+        if (!Dll(Path.Combine(game, original), false)) throw new InvalidDataException("PS4 skins: the original Steam DLL configured by orgapi is missing or is not a compatible 32-bit Steam API DLL. Check your existing loader setup. Leave PS4 skins unticked to install the rest of the pack.");
         if (registration == 1) return new ConfigChange { Before = before, After = before };
         if (unlockAll) throw new InvalidDataException("PS4 skins cannot add their registration while the existing loader uses unlockall=true. Leave PS4 skins unticked; your current loader settings are kept.");
         string nl = text.Contains("\r\n") ? "\r\n" : text.Contains("\n") ? "\n" : text.Contains("\r") ? "\r" : "\r\n";
         string prefix = insert > 0 && text[insert - 1] != '\n' && text[insert - 1] != '\r' ? nl : "";
-        string edited = text.Insert(insert, prefix + "990015=PS4 costumes" + nl);
+        string edited = text.Insert(insert, prefix + (foundDlc ? "" : "[dlc]" + nl) + "990015=PS4 costumes" + nl);
         return new ConfigChange { Before = before, After = before.Take(bom).Concat(enc.GetBytes(edited)).ToArray() };
     }
 }
