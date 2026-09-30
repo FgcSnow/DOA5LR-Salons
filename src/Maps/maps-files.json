@@ -235,19 +235,9 @@
     "size": 109
   },
   {
-    "path": "DOA5LR-Crimson-BackendProbe.asi",
-    "sha256": "3308f20d14fb2941bdfdbd96bd2640000dabd625e3ebfe7a62f9a86128aa4d37",
-    "size": 12800
-  },
-  {
-    "path": "DOA5LR-Crimson-EventLog.asi",
-    "sha256": "b70724196200e20bf197991ead23f091ebdf9a6f282f9affb2f3575b50a181ea",
-    "size": 24064
-  },
-  {
     "path": "DOA5LR-Crimson-VFX.asi",
-    "sha256": "b6a651486e022205d5c3623c6f12f13ff39ad42e7ae7fd6c56c31037b55cef32",
-    "size": 307200
+    "sha256": "34e596a686e1b86f836b7d39dcb6b50a5ba0164df8fbc464d5049a4bac35738e",
+    "size": 315864
   },
   {
     "path": "DOA5LR-Crimson-VFX.ini",
@@ -321,8 +311,8 @@
   },
   {
     "path": "DOA5LR-RandomStages.asi",
-    "sha256": "0bfee24fedeb17a2cf90a7dcb27705d9d0b4ab6ebc3c3f22c0f0b88c38cb522a",
-    "size": 15360
+    "sha256": "a4a6ac75eb65a74af25a3766c68678d1eded54146e900153a4c5ef64db76c31c",
+    "size": 24024
   },
   {
     "path": "DOA5LR-RandomStages.ini",

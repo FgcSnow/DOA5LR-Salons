@@ -39,7 +39,7 @@ FILES
 - DOA5LR-DangerZone / DNZ-* / Crimson* / ExtraStages / RandomStages / DebugArchive .asi (+ .ini)
   next to game.exe, stage data in CodexDangerZone, CodexCrimson and PS4Stages.
 - These modules write local logs next to the game (DOA5LR-Crimson-VFX.log, ...). Since 0.3.14 the
-  Crimson effects log stops at 2 MB per game session and keeps the previous session as .log.old;
-  [Log] Enabled=0 in DOA5LR-Crimson-VFX.ini turns it off.
+  Crimson effects log only records startup and errors, capped at 512 KB ([Log] in
+  DOA5LR-Crimson-VFX.ini: Level=0 off, Level=2 every effect, MaxKB = cap).
 
 Stages ported by FGCsnow & the DOA5LR community mod team.

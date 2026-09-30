@@ -18,7 +18,7 @@ Every installer since 0.3.4 removed any `d3d9.dll` from the game folder, because
 RandomStages 2.1: Danger Zone and The Crimson 1/2 are drawn by offline Random only. Online Random (ranked, player match, lobbies) is the game's own again, so a player without the maps can never get one of them. Pick them by hand in lobbies (everyone in the room needs the maps). `Online=1` under `[RandomStages]` in `DOA5LR-RandomStages.ini` restores online Random for groups where everyone has the maps.
 
 ## Smaller logs, fewer files
-- Crimson-VFX 25.1: at most 2 MB of log per game session, the previous session kept as `DOA5LR-Crimson-VFX.log.old` when the file is over 4 MB, `[Log] Enabled=0` turns it off. Effects unchanged.
+- Crimson-VFX v26: the log records startup and errors only by default (no line per effect), capped at 512 KB (`[Log] MaxKB`); at startup a bigger log becomes `DOA5LR-Crimson-VFX.log.old` (deleted above 4 MB). `[Log] Level=0` turns it off, `Level=2` records every effect. Effects code unchanged.
 - Removed: `DOA5LR-Crimson-EventLog.asi` (a diagnostic that logged every stage effect while the stage was ported) and `DOA5LR-Crimson-BackendProbe.asi` (a research probe that did nothing on its own), with their logs.
 
 ## Windows 11 error 4551
