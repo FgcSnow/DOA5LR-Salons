@@ -1,6 +1,15 @@
 # DOA5LR-Salons 0.3.14 — fixes from your 0.3.13 reports
 
+**Local build, not published:** Installer 1.3.6 adds the optional PS4 skins component described below. Installer checks are recorded separately in `validation-report.json` in the local release folder.
+
 **Danger Zone no longer removed by Windows Defender, your own resolution again, your d3d9.dll kept, PLAY starts the game, new stages in offline Random only.**
+
+## Optional PS4 skins - local integration build
+
+- **15 native costume slots:** Ayane, Honoka, Kasumi, Marie and Nyotengu. Honoka slot 41, Marie slots 25 and 51, and Nyotengu slot 51 each include four texture/color variants. Experimental costume destruction and transformation tests are excluded.
+- **Existing loader required:** Installer 1.3.6 recognizes an existing compatible local native costume loader configuration (`cream_api.ini`) and registers only costume package `990015`. No Steam DLL is supplied or replaced. On a new setup, the optional `ps4skins` component is selected by default only when that configuration is detected; existing choices are kept. Configuration detection does not prove that the loader works.
+- **Separate skin data:** the `skins_data` archive is reused when all four installed files match their SHA-256 hashes. Unticking the option removes only those four files in `DLC/990015` and the component guide. The loader configuration and its `990015` entry are kept because the entry may predate the installer; without the data files the package is inactive. Unrelated data and settings are preserved.
+- **Static checks and user gameplay confirmation:** the package contains 92 resources in four files (158,744,078 bytes unpacked). On 2026-09-30, the user confirmed all 15 costumes and their variants work in combat and reported having played online with this set. Guide and exact slots: `scripts/PS4-SKINS-EN.txt`.
 
 ## Fixes
 

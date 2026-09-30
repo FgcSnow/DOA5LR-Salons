@@ -1,4 +1,4 @@
-﻿// DOA5LR-Salons Installer / Updater — single-file WinForms app, .NET Framework 4.8 (built with the csc.exe shipped in Windows).
+// DOA5LR-Salons Installer / Updater — single-file WinForms app, .NET Framework 4.8 (built with the csc.exe shipped in Windows).
 // Community Mod Pack by FGCsnow & BonuStage. Original Auto Installer concept by BRG Hades.
 //
 // What it does:
@@ -10,7 +10,8 @@
 //   - 1.2.0 : LAUNCH GAME button - starts DOA5LR through Steam (steam://rungameid), opens Steam first if it is not running
 //             --play = explicit launcher mode: checks for updates, then opens input selection when InputLab is installed
 //   - desktop shortcut opens the installer and configuration; the player chooses when to launch
-//   - never writes steam_api / cream / DLC files; diagnostics only write the ZIP explicitly chosen by the user
+//   - never supplies Steam/proxy DLLs; PS4 skins own four DLC/990015 files and add only their registration to an existing
+//     compatible local loader configuration (backed up); diagnostics only write the ZIP explicitly chosen by the user
 //
 // version.txt format (one key per line, unknown keys ignored — same file DOA5LR-Telemetry 0.3 reads):
 //   version=0.3.3
@@ -28,6 +29,9 @@
 //   optional_v2=id|label|glob;glob...  (1.3.1: same validation; older installers ignore this key and can self-update first)
 //   optional_v3=id|label|glob;glob...  (1.3.2: Replay Takeover; 1.3.1 ignores this key and self-updates first)
 //   optional_v4=id|label|glob;glob...  (1.3.3: DZ / Crimson maps; 1.3.2 ignores this key and self-updates first)
+//   optional_v5=id|label|glob;glob...  (1.3.5: maps modules in scripts; older installers ignore this key)
+//   optional_v6=id|label|glob;glob...  (1.3.6: optional native PS4 costumes; older installers ignore this key)
+//   skins_data=url|sha256|size         independent four-file costume archive; downloaded only when selected and needed
 //   core=url|sha256|size                (1.3.4: the pack WITHOUT the stage data; with data= below, a player whose stage data is
 //   data=maps|url|sha256|size            already installed and intact downloads only the core. url= stays the full pack for older
 //                                        installers; core + data = full pack, entry for entry. The data files are the entries of
@@ -57,13 +61,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.4.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.4.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.4")]
+[assembly: System.Reflection.AssemblyVersion("1.3.6.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.6.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.6")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.5";
+    public const string AppVersion = "1.3.6";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -104,6 +108,75 @@ static class Cfg
         @"scripts\DOA5LR-ExtraStages.asi", @"scripts\DOA5LR-DangerZone.asi", @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-RandomStages.asi" };
     // Files the pack must never contain / the installer must never write (same rule as build_pack.py).
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
+    // Only these four native costume assets are allowed. Steam/proxy binaries and other DLC stay forbidden.
+    public static readonly string[] Ps4SkinFiles = { @"DLC\990015\990015.bcm", @"DLC\990015\data\990015.bin", @"DLC\990015\data\990015.blp", @"DLC\990015\data\990015.lnk" };
+    public static bool IsPs4Skin(string rel) { return Ps4SkinFiles.Contains(rel.Replace('/', '\\'), StringComparer.OrdinalIgnoreCase); }
+    public static bool IsForbidden(string rel) { return Forbidden.IsMatch(rel) && !IsPs4Skin(rel); }
+    public static bool Ps4LoaderCompatible(string game) { try { Ps4Skins.Preflight(game); return true; } catch { return false; } }
+}
+
+// Native costumes use an existing local loader. The installer never supplies or replaces Steam DLLs.
+// INI editing inserts one registration only; all original bytes and any existing label are retained.
+static class Ps4Skins
+{
+    public const string Config = "cream_api.ini";
+    public const string BackupMarker = "ps4skins-config|cream_api.ini";
+    public class ConfigChange { public byte[] Before, After; }
+    static bool Dll(string path, bool proxy)
+    {
+        if (!File.Exists(path)) return false;
+        var b = File.ReadAllBytes(path);
+        if (b.Length < 64 || b[0] != 'M' || b[1] != 'Z') return false;
+        int p = BitConverter.ToInt32(b, 60);
+        if (p < 64 || p > b.Length - 6 || b[p] != 'P' || b[p + 1] != 'E' || b[p + 2] != 0 || b[p + 3] != 0 || BitConverter.ToUInt16(b, p + 4) != 0x14c) return false;
+        var text = Encoding.ASCII.GetString(b);
+        return text.Contains("SteamAPI_Init") && (!proxy || text.Contains("cream_api.ini"));
+    }
+    public static ConfigChange Preflight(string game)
+    {
+        const string error = "PS4 skins require an existing compatible local costume loader (cream_api.ini for game 311730, [dlc], steam_api.dll and its configured original DLL). Leave PS4 skins unticked on this PC.";
+        if (string.IsNullOrEmpty(game)) throw new InvalidDataException(error);
+        var path = Path.Combine(game, Config);
+        if (!File.Exists(path)) throw new InvalidDataException(error);
+        var before = File.ReadAllBytes(path);
+        int bom = 0; Encoding enc = Encoding.GetEncoding(28591);
+        if (before.Length >= 2 && before[0] == 255 && before[1] == 254) { enc = new UnicodeEncoding(false, false, true); bom = 2; }
+        else if (before.Length >= 2 && before[0] == 254 && before[1] == 255) { enc = new UnicodeEncoding(true, false, true); bom = 2; }
+        else if (before.Length >= 3 && before[0] == 239 && before[1] == 187 && before[2] == 191) bom = 3;
+        string text = enc.GetString(before, bom, before.Length - bom), section = "", original = "", appid = "";
+        int steam = 0, dlc = 0, registration = 0, orgKeys = 0, appKeys = 0, insert = text.Length;
+        bool foundDlc = false, unlockAll = false;
+        foreach (Match line in Regex.Matches(text, @"[^\r\n]*(?:\r\n|\r|\n|$)"))
+        {
+            string value = line.Value.Trim();
+            var header = Regex.Match(value, @"^\[([^\]]+)\]\s*(?:[;#].*)?$");
+            if (header.Success)
+            {
+                if (section == "dlc") insert = line.Index;
+                section = header.Groups[1].Value.Trim().ToLowerInvariant();
+                if (section == "steam") steam++;
+                if (section == "dlc") { dlc++; foundDlc = true; insert = text.Length; }
+                continue;
+            }
+            if (value.Length == 0 || value[0] == ';' || value[0] == '#') continue;
+            int eq = value.IndexOf('='); if (eq <= 0) continue;
+            string key = value.Substring(0, eq).Trim(), val = value.Substring(eq + 1).Split(';', '#')[0].Trim();
+            if (section == "steam" && key.Equals("orgapi", StringComparison.OrdinalIgnoreCase)) { original = val; orgKeys++; }
+            if (section == "steam" && key.Equals("appid", StringComparison.OrdinalIgnoreCase)) { appid = val; appKeys++; }
+            if (section == "steam" && key.Equals("unlockall", StringComparison.OrdinalIgnoreCase) && (val.Equals("true", StringComparison.OrdinalIgnoreCase) || val == "1")) unlockAll = true;
+            if (section == "dlc" && key == "990015") registration++;
+        }
+        if (steam != 1 || dlc != 1 || !foundDlc || orgKeys != 1 || appKeys != 1 || appid != "311730" || registration > 1 ||
+            original.Length == 0 || original != Path.GetFileName(original) || original.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+            !original.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || original.Equals("steam_api.dll", StringComparison.OrdinalIgnoreCase) ||
+            !Dll(Path.Combine(game, "steam_api.dll"), true) || !Dll(Path.Combine(game, original), false)) throw new InvalidDataException(error);
+        if (registration == 1) return new ConfigChange { Before = before, After = before };
+        if (unlockAll) throw new InvalidDataException("PS4 skins cannot add their registration while the existing loader uses unlockall=true. Leave PS4 skins unticked; your current loader settings are kept.");
+        string nl = text.Contains("\r\n") ? "\r\n" : text.Contains("\n") ? "\n" : text.Contains("\r") ? "\r" : "\r\n";
+        string prefix = insert > 0 && text[insert - 1] != '\n' && text[insert - 1] != '\r' ? nl : "";
+        string edited = text.Insert(insert, prefix + "990015=PS4 costumes" + nl);
+        return new ConfigChange { Before = before, After = before.Take(bom).Concat(enc.GetBytes(edited)).ToArray() };
+    }
 }
 
 // ---------------------------------------------------------------- optional components (1.1.0)
@@ -127,7 +200,8 @@ class Component
     public static readonly Component MapsRoot = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
     // 1.3.5 : modules in scripts\ (optional_v5); the old root names are listed too, so leaving the maps out removes them
     public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"scripts\DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"scripts\DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"scripts\DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"scripts\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"scripts\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"scripts\DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt", @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-DangerZone.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-RandomStages.asi" } };
-    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps, MapsRoot }).ToArray();
+    public static readonly Component Ps4Skin = new Component { Id = "ps4skins", Label = "PS4 skins: 15 costumes (existing local costume loader required)", Globs = new[] { @"DLC\990015\990015.bcm", @"DLC\990015\data\990015.bin", @"DLC\990015\data\990015.blp", @"DLC\990015\data\990015.lnk", @"scripts\PS4-SKINS-EN.txt" } };
+    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps, MapsRoot, Ps4Skin }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
     {
@@ -144,6 +218,7 @@ class Component
         var d = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         d["borderless"] = game != "" && (Util.InstalledVersion(game) != "" || File.Exists(Path.Combine(game, @"scripts\DOA5LR-Borderless.asi")) || File.Exists(Path.Combine(game, "DOA5LR-Borderless.asi")));
         d["inputlab"] = false;
+        d["ps4skins"] = Cfg.Ps4LoaderCompatible(game);
         try { if (game != "") foreach (var ln in File.ReadAllLines(Path.Combine(game, Cfg.ComponentsFile))) { var i = ln.IndexOf('='); if (i > 0 && ln[0] != '#') d[ln.Substring(0, i).Trim()] = ln.Substring(i + 1).Trim() != "0"; } } catch { }
         return d;
     }
@@ -168,6 +243,8 @@ class Manifest
     public List<Component> Optional = new List<Component>();   // 1.1.0
     public string CoreUrl = "", CoreSha256 = "", DataId = "", DataUrl = "", DataSha256 = "";   // 1.3.4 : split download
     public long CoreSize, DataSize;
+    public string SkinsUrl = "", SkinsSha256 = "";
+    public long SkinsSize;
     public static Manifest Parse(string text)
     {
         var m = new Manifest();
@@ -199,7 +276,9 @@ class Manifest
                 case "optional_v2":
                 case "optional_v3":
                 case "optional_v4":
-                case "optional_v5": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "optional_v5":
+                case "optional_v6": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "skins_data": { var c = v.Split('|'); long n; if (c.Length != 3 || !Regex.IsMatch(c[1].Trim(), "^[0-9a-fA-F]{64}$") || !long.TryParse(c[2].Trim(), out n) || n <= 0 || m.SkinsUrl != "") throw new InvalidDataException("Refused: invalid PS4 skins archive in manifest."); m.SkinsUrl = c[0].Trim(); m.SkinsSha256 = c[1].Trim().ToLowerInvariant(); m.SkinsSize = n; break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");
@@ -280,6 +359,8 @@ static class Util
         // 1.3.3 : maps files are only required once a 0.3.13+ manifest lists the Maps component and the box is ticked
         bool mapsOn = Component.Current.Any(c => c.Id == "maps") && Component.Selected(selection, "maps");
         try { foreach (var rel in Cfg.RequiredFiles) if (!left.Any(c => c.Owns(rel)) && (mapsOn || !Component.Maps.Owns(rel)) && !File.Exists(Path.Combine(game, rel))) miss.Add(rel); } catch { }
+        if (Component.Current.Any(c => c.Id == "ps4skins") && Component.Selected(selection, "ps4skins"))
+            foreach (var rel in Cfg.Ps4SkinFiles) if (!File.Exists(Path.Combine(game, rel))) miss.Add(rel);
         if (Component.Current.Any(c => c.Id == "inputlab"))
             try {
                 var required = Cfg.InputLabAppFiles.AsEnumerable();
@@ -630,9 +711,77 @@ class Engine
     public string PreparePack(Manifest m, Dictionary<string, bool> choice)
     {
         Game = Path.GetFullPath(Game);
+        var sel = Component.Read(Game); if (choice != null) foreach (var c in choice) sel[c.Key] = c.Value;
+        bool skinsOn = Component.Current.Any(c => c.Id == "ps4skins") && Component.Selected(sel, "ps4skins");
+        if (skinsOn) Ps4Skins.Preflight(Game); // before downloading or changing any game files
+        string pack = PrepareMapsPack(m, choice);
+        if (!skinsOn) { if (m.SkinsUrl != "") Line("PS4 skins left out: costume data not downloaded"); return pack; }
+        try
+        {
+            List<KeyValuePair<string, string>> want;
+            using (var z = ZipFile.OpenRead(pack))
+            {
+                want = SkinList(z);
+                if (ValidateSkinEntries(z.Entries.ToList(), want)) return pack; // complete offline archive
+            }
+            var bad = want.Where(d => !File.Exists(Abs(d.Key)) || Util.Sha256(Abs(d.Key)) != d.Value).ToList();
+            if (bad.Count == 0) { Line("PS4 skins up to date (4 files checked): costume data not downloaded"); return pack; }
+            if (m.SkinsUrl == "") throw new InvalidDataException("PS4 skins files are missing or different and the manifest has no skins_data archive.");
+            Line("PS4 skins data to download: " + bad.Count + " of 4 files missing or different");
+            string data = Fetch(m.SkinsUrl, m.SkinsSha256, m.SkinsSize, Cfg.PackName + "-ps4skins-data-" + m.SkinsSha256.Substring(0, 16) + ".zip", "PS4 skins data");
+            string merged = Path.Combine(Path.GetDirectoryName(pack), Cfg.PackName + "-" + m.Version + "-skins-merged.zip");
+            using (var core = ZipFile.OpenRead(pack)) using (var skins = ZipFile.OpenRead(data))
+            {
+                var skinEntries = skins.Entries.Where(e => !string.IsNullOrEmpty(e.Name)).ToList();
+                if (skinEntries.Count != Cfg.Ps4SkinFiles.Length || !ValidateSkinEntries(skinEntries, want))
+                    throw new InvalidDataException("Refused: PS4 skins archive must contain exactly the four listed costume files.");
+                if (File.Exists(merged)) File.Delete(merged);
+                using (var output = ZipFile.Open(merged, ZipArchiveMode.Create))
+                    foreach (var e in core.Entries.Concat(skinEntries))
+                    {
+                        if (string.IsNullOrEmpty(e.Name)) continue;
+                        var added = output.CreateEntry(e.FullName, CompressionLevel.NoCompression);
+                        using (var input = e.Open()) using (var dest = added.Open()) input.CopyTo(dest);
+                    }
+            }
+            DropMerged(pack);
+            Line("core + PS4 skins data merged into " + merged);
+            return merged;
+        }
+        catch { DropMerged(pack); throw; }
+    }
+    static List<KeyValuePair<string, string>> SkinList(ZipArchive zip)
+    {
+        var entry = ExactlyOneEntry(zip.Entries.ToList(), @"DOA5LR-Diagnostic\ps4skins-files.json");
+        string json; using (var reader = new StreamReader(entry.Open(), Encoding.UTF8)) json = reader.ReadToEnd();
+        var list = new List<KeyValuePair<string, string>>();
+        foreach (Match m in Regex.Matches(json, "\"path\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"sha256\"\\s*:\\s*\"([0-9a-fA-F]{64})\""))
+        {
+            string rel = m.Groups[1].Value.Replace("\\\\", "\\").Replace('/', '\\');
+            if (!Cfg.IsPs4Skin(rel) || list.Any(d => d.Key.Equals(rel, StringComparison.OrdinalIgnoreCase)))
+                throw new InvalidDataException("Refused: invalid or duplicate PS4 skins file in the pack's list.");
+            list.Add(new KeyValuePair<string, string>(rel, m.Groups[2].Value.ToLowerInvariant()));
+        }
+        if (list.Count != Cfg.Ps4SkinFiles.Length) throw new InvalidDataException("Refused: PS4 skins list must describe exactly four costume files.");
+        return list;
+    }
+    static bool ValidateSkinEntries(List<ZipArchiveEntry> entries, List<KeyValuePair<string, string>> want)
+    {
+        int count = entries.Count(e => Cfg.IsPs4Skin(e.FullName));
+        if (count == 0) return false;
+        if (count != Cfg.Ps4SkinFiles.Length) throw new InvalidDataException("Refused: incomplete PS4 skins archive.");
+        foreach (var d in want)
+            if (ArchiveSha256(ExactlyOneEntry(entries, d.Key)) != d.Value)
+                throw new InvalidDataException("Refused: PS4 skins file differs from the pack's list: " + d.Key);
+        return true;
+    }
+    string PrepareMapsPack(Manifest m, Dictionary<string, bool> choice)
+    {
+        Game = Path.GetFullPath(Game);
         CleanCache(m);
-        if (m.CoreUrl == "" || m.DataUrl == "" || m.DataId != "maps") return DownloadPack(m);
+        if (m.CoreUrl == "" || ((m.DataUrl == "" || m.DataId != "maps") && m.SkinsUrl == "")) return DownloadPack(m);
         var core = Fetch(m.CoreUrl, m.CoreSha256, m.CoreSize, Cfg.PackName + "-core-" + m.CoreSha256.Substring(0, 16) + ".zip", Cfg.PackName + " " + m.Version);
+        if (m.DataUrl == "" || m.DataId != "maps") return core; // skins-only split pack
         var sel = Component.Read(Path.GetFullPath(Game)); if (choice != null) foreach (var c in choice) sel[c.Key] = c.Value;
         if (!Component.Current.Any(c => c.Id == "maps") || !Component.Selected(sel, "maps")) { Line("maps left out: stage data not downloaded"); return core; }
         List<KeyValuePair<string, string>> data;
@@ -682,6 +831,7 @@ class Engine
             var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Cfg.PackName + "-" + m.Version + ".zip" };
             if (m.CoreSha256.Length == 64) keep.Add(Cfg.PackName + "-core-" + m.CoreSha256.Substring(0, 16) + ".zip");
             if (m.DataSha256.Length == 64) keep.Add(Cfg.PackName + "-maps-data-" + m.DataSha256.Substring(0, 16) + ".zip");
+            if (m.SkinsSha256.Length == 64) keep.Add(Cfg.PackName + "-ps4skins-data-" + m.SkinsSha256.Substring(0, 16) + ".zip");
             foreach (var f in Directory.GetFiles(dir, Cfg.PackName + "-*.zip*"))
                 if (!keep.Contains(Path.GetFileName(f))) try { File.Delete(f); } catch { }
         }
@@ -698,7 +848,7 @@ class Engine
         foreach (Match m in Regex.Matches(json, "\"path\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"sha256\"\\s*:\\s*\"([0-9a-fA-F]{64})\""))
         {
             var rel = m.Groups[1].Value.Replace("\\\\", "\\").Replace('/', '\\');
-            if (rel.Contains("..") || Path.IsPathRooted(rel) || Cfg.Forbidden.IsMatch(rel)) throw new InvalidDataException("Refused: unsafe stage data path: " + rel);
+            if (rel.Contains("..") || Path.IsPathRooted(rel) || Cfg.IsForbidden(rel)) throw new InvalidDataException("Refused: unsafe stage data path: " + rel);
             if (!inCore.Contains(rel.Replace('\\', '/'))) list.Add(new KeyValuePair<string, string>(rel, m.Groups[2].Value.ToLowerInvariant()));
         }
         return list;
@@ -761,6 +911,11 @@ class Engine
         sel = selection;
         var left = Component.LeftOut(sel); var leftFiles = new List<string>(); var leftDirs = new List<string>();
         bool inputLabOn = Component.Current.Any(c => c.Id == "inputlab") && Component.Selected(sel, "inputlab");
+        bool skinsPresent = Component.Current.Any(c => c.Id == "ps4skins");
+        bool skinsOn = skinsPresent && Component.Selected(sel, "ps4skins");
+        var skinsConfig = skinsOn ? Ps4Skins.Preflight(Game) : null;
+        bool changeSkinsConfig = skinsConfig != null && !skinsConfig.Before.SequenceEqual(skinsConfig.After);
+        if (changeSkinsConfig) bman.Add(Ps4Skins.BackupMarker);
         if (wasInputLabOn) InputLabSettings.VerifyExisting(Game); // fail before changing files if the old values cannot be restored
         else if (inputLabOn && File.Exists(Path.Combine(Game, InputLabSettings.SnapshotRel))) InputLabSettings.VerifyExisting(Game);
         string inputLabBridgeHash = null;
@@ -774,9 +929,17 @@ class Engine
             {
                 var rel = e.FullName.Replace('/', '\\');
                 if (rel.Contains("..") || Path.IsPathRooted(rel) || !Inside(Abs(rel))) throw new Exception("Refused: unsafe path in archive: " + e.FullName);
-                if (Cfg.Forbidden.IsMatch(rel)) throw new Exception("Refused: the archive contains a forbidden file (" + e.FullName + "). This is not an official pack.");
+                if (Cfg.IsForbidden(rel)) throw new Exception("Refused: the archive contains a forbidden file (" + e.FullName + "). This is not an official pack.");
             }
             if (Component.Current.Any(c => c.Id == "inputlab")) inputLabBridgeHash = ValidateInputLabArchive(entries); // app/payload must be complete even with runtime OFF
+            if (skinsPresent || entries.Any(e => Cfg.IsPs4Skin(e.FullName)))
+            {
+                if (!skinsPresent) throw new InvalidDataException("Refused: native PS4 skins need the optional_v6 component.");
+                var skinList = SkinList(z);
+                bool inArchive = ValidateSkinEntries(entries, skinList);
+                if (skinsOn && !inArchive && skinList.Any(d => !File.Exists(Abs(d.Key)) || Util.Sha256(Abs(d.Key)) != d.Value))
+                    throw new InvalidDataException("Refused: PS4 skins are selected but costume files are missing or different.");
+            }
             if (!entries.Any(e => e.FullName.Equals(Cfg.VersionFile, StringComparison.OrdinalIgnoreCase))) throw new Exception("Refused: archive has no " + Cfg.VersionFile + " at its root (wrong zip?).");
             Status("Backing up files that will be replaced...");
             if (m != null) foreach (var rel in m.Delete.Concat(m.DeleteIf.Select(d => d.Key)))
@@ -788,7 +951,7 @@ class Engine
             foreach (var mv in moves)
             {
                 var a = Abs(mv.Key); var b2 = Abs(mv.Value);
-                if (!Inside(a) || !Inside(b2) || mv.Key.Contains("..") || mv.Value.Contains("..") || Cfg.Forbidden.IsMatch(mv.Key) || Cfg.Forbidden.IsMatch(mv.Value))
+                if (!Inside(a) || !Inside(b2) || mv.Key.Contains("..") || mv.Value.Contains("..") || Cfg.IsForbidden(mv.Key) || Cfg.IsForbidden(mv.Value))
                     throw new Exception("Refused: unsafe move in version.txt: " + mv.Key + " -> " + mv.Value);
             }
             // 1.1.0 : files on disk that belong to a component left out (a dir\* glob covers the whole folder, whatever is in it)
@@ -800,6 +963,7 @@ class Engine
             var keptDefaults = entries.Select(e => e.FullName.Replace('/', '\\')).Where(rel => File.Exists(Abs(rel)) && keep.Any(k => Util.Glob(k, Path.GetFileName(rel)))).Select(rel => rel + ".new");
             var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(keptDefaults).Concat(m != null ? m.Delete : new List<string>()).Concat(m != null ? m.DeleteIf.Select(d => d.Key) : new string[0]).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Concat(new[] { Cfg.ComponentsFile })
                 .Concat(Component.Current.Any(c => c.Id == "inputlab") ? new[] { "Xidi.ini", InputLabSettings.SnapshotRel } : new string[0])
+                .Concat(changeSkinsConfig ? new[] { Ps4Skins.Config } : new string[0])
                 .Concat(leftFiles).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             Directory.CreateDirectory(BackupFolder);
             foreach (var rel in touched)
@@ -862,14 +1026,14 @@ class Engine
             if (m != null) foreach (var rel in m.Delete)
             {
                 var abs = Abs(rel);
-                if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel) && !rel.Equals("DLC Unlocker.txt", StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
+                if (!Inside(abs) || Cfg.IsForbidden(rel) && !rel.Equals("DLC Unlocker.txt", StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
                 if (File.Exists(abs)) { try { File.Delete(abs); deleted++; Line("removed obsolete " + rel); } catch (Exception ex) { Line("could not remove " + rel + ": " + ex.Message); } }
             }
             // 4b. 1.3.4 : conditional deletes — only the exact old file (a same-named file of another mod stays)
             if (m != null) foreach (var d in m.DeleteIf)
             {
                 var abs = Abs(d.Key);
-                if (!Inside(abs) || Cfg.Forbidden.IsMatch(d.Key) || !File.Exists(abs)) continue;
+                if (!Inside(abs) || Cfg.IsForbidden(d.Key) || !File.Exists(abs)) continue;
                 if (Util.Sha256(abs) != d.Value) { Line("kept your " + d.Key + " (not the old pack file)"); continue; }
                 try { File.Delete(abs); deleted++; Line("removed obsolete " + d.Key); } catch (Exception ex) { Line("could not remove " + d.Key + ": " + ex.Message); }
             }
@@ -877,6 +1041,14 @@ class Engine
         // InputLab is opt-in: the mandatory archive frontend remains the original Xidi when unchecked.
         // Both frontend copies were verified in the archive before backup/extraction; check disk again
         // before placing the bridge so an unexpected delete or partial extraction cannot be hidden.
+        if (changeSkinsConfig)
+        {
+            string path = Abs(Ps4Skins.Config);
+            if (!File.ReadAllBytes(path).SequenceEqual(skinsConfig.Before))
+                throw new IOException("The local costume loader configuration changed during installation. Use Restore backup before trying again.");
+            File.WriteAllBytes(path, skinsConfig.After);
+            Line("registered PS4 costume package 990015 in the existing local loader; other configuration bytes kept");
+        }
         if (inputLabOn)
         {
             var active = Abs("dinput8ex.bin");
@@ -911,7 +1083,7 @@ class Engine
         // remembered (read back by --update, the file check and the next run of this installer)
         foreach (var rel in leftFiles.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            var abs = Abs(rel); if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel) || !File.Exists(abs)) continue;
+            var abs = Abs(rel); if (!Inside(abs) || Cfg.IsForbidden(rel) || !File.Exists(abs)) continue;
             if (rel.EndsWith(".ini", StringComparison.OrdinalIgnoreCase)) { Line("kept your " + rel + " (settings of a component left out)"); continue; }
             File.Delete(abs); Line("removed " + rel + " (component left out)");
         }
@@ -950,7 +1122,8 @@ class Engine
             Progress(++n * 100 / Math.Max(1, lines.Length));
             var p = ln.Split(new[] { '|' }, 2); if (p.Length != 2) continue;
             var rel = p[1]; var abs = Abs(rel);
-            if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel)) continue;
+            bool skinConfig = rel.Equals(Ps4Skins.Config, StringComparison.OrdinalIgnoreCase) && p[0] == "had" && lines.Contains(Ps4Skins.BackupMarker);
+            if (!Inside(abs) || (Cfg.IsForbidden(rel) && !skinConfig)) continue;
             if (p[0] == "had")
             {
                 var src = Path.Combine(backup, rel); if (!File.Exists(src)) continue;
@@ -1165,7 +1338,7 @@ static class DiagnosticBundle
             string version = SmallText(game, Cfg.VersionFile).Trim();
             report.AppendLine("Pack version: " + (Regex.IsMatch(version, @"\A[0-9A-Za-z.+_-]{1,64}\z") ? version : "missing or invalid"));
             string components = SmallText(game, Cfg.ComponentsFile);
-            foreach (string component in new[] { "borderless", "60fps", "inputlab", "replaytakeover", "maps" }) { string value = IniValue(components, null, component); report.AppendLine("Component " + component + ": " + (value == "0" || value == "1" ? value : "not recorded")); }
+            foreach (string component in new[] { "borderless", "60fps", "inputlab", "replaytakeover", "maps", "ps4skins" }) { string value = IniValue(components, null, component); report.AppendLine("Component " + component + ": " + (value == "0" || value == "1" ? value : "not recorded")); }
             string mode = IniValue(SmallText(game, "DOA5LR-InputBridge.ini"), "Input", "Mode");
             report.AppendLine("Saved input mode: " + (new[] { "Keyboard", "Controller", "Hybrid" }.Contains(mode, StringComparer.OrdinalIgnoreCase) ? mode : "not recorded") + " (only relevant when inputlab is enabled)");
             report.AppendLine("\r\nExisting logs (up to the last 2 MiB each):");
@@ -1288,7 +1461,7 @@ class MainForm : Form
             bp.Font = new Font("Segoe UI", 10f, FontStyle.Bold); bp.BringToFront();
         }
         L("Installer " + Cfg.AppVersion + "  ·  " + Cfg.ProjectUrl.Replace("https://", ""), x, 812, w, 9f, false, DIM);
-        L("The pack contains no Steam / DLC files. Your .ini settings are kept on every update.", x, 834, w, 9f, false, DIM);
+        L("No Steam DLLs supplied. PS4 skins use your existing loader. Other .ini settings are kept.", x, 834, w, 9f, false, DIM);
         L("Made with ♥ for the DOA5LR community — original Auto Installer by BRG Hades.", x, 860, w, 9f, false, DIM);
     }
     // 1.1.0 : one check box per optional component (list = Component.Current, may change once the manifest is read)
@@ -1298,9 +1471,9 @@ class MainForm : Form
         int x = 32, top = 408;
         foreach (var comp in Component.Current)
         {
-            var cb = new CheckBox { Text = comp.Label, Tag = comp.Id, Left = x + 8, Top = top, AutoSize = true, ForeColor = TXT, BackColor = Color.Transparent, Font = new Font("Segoe UI", 10f), Checked = Component.Selected(sel, comp.Id), Cursor = Cursors.Hand };
+            var cb = new CheckBox { Text = comp.Label, Tag = comp.Id, Left = x + 8, Top = top, AutoSize = true, ForeColor = TXT, BackColor = Color.Transparent, Font = new Font("Segoe UI", Component.Current.Length > 5 ? 9.5f : 10f), Checked = Component.Selected(sel, comp.Id), Cursor = Cursors.Hand };
             cb.CheckedChanged += (s, e) => { if (busy) return; sel[(string)cb.Tag] = cb.Checked; if (cbDisplay != null && (string)cb.Tag == "borderless") { cbDisplay.Enabled = cb.Checked && cbDisplay.Tag == null; lblDisplay.ForeColor = cbDisplay.Enabled ? TXT : DIM; } UpdateState(); };
-            Controls.Add(cb); chkComp.Add(cb); top += 26;
+            Controls.Add(cb); chkComp.Add(cb); top += Component.Current.Length > 5 ? 24 : 26;
         }
         if (lblComp != null) lblComp.Visible = lblCompSub.Visible = chkComp.Count > 0;
     }

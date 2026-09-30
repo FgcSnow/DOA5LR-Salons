@@ -1,5 +1,13 @@
 # DOA5LR-Salons 0.3.14 — fixes from the 0.3.13 reports
 
+## Optional PS4 skins - local test build, Installer 1.3.6
+
+This local build has not been published. It packages 15 PS4 costumes in their native slots, with four texture/color variants each for Honoka slot 41, Marie slots 25 and 51, and Nyotengu slot 51. Static package validation passed. On 2026-09-30, the user confirmed that all 15 costumes and their variants work in combat and that this set has already been used online. Installer checks are recorded separately in `validation-report.json` in the local release folder. Experimental costume destruction and transformations are excluded.
+
+The new optional component is `ps4skins`. A compatible local native costume loader must already be installed; detection of its configuration alone does not establish that it works. Installer 1.3.6 recognizes an existing `cream_api.ini` and adds only the local `990015` entry. No Steam DLL is supplied or replaced. On a new setup, the component is selected by default only when that loader configuration is detected; existing component choices are retained.
+
+Skin data is a separate `skins_data` archive: four files, 158,744,078 bytes unpacked, containing 92 resources. An update reuses the installed files when all their SHA-256 hashes match. Unticking the component removes only `DLC/990015/990015.bcm`, `DLC/990015/data/990015.bin`, `.blp` and `.lnk`, plus the component guide. The loader configuration and its `990015` entry remain intact because the entry may predate the installer; without its data files the package is inactive. Unrelated configuration and data are preserved. Full slot list: `scripts/PS4-SKINS-EN.txt`.
+
 ## Display: your resolution again
 The pack's AutoLink settings (`DInput8.ini`, `[PATCH] ResolutionMod=1`, `WindowResolution=desktop`) forced every game to the desktop resolution, so a lower resolution or a smaller window chosen in the game's launcher was ignored ("forced 1920x1080", "forced fullscreen"). That setting is only needed by **Borderless**, which renders at the monitor size.
 

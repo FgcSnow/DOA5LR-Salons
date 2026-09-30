@@ -2,19 +2,29 @@
 
 ## What's new in 0.3.14
 
-Fixes from your reports on 0.3.13 (Installer 1.3.4):
+**Local build, not published:** the optional PS4 skins addition below uses Installer 1.3.6. On 2026-09-30, the user confirmed all 15 costumes and their variants work in combat and reported already playing online with this set. Installer checks are recorded separately in `validation-report.json` in the local release folder.
+
+Fixes from your reports on 0.3.13 (included in Installer 1.3.6):
 
 - **The game no longer forces your desktop resolution / a full-size window.** The pack's AutoLink settings (`DInput8.ini`, `ResolutionMod=1`) forced the desktop resolution for everyone. That is only needed with **Borderless**, which renders at your monitor size. The installer now sets `ResolutionMod=0` when Borderless is unticked, so the resolution and window mode you choose in the game's launcher apply again. With Borderless ticked, rendering stays at the desktop size (untick Borderless to play at a lower resolution). A value you changed by hand is not turned back on, and a custom `WindowResolution` / `FullscreenResolution` is never touched.
 - **Your `d3d9.dll` is no longer deleted.** Older installers removed any `d3d9.dll` (it was meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. If an earlier update removed yours, it is in `DOA5LR-Salons-Backups\<date>\`.
 - **PLAY starts the game directly; "Set controls" opens the controls app** (idea from Inyo). PLAY only goes through the controls app when experimental keyboard remapping is on in Keyboard mode, because that app checks that no controller is connected first.
 - **Random: the new stages are offline only.** Danger Zone and The Crimson 1/2 were also added to online Random (ranked, lobbies), where a player without the maps could get a stage they do not have. Online Random is now the game's own; pick the new stages by hand in lobbies. Everyone in a room still needs the maps for a manual pick. (`[RandomStages] Online=1` in `DOA5LR-RandomStages.ini` brings back online Random, only if everyone you play with has the maps.)
 - **Danger Zone no longer removed by Windows Defender:** Defender started flagging `DOA5LR-DangerZone.asi` of 0.3.13 (a false positive) and quarantined it, which also stopped The Crimson and the stage menu additions. It is rebuilt without its own crash handler and is no longer flagged; updating puts it back.
-- **Much smaller updates:** the stage data (about 260 MB) is a separate download now. When your stage files are installed and intact, an update downloads only about 7 MB. Accept **Installer 1.3.4** when it is offered.
+- **Much smaller updates:** the stage data (about 260 MB) is a separate download now. The optional PS4 skin data has its own archive too. When the selected data files are installed and intact, an update needs only the remaining pack files. This local build uses **Installer 1.3.6**.
 - **Smaller logs:** the Crimson effects log (42 MB seen) now only records startup and errors, is capped at 512 KB, and an oversized old log is set aside at startup (`[Log] Level=0` in `DOA5LR-Crimson-VFX.ini` turns it off, `Level=2` records every effect for a bug report). Two diagnostic modules used while porting the stages (`DOA5LR-Crimson-EventLog.asi`, `DOA5LR-Crimson-BackendProbe.asi`) are removed.
 
 **Windows 11 "Unable to load ... Error: 4551"** comes from **Smart App Control**, not from Defender: it blocks unsigned DLLs. Turning Defender off changes nothing. See the Troubleshooting table at the end. Do not use tools that disable Windows Defender.
 
 Details: [0.3.14 release notes](RELEASE-NOTES-0.3.14.md).
+
+## Optional PS4 skins - local test build
+
+Installer 1.3.6 adds **PS4 skins** (`ps4skins`): 15 costumes in their native costume slots, with four texture/color variants each for Honoka slot 41, Marie slots 25 and 51, and Nyotengu slot 51. A compatible local native costume loader must already be installed. The installer recognizes an existing `cream_api.ini` and registers only package `990015`; it supplies or replaces no Steam DLL. On a new setup, the option is selected by default only when that loader configuration is detected. Detection alone does not verify the loader's operation.
+
+The separate `skins_data` archive is reused without a new download when all four installed package files match their hashes. Close the game before applying a change. Unticking the option removes only its four files under `DLC/990015` and the component guide. The loader configuration, including the `990015` entry, is retained because it may predate the installer; without the data files the package is inactive. Unrelated data, settings and AutoLink mods are preserved. Full slot list and usage: `scripts/PS4-SKINS-EN.txt`.
+
+**Static package checks passed.** The user confirmed all 15 costumes and their variants in combat on 2026-09-30 and has already played online with this set. Installer checks are recorded separately in `validation-report.json` in the local release folder. Experimental costume destruction, transformations and the old AutoLink costume-01 tests are excluded.
 
 ## Since 0.3.13
 
@@ -70,7 +80,7 @@ The portable remapping module requires **the verified DOA5LR-Salons input setup 
 ## Install or update the pack
 
 1. Close DOA5LR.
-2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. If an older installer offers its own update, accept Installer 1.3.4 first, then continue with the pack.
+2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. Use Installer 1.3.6 for the local PS4 skins test; earlier installers do not manage this optional component.
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
 4. Click **PLAY** to start the game, or **Set controls** to open the controls app (it works even with the experimental component unchecked; its **Play via Steam** applies the chosen mode and launches).
 

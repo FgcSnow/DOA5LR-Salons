@@ -1,0 +1,81 @@
+DOA5LR-Salons 0.3.14 - Optional PS4 skins (local test build)
+
+This component adds 15 PS4 costumes to their native costume slots. Four costumes
+have four texture/color variants each. It does not include the experimental
+costume destruction or transformation tests.
+
+INSTALLATION
+
+Close the game and use Installer 1.3.6. The optional component id is ps4skins.
+On a new setup, it is selected by default only when the installer detects an
+existing compatible local native costume loader. Existing choices are retained.
+
+The installer recognizes an existing cream_api.ini and registers only local
+costume package 990015 in its [dlc] section. It does not supply or replace any
+Steam DLL, and it does not install a loader. Detection of that configuration
+alone does not prove that the existing loader works. Without a compatible
+loader already working in the game folder, leave this component off.
+
+The skins_data archive is downloaded separately. When all four installed data
+files match their expected SHA-256 hashes, updates reuse them without downloading
+the skin archive again. A missing or changed file requires that archive again.
+
+WHERE TO FIND THE COSTUMES
+
+Restart the game after installation. Select the character, then the numbered
+costume in the normal costume selection. These are native costume slots; they
+are not AutoLink details added under costume 01.
+
+Character  Slot  Costume                         Variants
+Ayane        44  Outcast Armor                          1
+Ayane        54  Miyama Ageha                           1
+Ayane        74  DLCU 054                               1
+Honoka       19  Secret Agent                           1
+Honoka       41  DLCU 035                               4
+Kasumi       44  Outcast Armor                          1
+Kasumi       54  Ninja Miyukizakura                     1
+Kasumi       60  DOA Festival 2016                      1
+Kasumi       74  DLCU 054                               1
+Marie        25  Angelic Maid                           4
+Marie        31  Red Bull 5G R                          1
+Marie        32  Red Bull 5G B                          1
+Marie        43  DOA Festival 2016                      1
+Marie        51  DLCU 046                               4
+Nyotengu     51  Teacher                                4
+
+The four-variant costumes use the game's native texture variants. The DLCU
+labels above are retained where a more specific costume name is unconfirmed.
+
+TURNING THE COMPONENT OFF
+
+Close the game, untick PS4 skins in the installer and apply. Its data removal
+targets only these four files:
+
+  DLC\990015\990015.bcm
+  DLC\990015\data\990015.bin
+  DLC\990015\data\990015.blp
+  DLC\990015\data\990015.lnk
+
+The component guide is removed too. The existing loader configuration, including
+the 990015 entry, is kept because that entry may predate this installer. Without
+the four data files, this costume package is inactive. Unrelated entries,
+settings, DLC files and AutoLink mods are kept. Keep the installer's backups if
+you want to restore the previous setup.
+
+VALIDATION AND LIMITS
+
+The payload contains 92 resources in four package files (158,744,078 bytes).
+Static checks passed: SHA-256 hashes, catalogue/archive counts, resource bounds,
+unique asset ids and the costume package checksum. All 60 base resources match
+the earlier 15-costume package; the other 32 resources are texture variants.
+
+On 2026-09-30, the user confirmed that all 15 costumes and their variants work
+in combat, and that this set has already been used online. That confirms use of
+the existing costume payload. Installer checks are recorded separately in
+validation-report.json in the local release folder. This local build has not
+been published.
+
+The older AutoLink costume-01 copies and the experimental intact/broken models
+are not included. If a costume does not appear, check the existing native loader
+and package registration. Report the character, slot, variant and whether the
+problem happens in selection, loading or combat.
