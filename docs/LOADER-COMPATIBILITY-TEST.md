@@ -4,4 +4,4 @@ Remove the requirement that an existing x86 Steam API proxy contains the literal
 
 Synthetic offline tests pass for a proxy without the config filename and reject 64-bit proxies, invalid PE files, missing Steam API markers and incompatible original DLLs. Backup, restore and all costume-installation regression tests also pass. These tests do not establish runtime compatibility with every loader or explain the player's exact rejection.
 
-This is a test build, not an automatic public release. Keep the game closed during installation. Confirm the affected player's real loader and costume behavior before distributing a new production installer.
+Published as Installer 1.3.9 at the maintainer’s request. Keep the game closed during installation. Synthetic tests do not prove compatibility with every real loader. The affected player’s runtime result remains unconfirmed.
