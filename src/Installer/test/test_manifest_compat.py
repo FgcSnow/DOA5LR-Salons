@@ -64,7 +64,7 @@ static class ManifestCompatHarness {
     [STAThread] static void Main(string[] args) {
         string text=File.ReadAllText(args[0]);
         var manifest=Manifest.Parse(text);
-        Check(Cfg.AppVersion=="1.3.2" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.2.0","installer/assembly version is 1.3.2");
+        Check(Cfg.AppVersion=="1.3.4" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.4.0","installer/assembly version is 1.3.4");
         Check(manifest.Version=="0.3.9" && manifest.InstallerVersion=="1.3.1" &&
               manifest.InstallerUrl==args[2] && manifest.InstallerSha256==args[3] &&
               manifest.Url==args[4] && manifest.Sha256==args[5] && manifest.Size==long.Parse(args[6]),

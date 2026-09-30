@@ -80,6 +80,20 @@ static class LaunchInputHarness
             Check(missingBlocked && opened == 4, "InputLab-capable manifest requires chooser before initial install");
             Check(!InputLauncher.TryOpen("", record) && opened == 4, "no game folder does not open the chooser");
 
+            // 1.3.4 : PLAY goes through the app only when keyboard remapping is ON in Keyboard/combined mode
+            File.WriteAllText(components, "inputlab=0\r\n");
+            File.WriteAllText(profile, "[Input]\r\nMode=Keyboard\r\n");
+            Check(!InputLauncher.RequiresChooser(game), "runtime OFF: PLAY starts the game directly");
+            File.WriteAllText(components, "# c\r\ninputlab=1\r\n");
+            Check(InputLauncher.RequiresChooser(game), "runtime ON + Keyboard: PLAY opens the app (controller check)");
+            File.WriteAllText(profile, "[Input]\r\nMode=Hybrid\r\n");
+            Check(InputLauncher.RequiresChooser(game), "runtime ON + combined: PLAY opens the app");
+            File.WriteAllText(profile, "[Input]\r\nMode=Controller\r\n");
+            Check(!InputLauncher.RequiresChooser(game), "runtime ON + Controller: PLAY starts the game directly");
+            File.Delete(profile);
+            Check(InputLauncher.RequiresChooser(game), "runtime ON without its settings file: app first (never a silent bypass)");
+            File.Delete(components);
+            Check(!InputLauncher.RequiresChooser(game) && !InputLauncher.RequiresChooser(""), "no choice file / no game: direct");
             File.WriteAllText(Path.Combine(game, "game.exe"), "fake game");
             File.WriteAllText(controls, "non executable test fixture");
             File.WriteAllText(components, "inputlab=0\r\n");
@@ -88,7 +102,7 @@ static class LaunchInputHarness
                 ((TextBox)Field(form, "txtGame")).Text = game;
                 var finder = (Button)Field(form, "btnFinder");
                 var choices = (List<CheckBox>)Field(form, "chkComp");
-                Check(finder.Enabled && !choices[0].Checked, "Keyboard / controller button stays enabled with runtime unchecked");
+                Check(finder.Enabled && !choices[0].Checked, "Set controls button stays enabled with runtime unchecked");
                 File.WriteAllText(components, "inputlab=1\r\n");
                 ActivateWithoutShowing(form);
                 Check(choices[0].Checked, "returning to installer reflects runtime activation by Controls");

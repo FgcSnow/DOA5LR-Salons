@@ -18,6 +18,8 @@
 //   sha256=<sha256 of the zip>          size=<bytes>
 //   notes=one-line summary (Telemetry shows this one)      note=detail line (0..n, installer shows these)
 //   delete=relative\path                (0..n, files removed by this version — cumulative)
+//   delete_if=relative\path|sha256      (0..n, 1.3.4: removed ONLY when the file on disk is exactly that old file; a file of
+//                                       the same name from another mod is kept. Older installers ignore this key)
 //   move=old\path|new\path              (0..n, migrations: e.g. root .ini -> scripts\ ; the user file is moved before extraction)
 //   keep=*.ini                          (0..n, existing files never overwritten on update; default *.ini)
 //   installer=https://.../DOA5LR-Salons-Installer.exe   installer_version=1.0.0   installer_sha256=<sha>
@@ -51,13 +53,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.3.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.3.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.3")]
+[assembly: System.Reflection.AssemblyVersion("1.3.4.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.4.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.4")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.3";
+    public const string AppVersion = "1.3.4";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -152,6 +154,7 @@ class Manifest
     public string Version = "", Url = "", Sha256 = "", Notes = "", InstallerUrl = "", InstallerVersion = "", InstallerSha256 = "";
     public long Size;
     public List<string> NoteLines = new List<string>(), Delete = new List<string>(), Keep = new List<string>();
+    public List<KeyValuePair<string, string>> DeleteIf = new List<KeyValuePair<string, string>>();   // 1.3.4 : path -> sha256
     public List<KeyValuePair<string, string>> Move = new List<KeyValuePair<string, string>>();
     public List<Component> Optional = new List<Component>();   // 1.1.0
     public static Manifest Parse(string text)
@@ -172,6 +175,7 @@ class Manifest
                 case "note": m.NoteLines.Add(v); break;
                 case "delete": if (v.Length > 0) m.Delete.Add(v.Replace('/', '\\')); break;
                 case "keep": if (v.Length > 0) m.Keep.Add(v); break;
+                case "delete_if": { var d = v.Split('|'); if (d.Length == 2 && d[0].Trim().Length > 0 && Regex.IsMatch(d[1].Trim(), "^[0-9a-fA-F]{64}$")) m.DeleteIf.Add(new KeyValuePair<string, string>(d[0].Trim().Replace('/', '\\'), d[1].Trim().ToLowerInvariant())); break; }
                 case "move": { var mv = v.Split('|'); if (mv.Length == 2 && mv[0].Length > 0 && mv[1].Length > 0) m.Move.Add(new KeyValuePair<string, string>(mv[0].Trim().Replace('/', '\\'), mv[1].Trim().Replace('/', '\\'))); break; }
                 case "installer": m.InstallerUrl = v; break;
                 case "installer_version": m.InstallerVersion = v; break;
@@ -363,6 +367,43 @@ static class Util
             if (Regex.IsMatch(g, @"^SCREEN_TYPE=", RegexOptions.Multiline)) { g = Regex.Replace(g, @"^SCREEN_TYPE=[^\r\n]*", "SCREEN_TYPE=" + want, RegexOptions.Multiline); File.WriteAllText(gi, g, enc); }
         }
         Log("display mode set to " + mode + " (" + (mode == 2 ? "borderless" : mode == 1 ? "window" : "fullscreen") + ")");
+    }
+    // 1.3.4 : AutoLink [PATCH] ResolutionMod=1 with WindowResolution/FullscreenResolution=desktop (the pack's DInput8.ini) forces
+    // the desktop resolution: needed by Borderless (render at the monitor size), but without Borderless it overrides the
+    // resolution/window chosen in the game's launcher. keep=*.ini never updates the file, so the installer sets only this key:
+    // 1 with Borderless, 0 without — and only while both resolutions are still the pack's "desktop" (a custom value is the
+    // player's own choice). The file is edited in place: same encoding and BOM, only the digit changes.
+    public static string SyncResolutionMod(string game, bool borderless)
+    {
+        var p = Path.Combine(game, "DInput8.ini"); if (!File.Exists(p)) return null;
+        var raw = File.ReadAllBytes(p);
+        bool wide = raw.Length >= 2 && raw[0] == 0xFF && raw[1] == 0xFE;
+        var enc = wide ? (Encoding)new UnicodeEncoding(false, false) : Encoding.GetEncoding(28591);   // Latin-1: lossless byte <-> char
+        int skip = wide ? 2 : raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF ? 3 : 0;
+        var txt = enc.GetString(raw, skip, raw.Length - skip);
+        // [PATCH] section, line by line (the file also has "ResolutionMod=0" inside a comment block of [NEWS])
+        int start = -1, end = txt.Length;
+        foreach (Match ln in Regex.Matches(txt, @"^[^\r\n]*", RegexOptions.Multiline))
+        {
+            var t = ln.Value.Trim();
+            if (!t.StartsWith("[")) continue;
+            if (start >= 0) { end = ln.Index; break; }
+            if (t.Equals("[PATCH]", StringComparison.OrdinalIgnoreCase)) start = ln.Index + ln.Length;
+        }
+        if (start < 0) return null;
+        var body = txt.Substring(start, end - start);
+        Func<string, Match> key = k => Regex.Match(body, @"^[ \t]*" + k + @"[ \t]*=[ \t]*([^\r\n;]*)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        Func<string, string> val = k => { var mm = key(k); return mm.Success ? mm.Groups[1].Value.Trim() : null; };
+        if (!string.Equals(val("WindowResolution"), "desktop", StringComparison.OrdinalIgnoreCase) || !string.Equals(val("FullscreenResolution"), "desktop", StringComparison.OrdinalIgnoreCase)) return null;
+        var line = key("ResolutionMod");
+        if (!line.Success || line.Groups[1].Value.Trim().Length != 1 || !char.IsDigit(line.Groups[1].Value.Trim()[0])) return null;
+        var want = borderless ? "1" : "0";
+        if (line.Groups[1].Value.Trim() == want) return null;
+        int at = start + line.Groups[1].Index + line.Groups[1].Value.IndexOf(line.Groups[1].Value.Trim()[0]);
+        txt = txt.Substring(0, at) + want + txt.Substring(at + 1);
+        var head = new byte[skip]; Array.Copy(raw, head, skip);
+        File.WriteAllBytes(p, head.Concat(enc.GetBytes(txt)).ToArray());
+        return "DInput8.ini: ResolutionMod=" + want + (borderless ? " (Borderless renders at the desktop size)" : " (Borderless off: the resolution and window mode of the game's launcher apply)");
     }
     public static bool CanWrite(string dir)
     {
@@ -629,7 +670,7 @@ class Engine
             if (Component.Current.Any(c => c.Id == "inputlab")) inputLabBridgeHash = ValidateInputLabArchive(entries); // app/payload must be complete even with runtime OFF
             if (!entries.Any(e => e.FullName.Equals(Cfg.VersionFile, StringComparison.OrdinalIgnoreCase))) throw new Exception("Refused: archive has no " + Cfg.VersionFile + " at its root (wrong zip?).");
             Status("Backing up files that will be replaced...");
-            if (m != null) foreach (var rel in m.Delete)
+            if (m != null) foreach (var rel in m.Delete.Concat(m.DeleteIf.Select(d => d.Key)))
                 if (Path.IsPathRooted(rel) || rel.Contains("..") || !Inside(Abs(rel)))
                     throw new InvalidDataException("Refused: unsafe delete in version.txt: " + rel);
             Progress(0);
@@ -648,7 +689,7 @@ class Engine
                 else if (g.IndexOf('*') < 0 && Inside(Abs(g)) && File.Exists(Abs(g))) leftFiles.Add(g);
             }
             var keptDefaults = entries.Select(e => e.FullName.Replace('/', '\\')).Where(rel => File.Exists(Abs(rel)) && keep.Any(k => Util.Glob(k, Path.GetFileName(rel)))).Select(rel => rel + ".new");
-            var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(keptDefaults).Concat(m != null ? m.Delete : new List<string>()).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Concat(new[] { Cfg.ComponentsFile })
+            var touched = entries.Select(e => e.FullName.Replace('/', '\\')).Concat(keptDefaults).Concat(m != null ? m.Delete : new List<string>()).Concat(m != null ? m.DeleteIf.Select(d => d.Key) : new string[0]).Concat(moves.Select(mv => mv.Key)).Concat(moves.Select(mv => mv.Value)).Concat(new[] { Cfg.ComponentsFile })
                 .Concat(Component.Current.Any(c => c.Id == "inputlab") ? new[] { "Xidi.ini", InputLabSettings.SnapshotRel } : new string[0])
                 .Concat(leftFiles).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             Directory.CreateDirectory(BackupFolder);
@@ -703,6 +744,14 @@ class Engine
                 if (!Inside(abs) || Cfg.Forbidden.IsMatch(rel) && !rel.Equals("DLC Unlocker.txt", StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
                 if (File.Exists(abs)) { try { File.Delete(abs); deleted++; Line("removed obsolete " + rel); } catch (Exception ex) { Line("could not remove " + rel + ": " + ex.Message); } }
             }
+            // 4b. 1.3.4 : conditional deletes — only the exact old file (a same-named file of another mod stays)
+            if (m != null) foreach (var d in m.DeleteIf)
+            {
+                var abs = Abs(d.Key);
+                if (!Inside(abs) || Cfg.Forbidden.IsMatch(d.Key) || !File.Exists(abs)) continue;
+                if (Util.Sha256(abs) != d.Value) { Line("kept your " + d.Key + " (not the old pack file)"); continue; }
+                try { File.Delete(abs); deleted++; Line("removed obsolete " + d.Key); } catch (Exception ex) { Line("could not remove " + d.Key + ": " + ex.Message); }
+            }
         }
         // InputLab is opt-in: the mandatory archive frontend remains the original Xidi when unchecked.
         // Both frontend copies were verified in the archive before backup/extraction; check disk again
@@ -747,6 +796,8 @@ class Engine
         }
         foreach (var d in leftDirs.OrderByDescending(d => d.Length)) try { if (Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
         Component.Write(Game, sel);
+        try { var rm = Util.SyncResolutionMod(Game, Component.Current.Any(c => c.Id == "borderless") && Component.Selected(sel, "borderless")); if (rm != null) Line(rm); }
+        catch (Exception ex) { Line("DInput8.ini ResolutionMod not updated: " + ex.Message); }
         // folders emptied by the delete list
         if (m != null) foreach (var d in m.Delete.Select(r => Path.GetDirectoryName(Abs(r))).Where(d => d != null).Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(d => d.Length))
             try { if (Inside(d + "\\") && Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()) Directory.Delete(d); } catch { }
@@ -833,11 +884,29 @@ static class InputLauncher
         catch { return false; }
     }
 
+    // 1.3.4 (idea from Inyo): PLAY starts the game directly; "Set controls" opens the app. The app is only needed before
+    // play when the experimental in-game remapping is ON in Keyboard/combined mode: its Play button checks that no
+    // controller is connected (a connected controller can block keyboard input). Controller mode or runtime OFF = direct.
+    public static bool RequiresChooser(string game)
+    {
+        if (string.IsNullOrEmpty(game)) return false;
+        bool runtimeOn;
+        try { runtimeOn = File.ReadLines(Path.Combine(game, Cfg.ComponentsFile)).Any(line => Regex.IsMatch(line, @"^\s*inputlab\s*=\s*1\s*$", RegexOptions.IgnoreCase)); }
+        catch { runtimeOn = false; }
+        if (!runtimeOn) return false;
+        try
+        {
+            var m = Regex.Match(File.ReadAllText(Path.Combine(game, "DOA5LR-InputBridge.ini")), @"^\s*Mode\s*=\s*(\w+)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            return !(m.Success && m.Groups[1].Value.Equals("Controller", StringComparison.OrdinalIgnoreCase));
+        }
+        catch { return true; }
+    }
+
     public static bool TryOpen(string game, Action<ProcessStartInfo> open = null)
     {
         if (!Enabled(game)) return false;
         var exe = Path.GetFullPath(Path.Combine(game, @"InputLab\DOA5LR-Commandes.exe"));
-        if (!File.Exists(exe)) throw new FileNotFoundException("The Keyboard / controller app is missing. Repair the mod pack, or restore the InputLab folder from the pack ZIP before playing. The experimental runtime may remain unchecked.", exe);
+        if (!File.Exists(exe)) throw new FileNotFoundException("The Set controls app is missing. Repair the mod pack, or restore the InputLab folder from the pack ZIP before playing. The experimental runtime may remain unchecked.", exe);
         var start = new ProcessStartInfo(exe) { WorkingDirectory = Path.GetDirectoryName(exe), UseShellExecute = true };
         if (open == null) StartOrActivate(start); else open(start);
         return true;
@@ -1080,9 +1149,9 @@ class MainForm : Form
         cbDisplay.Items.AddRange(new object[] { "Fullscreen (game setting)", "Window (with borders)", "Borderless fullscreen (recommended)" });
         cbDisplay.SelectedIndexChanged += (s, e) => { if (!busy && cbDisplay.Enabled && cbDisplay.Tag == null) { try { Util.WriteDisplayMode(game, cbDisplay.SelectedIndex); Status("Display mode: " + cbDisplay.Text + " — applied at the next game launch (F11 in game switches too)."); } catch (Exception ex) { Status("Display mode not saved: " + ex.Message); } } };
         Controls.Add(cbDisplay);
-        btnLaunch = B("▶   LAUNCH GAME", x, 696, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
+        btnLaunch = B("▶   PLAY", x, 696, w - 396, 44, OK, async (s, e) => await LaunchAction(), true);   // 1.2.0
         btnShortcut = B("Desktop shortcut", x + 308, 696, 180, 44, BTN, (s, e) => MakeShortcut());   // 1.2.0
-        btnFinder = B("Keyboard / controller", x + 496, 696, 200, 44, BTN, (s, e) => OpenInputSettings());
+        btnFinder = B("Set controls", x + 496, 696, 200, 44, BTN, (s, e) => OpenInputSettings());
         btnRestore = B("Restore backup", x, 752, 150, 40, BTN, async (s, e) => await RestoreAction());
         btnBackups = B("Backups folder", x + 154, 752, 150, 40, BTN, (s, e) => OpenBackups());
         btnCheck = B("Check again", x + 308, 752, 130, 40, BTN, async (s, e) => await CheckAsync());
@@ -1194,7 +1263,7 @@ class MainForm : Form
     void UpdateState()
     {
         bool ok = game != "" && File.Exists(Path.Combine(game, Cfg.GameExe));
-        if (btnLaunch != null) { btnLaunch.Enabled = ok && !busy; btnLaunch.Text = InputLauncher.Enabled(game) ? "▶   CHOOSE INPUT / PLAY" : "▶   LAUNCH GAME"; }   // works offline too (no manifest needed)
+        if (btnLaunch != null) { btnLaunch.Enabled = ok && !busy; btnLaunch.Text = "▶   PLAY"; }   // works offline too (no manifest needed)
         if (btnFinder != null) btnFinder.Enabled = ok && !busy && InputLauncher.Available(game);
         if (manifest == null) { btnMain.Text = "CHECKING…"; btnMain.Enabled = false; return; }
         btnMain.Enabled = ok && !busy && manifest.Url != "";
@@ -1303,9 +1372,9 @@ class MainForm : Form
             msg += (eng.FreshInstall ? "\r\n\r\nRead READ-ME-FIRST-EN.txt in the game folder once (controller setup, lobby key)." : "") + "\r\n\r\nYou can start the game.";
             bool play = false;
             if (updateMode || eng.SelfReplaced) MessageBox.Show(this, msg.Trim(), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            else play = MessageBox.Show(this, msg.Trim() + (InputLauncher.Enabled(game) ? "\r\n\r\nOpen Keyboard / controller to choose your input before playing?" : "\r\n\r\nLaunch the game now (through Steam)?"), "Success", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes;
+            else play = MessageBox.Show(this, msg.Trim() + (InputLauncher.RequiresChooser(game) ? "\r\n\r\nOpen Set controls (keyboard remapping is on) before playing?" : "\r\n\r\nLaunch the game now (through Steam)?"), "Success", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes;
             if (eng.FreshInstall && !updateMode && !File.Exists(ShortcutPath) &&   // first install -> offer the configuration shortcut
-                MessageBox.Show(this, "Add a \"" + Path.GetFileNameWithoutExtension(ShortcutPath) + "\" shortcut to your desktop?\r\n\r\nDouble-click it to open the installer and review your settings. Choose Keyboard / controller or launch through Steam when you are ready.", "Desktop shortcut", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                MessageBox.Show(this, "Add a \"" + Path.GetFileNameWithoutExtension(ShortcutPath) + "\" shortcut to your desktop?\r\n\r\nDouble-click it to open the installer and review your settings. Click PLAY to start the game, or Set controls to change keyboard / controller settings.", "Desktop shortcut", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 MakeShortcut(false);
             if (play) { SetBusy(false); await LaunchAction(true); return; }
             if (eng.SelfReplaced) Engine.ApplySelfReplaceAndRestart("");
@@ -1336,10 +1405,10 @@ class MainForm : Form
                 if (r == DialogResult.Yes) { await MainAction(); return; }   // MainAction offers to launch when it succeeds
             }
         }
-        if (InputLauncher.Enabled(game))
+        if (InputLauncher.RequiresChooser(game))
         {
             if (OpenInputSettings() && playMode) Close();
-            return; // A missing/broken app must not silently bypass the input choice and start the game.
+            return; // keyboard remapping ON: its app checks the controllers first; a missing app must not be bypassed silently.
         }
         SetBusy(true); bar.Visible = false;
         try
@@ -1411,7 +1480,7 @@ class MainForm : Form
                 "Opens " + Cfg.PackName + " installer and configuration; choose your settings before launching");
             Util.Log("shortcut created: " + lnk + " -> " + Application.ExecutablePath + " " + args);
             Status("Desktop shortcut created: " + Path.GetFileName(lnk));
-            if (explain) MessageBox.Show(this, "Shortcut \"" + Path.GetFileNameWithoutExtension(lnk) + "\" added to your desktop.\r\n\r\nDouble-click it to open the installer and review your settings. Choose Keyboard / controller or launch through Steam when you are ready.\r\n\r\nKeep this installer where it is now:\r\n" + Application.ExecutablePath + "\r\n(if you move it, click Desktop shortcut again).", "Desktop shortcut", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (explain) MessageBox.Show(this, "Shortcut \"" + Path.GetFileNameWithoutExtension(lnk) + "\" added to your desktop.\r\n\r\nDouble-click it to open the installer and review your settings. Click PLAY to start the game, or Set controls to change keyboard / controller settings.\r\n\r\nKeep this installer where it is now:\r\n" + Application.ExecutablePath + "\r\n(if you move it, click Desktop shortcut again).", "Desktop shortcut", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex) { Status("Shortcut failed: " + ex.Message); Util.Log("shortcut FAILED: " + ex.Message); }
     }
@@ -1469,15 +1538,15 @@ class MainForm : Form
     {
         try
         {
-            if (!InputLauncher.TryOpen(game)) { Status("Install or repair the mod pack to add Keyboard / controller settings."); return false; }
+            if (!InputLauncher.TryOpen(game)) { Status("Install or repair the mod pack to add the Set controls app."); return false; }
             Status("Choose Keyboard or Controller, then click Play via Steam when you are ready.");
-            Util.Log("launch: opened Keyboard / controller; waiting for the player's choice");
+            Util.Log("launch: opened Set controls; waiting for the player's choice");
             return true;
         }
         catch (Exception ex)
         {
-            Status("Could not open Keyboard / controller: " + ex.Message); Util.Log("input settings FAILED: " + ex);
-            MessageBox.Show(this, ex.Message, "Keyboard / controller", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Status("Could not open Set controls: " + ex.Message); Util.Log("input settings FAILED: " + ex);
+            MessageBox.Show(this, ex.Message, "Set controls", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return false;
         }
     }
