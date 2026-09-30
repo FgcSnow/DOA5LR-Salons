@@ -3,7 +3,7 @@
 Input  : the published 0.3.13 release folder (ZIP, installer and version.txt, SHA256 checked).
 Changed: installer 1.3.4 (ResolutionMod follows Borderless, delete_if=, PLAY / Set controls) and its source copy,
          DOA5LR-RandomStages.asi 2.1 + .ini (new stages in offline Random only), DOA5LR-Crimson-VFX.asi v26 (bounded log) + .ini,
-         scripts/MAPS-DZ-CRIMSON-EN.txt, DOA5LR-Diagnostic/maps-files.json, the three guide copies, VERSION, SHA256SUMS.
+         scripts/MAPS-DZ-CRIMSON-EN.txt, DOA5LR-Diagnostic/maps-files.json + DOA5LR-Diagnostic.ps1 (.ini checked for presence only), the three guide copies, VERSION, SHA256SUMS.
          DOA5LR-DangerZone.asi rebuilt without its crash handler (the 0.3.13 file is a Defender ML false positive,
          Wacatac.C!ml, quarantined on players' PCs; crash dumps come from Windows WER / DOA5LR-Diagnostic instead) and
          DOA5LR-ExtraStages.asi 2.0.4 (log can be turned off): both built outside this repository by the maps work,
@@ -183,6 +183,7 @@ def main() -> None:
         "DOA5LR-Crimson-VFX.ini": maps_files["DOA5LR-Crimson-VFX.ini"],
         "scripts/MAPS-DZ-CRIMSON-EN.txt": (REPO / "src/Maps/MAPS-DZ-CRIMSON-EN.txt").read_bytes(),
         "DOA5LR-Diagnostic/maps-files.json": maps_json,
+        "DOA5LR-Diagnostic/DOA5LR-Diagnostic.ps1": (REPO / "src/Diagnostic/DOA5LR-Diagnostic.ps1").read_bytes(),   # .ini: presence only
         **pack_guides(VERSION),
         "DOA5LR-Salons-VERSION.txt": (VERSION + "\r\n").encode("ascii"),
     }
