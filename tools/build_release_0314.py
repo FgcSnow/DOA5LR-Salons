@@ -42,7 +42,7 @@ BASE_ZIP_SHA256 = "33e58048085a6da515c599545742be2192aea7fd99f50fb75fa738f6e5dd3
 BASE_INSTALLER_SHA256 = "485b34afda6ec85f07227b8f9b956852c7246dab4216192eb25316e7b04f0b2c"
 BASE_MANIFEST_SHA256 = "ca30d3732a68e05c53298e0f0935909934c58d2b864173c2ced555678b1ee21c"
 INSTALLER = "DOA5LR-Salons-Installer.exe"
-INSTALLER_VERSION = "1.3.4"
+INSTALLER_VERSION = "1.3.5"
 UIMOD_D3D9_SHA256 = "badac2aa7b4ca2d355cecdf36afad246f5e27891c86f7fa23dc42c1998ba4ee8"   # 0.2.3-0.3.3 ui_mod d3d9.dll
 # 0.3.13 binaries the rebuilt modules replace (their sources in src/Maps rebuild to these, PE timestamp aside)
 OLD_RANDOM_SHA256 = "0bfee24fedeb17a2cf90a7dcb27705d9d0b4ab6ebc3c3f22c0f0b88c38cb522a"
@@ -53,13 +53,19 @@ DATA_PREFIXES = ("CodexCrimson/", "CodexDangerZone/", "PS4Stages/")
 DATA_ZIP = "DOA5LR-Salons-maps-data-1.zip"   # data set 1 = the stage data of 0.3.13/0.3.14; a later release may reuse this asset
 REMOVED = ["DOA5LR-Crimson-EventLog.asi", "DOA5LR-Crimson-BackendProbe.asi"]
 REMOVED_LOGS = ["DOA5LR-Crimson-EventLog.log"]
+# 1.3.5 (WAZAAAAA): the maps modules go to scripts\ like every other module; they find their .ini, logs and stage data
+# from game.exe's folder (checked in game 30/09: all 11 applied from scripts\, logs still next to game.exe).
+# DebugArchive stays next to game.exe (it builds its paths from its own location).
+MOVED = ["DOA5LR-Crimson.asi", "DOA5LR-Crimson-Audio.asi", "DOA5LR-Crimson-VFX.asi", "DOA5LR-DangerZone.asi",
+         "DOA5LR-DNZ-Complete.asi", "DOA5LR-DNZ-Name.asi", "DOA5LR-DNZ-Preview.asi", "DOA5LR-DNZ-SharedAudio.asi",
+         "DOA5LR-DNZ-Thumbnail.asi", "DOA5LR-ExtraStages.asi", "DOA5LR-RandomStages.asi"]
 OLD_MAPS_LABEL = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)"
 MAPS_LABEL = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)"
 NOTES = [
     "notes=pack 0.3.14: your own resolution/window again without Borderless, your d3d9.dll kept, PLAY starts the game, "
-    "new stages in offline Random only, smaller Crimson log",
+    "new stages in offline Random only, smaller Crimson log, maps modules tidied into scripts",
     "note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only "
-    "needed by Borderless: Installer 1.3.4 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of "
+    "needed by Borderless: Installer 1.3.5 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of "
     "the game's launcher apply again. A value you changed by hand is not turned back on.",
     "note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is "
     "removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.",
@@ -71,7 +77,10 @@ NOTES = [
     "are removed. Windows 11 error 4551 on a .asi = Smart App Control (not Defender): see the guide.",
     "note=0.3.14: DOA5LR-DangerZone.asi of 0.3.13 is flagged by Windows Defender (false positive): it is rebuilt without its crash "
     "handler. If Defender removed it, updating puts the new one back and the maps work again.",
-    "note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and "
+    "note=0.3.14: the maps modules (DangerZone, DNZ-*, Crimson*, ExtraStages, RandomStages .asi) moved to the scripts folder like "
+    "every other module of the pack (thanks WAZAAAAA); the update removes the old copies next to game.exe. Their .ini files and "
+    "the stage data stay next to game.exe.",
+    "note=0.3.14: accept Installer 1.3.5 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and "
     "later updates only download what changed (about 7 MB instead of 270 MB when your stage files are intact). If an older "
     "installer stops with 'the file contains a virus', run the update again: Defender has then removed the old DangerZone.asi.",
 ]
@@ -89,12 +98,23 @@ def manifest(base: str, zip_name: str, zip_data: bytes, installer: bytes, core_n
     k = next(i for i, l in enumerate(lines) if l.startswith("optional_v4="))
     if OLD_MAPS_LABEL not in lines[k]:
         raise AssertionError("optional_v4 label differs from 0.3.13")
-    lines[k] = lines[k].replace(OLD_MAPS_LABEL, MAPS_LABEL)   # label only: installers take the label from their own table
+    # 1.3.5: optional_v5 only (1.3.3/1.3.4 ignore it: no Maps box, no 'required maps files' check on the old root paths;
+    # the root copies go through the delete= lines below, so no installer ever loads the modules twice)
+    lines[k] = f"optional_v5=maps|{MAPS_LABEL}|{';'.join(maps_globs())}"
     k = next(i for i, l in enumerate(lines) if l.startswith("delete="))
-    lines[k:k] = [f"delete={n}" for n in REMOVED + REMOVED_LOGS]
+    lines[k:k] = [f"delete={n}" for n in REMOVED + REMOVED_LOGS + MOVED]
     k = max(i for i, l in enumerate(lines) if l.startswith("delete=")) + 1
     lines[k:k] = [f"delete_if=d3d9.dll|{UIMOD_D3D9_SHA256}"]   # 1.3.4: only the old ui_mod file; 1.3.3 ignores the key
     return "\n".join(lines) + "\n"
+
+
+def maps_globs() -> list[str]:
+    import re
+    src = (REPO / "src/Installer/Installer.cs").read_text(encoding="utf-8-sig")
+    m = re.search(r'public static readonly Component Maps = new Component \{ Id = "maps", Label = "(.*?)", Globs = new\[\] \{ (.*?) \} \};', src)
+    if not m or m.group(1) != MAPS_LABEL:
+        raise AssertionError("Maps component not found in the installer source")
+    return [g.strip()[2:-1] for g in m.group(2).split(",")]
 
 
 def build(cmd: Path, product: Path) -> bytes:
@@ -143,7 +163,7 @@ def main() -> None:
     src = REPO / "src" / "Installer"
     subprocess.run(["cmd", "/c", str(src / "build.cmd")], cwd=src, check=True)
     installer_source = (src / "Installer.cs").read_bytes()
-    for needle in (f'AppVersion = "{INSTALLER_VERSION}"', 'case "delete_if"', 'case "core"', 'case "data"', "SyncResolutionMod", "RequiresChooser", MAPS_LABEL):
+    for needle in (f'AppVersion = "{INSTALLER_VERSION}"', 'case "optional_v5"', 'case "delete_if"', 'case "core"', 'case "data"', "SyncResolutionMod", "RequiresChooser", MAPS_LABEL):
         if needle.encode() not in installer_source:
             raise AssertionError(f"installer source is not 1.3.4 ({needle} missing)")
 
@@ -160,6 +180,8 @@ def main() -> None:
     maps_files["DOA5LR-Crimson-VFX.ini"] = (REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.ini").read_bytes()
     new_maps = []
     for e in maps:
+        if e["path"].startswith("scripts/") and e["path"][8:] in MOVED:   # list already rewritten by an earlier run
+            e = {**e, "path": e["path"][8:]}
         if e["path"] in REMOVED:
             continue
         data = maps_files.get(e["path"], base.get(e["path"]))
@@ -206,6 +228,21 @@ def main() -> None:
             raise AssertionError(f"{n} changed although it should be byte-identical to 0.3.13")
     if set(payload) != (set(base) - set(REMOVED)):
         raise AssertionError("unexpected file added or missing")
+    for n in MOVED:
+        payload["scripts/" + n] = payload.pop(n)
+    for e in new_maps:
+        if e["path"] in MOVED:
+            e["path"] = "scripts/" + e["path"]
+    maps_json = (json.dumps(new_maps, indent=2) + "\n").encode("utf-8")
+    for copy in (REPO / "src/Maps/maps-files.json", REPO / "src/Diagnostic/maps-files.json"):
+        copy.write_bytes(maps_json)
+    payload["DOA5LR-Diagnostic/maps-files.json"] = maps_json
+    payload.pop("SHA256SUMS.txt", None)
+    payload["SHA256SUMS.txt"] = "".join(f"{sha(payload[n])} *{n}\n" for n in sorted(payload)).encode("ascii")
+    globs = maps_globs()
+    stray = [n for n in MOVED if "scripts\\" + n not in globs or n not in globs]
+    if stray:
+        raise AssertionError(f"installer Maps globs do not own both paths of {stray}")
     listed = json.loads(maps_json)
     bad = [e["path"] for e in listed if e["path"] not in payload or sha(payload[e["path"]]) != e["sha256"]]
     if bad:

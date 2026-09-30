@@ -63,7 +63,7 @@ using Microsoft.Win32;
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.4";
+    public const string AppVersion = "1.3.5";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -99,7 +99,9 @@ static class Cfg
         @"scripts\DOA5LR-Lobby.asi", @"scripts\DOA5LR-InviteFix.asi", @"scripts\DOA5LR-Borderless.asi",
         @"scripts\DOA5LR-60fps-menus.asi", @"scripts\DOA5LR-WiFi-Wired-Detector.asi", @"scripts\DOA5LR-UpdateCheck.asi",
         // 1.3.3 : JoinFix (room join fix) was not checked; maps modules (only when the Maps box is ticked, see Owns())
-        @"scripts\DOA5LR-JoinFix.asi", "DOA5LR-ExtraStages.asi", "DOA5LR-DangerZone.asi", "DOA5LR-Crimson.asi", "DOA5LR-RandomStages.asi" };
+        @"scripts\DOA5LR-JoinFix.asi",
+        // 1.3.5 : the maps modules moved from the game root to scripts\ (like every other module of the pack)
+        @"scripts\DOA5LR-ExtraStages.asi", @"scripts\DOA5LR-DangerZone.asi", @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-RandomStages.asi" };
     // Files the pack must never contain / the installer must never write (same rule as build_pack.py).
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
 }
@@ -121,15 +123,18 @@ class Component
     // its .ini next to game.exe), so a copy installed by hand is replaced, never loaded twice. On by default.
     public static readonly Component ReplayTakeover = new Component { Id = "replaytakeover", Label = "Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)", Globs = new[] { "DOA5LR-ReplayTakeover.asi", "DOA5LR-ReplayTakeover.ini", @"scripts\REPLAY-TAKEOVER-EN.txt", @"scripts\ReplayTakeover-Source\*" } };
     // 1.3.3 : PS4 stages Danger Zone / The Crimson 1-2 (+ Random). On by default: in a room everyone needs the same stages.
-    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
-    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps }).ToArray();
+    // 1.3.3 : maps component of 0.3.13/0.3.14 (optional_v4 = modules at the game root); kept to read those manifests
+    public static readonly Component MapsRoot = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
+    // 1.3.5 : modules in scripts\ (optional_v5); the old root names are listed too, so leaving the maps out removes them
+    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"scripts\DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"scripts\DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"scripts\DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"scripts\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"scripts\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"scripts\DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt", @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-DangerZone.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-RandomStages.asi" } };
+    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps, MapsRoot }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
     {
         var p = v.Split('|'); if (p.Length != 3) return null;
         var c = new Component { Id = p[0].Trim().ToLowerInvariant(), Label = p[1].Trim(), Globs = p[2].Split(';').Select(g => g.Trim().Replace('/', '\\')).Where(g => g.Length > 0 && !g.Contains("..")).ToArray() };
-        var known = Known.FirstOrDefault(item => item.Id == c.Id);
-        if (known == null || !c.Globs.SequenceEqual(known.Globs, StringComparer.OrdinalIgnoreCase))
+        var known = Known.FirstOrDefault(item => item.Id == c.Id && c.Globs.SequenceEqual(item.Globs, StringComparer.OrdinalIgnoreCase));
+        if (known == null)
             throw new InvalidDataException("Refused: unsupported optional component: " + c.Id);
         return known;
     }
@@ -193,7 +198,8 @@ class Manifest
                 case "optional":
                 case "optional_v2":
                 case "optional_v3":
-                case "optional_v4": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "optional_v4":
+                case "optional_v5": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
             }
         }
         if (m.Keep.Count == 0) m.Keep.Add("*.ini");

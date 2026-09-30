@@ -1,18 +1,19 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.14
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14.zip
-sha256=44bc48bc62132650257da7c936b07139eeca6859e0d2bd93735e4fa722475782
-size=266628053
-core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-core-0.3.14.zip|32c72f22330d2b06f91dc3815a73bf7a6bb3197b05578ad86d4d3b8f2865ee96|7288905
+sha256=8cfc6c230ef006e4ead41593b317fa045fc7bd5772f42106749831df97b14c66
+size=266628860
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-core-0.3.14.zip|ac076781efad526ce6c042b9bdb1a99d748ed0037bc2aa966f6c0edc05536160|7289712
 data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-maps-data-1.zip|6f16b041b35d2e2f065162264e1f889dc8ad38af828796c90b35ec024bacf99f|259339170
-notes=pack 0.3.14: your own resolution/window again without Borderless, your d3d9.dll kept, PLAY starts the game, new stages in offline Random only, smaller Crimson log
-note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.4 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
+notes=pack 0.3.14: your own resolution/window again without Borderless, your d3d9.dll kept, PLAY starts the game, new stages in offline Random only, smaller Crimson log, maps modules tidied into scripts
+note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.5 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
 note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.
 note=0.3.14: PLAY starts the game directly; Set controls opens the controls app (idea from Inyo). With keyboard remapping on in Keyboard mode, PLAY still opens the controls app first (it checks that no controller is connected).
 note=0.3.14: Danger Zone / Crimson are drawn by OFFLINE Random only: online Random (ranked, lobbies) is the game's own again, so a player without the maps never gets them. Pick them by hand in rooms (everyone in the room needs the maps).
 note=0.3.14: the Crimson effects log keeps startup and errors only (512 KB max); two porting diagnostics (Crimson-EventLog, Crimson-BackendProbe) are removed. Windows 11 error 4551 on a .asi = Smart App Control (not Defender): see the guide.
 note=0.3.14: DOA5LR-DangerZone.asi of 0.3.13 is flagged by Windows Defender (false positive): it is rebuilt without its crash handler. If Defender removed it, updating puts the new one back and the maps work again.
-note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and later updates only download what changed (about 7 MB instead of 270 MB when your stage files are intact). If an older installer stops with 'the file contains a virus', run the update again: Defender has then removed the old DangerZone.asi.
+note=0.3.14: the maps modules (DangerZone, DNZ-*, Crimson*, ExtraStages, RandomStages .asi) moved to the scripts folder like every other module of the pack (thanks WAZAAAAA); the update removes the old copies next to game.exe. Their .ini files and the stage data stay next to game.exe.
+note=0.3.14: accept Installer 1.3.5 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and later updates only download what changed (about 7 MB instead of 270 MB when your stage files are intact). If an older installer stops with 'the file contains a virus', run the update again: Defender has then removed the old DangerZone.asi.
 note=0.3.13: Danger Zone, The Crimson 1 and The Crimson 2 (PS4 versions): pick them by hand with proper thumbnails or tick them in the game's Random filter (three new check boxes). Offline and online; the original stages stay.
 note=0.3.13: ONLINE, EVERYONE IN THE ROOM (players and spectators) NEEDS THE MAPS: update before joining rooms that use them. Installer 1.3.3 adds a Maps check box, on by default (untick it to leave them out; your .ini settings are kept).
 note=0.3.13: AutoLink costumes work with the maps, but only put character folders inside AutoLink (+ _Movie, _Texture, _Sound, _Stages): modding tools stored in AutoLink\_Modding made a tester crash after the first fight.
@@ -40,14 +41,14 @@ note=0.3.8: the installer (1.1.0) now has check boxes: Borderless and 60fps-menu
 note=0.3.8: WiFi-Wired-Detector 0.8.8: the LinkOverride=1 setting (declare yourself wired) is gone; the tag comes from your real adapter (LinkOverride=2 = force wireless still exists). The plugin is part of the pack on purpose: the tag is only worth something if every player shows it.
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
 installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe
-installer_version=1.3.4
-installer_sha256=624e58b1351686de1f90d2df350fb5ee6ce0c6e991a1b22485806f10eec5a5ef
+installer_version=1.3.5
+installer_sha256=23d6e7afd1e5493e228c4b4cc9a235cc06a4364b58a2f96ecce9de40245b25e2
 keep=*.ini
 optional=borderless|Borderless fullscreen window (F11 in game; display mode below)|scripts\DOA5LR-Borderless.asi;scripts\DOA5LR-Borderless.ini;scripts\BORDERLESS-EN.txt;scripts\Borderless-Source\*
 optional=60fps|60 fps menus, intros, win poses and Story cutscenes (offline only)|scripts\DOA5LR-60fps-menus.asi;scripts\DOA5LR-60fps-menus.ini;scripts\60FPS-EN.txt;scripts\60fps-Source\*
 optional_v2=inputlab|Experimental in-game keyboard remapping (settings app always available)|DOA5LR-InputBridge-Xidi.dll;DOA5LR-InputBridge.ini;DOA5LR-ControllerProfiles.ini;DOA5LR-Companion.exe
 optional_v3=replaytakeover|Replay Takeover: take control of P1/P2 in a replay and rewind (replays only)|DOA5LR-ReplayTakeover.asi;DOA5LR-ReplayTakeover.ini;scripts\REPLAY-TAKEOVER-EN.txt;scripts\ReplayTakeover-Source\*
-optional_v4=maps|Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)|DOA5LR-Crimson.asi;DOA5LR-Crimson-Audio.asi;DOA5LR-Crimson-Audio.ini;DOA5LR-Crimson-BackendProbe.asi;DOA5LR-Crimson-EventLog.asi;DOA5LR-Crimson-VFX.asi;DOA5LR-Crimson-VFX.ini;DOA5LR-DangerZone.asi;DOA5LR-DangerZone.ini;DOA5LR-DebugArchive.asi;DOA5LR-DNZ-Complete.asi;DOA5LR-DNZ-Complete.ini;DOA5LR-DNZ-Name.asi;DOA5LR-DNZ-Preview.asi;DOA5LR-DNZ-SharedAudio.asi;DOA5LR-DNZ-SharedAudio.ini;DOA5LR-DNZ-Thumbnail.asi;DOA5LR-ExtraStages.asi;DOA5LR-ExtraStages.ini;DOA5LR-RandomStages.asi;DOA5LR-RandomStages.ini;CodexCrimson\*;CodexDangerZone\*;PS4Stages\*;scripts\MAPS-DZ-CRIMSON-EN.txt
+optional_v5=maps|Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)|scripts\DOA5LR-Crimson.asi;scripts\DOA5LR-Crimson-Audio.asi;DOA5LR-Crimson-Audio.ini;DOA5LR-Crimson-BackendProbe.asi;DOA5LR-Crimson-EventLog.asi;scripts\DOA5LR-Crimson-VFX.asi;DOA5LR-Crimson-VFX.ini;scripts\DOA5LR-DangerZone.asi;DOA5LR-DangerZone.ini;DOA5LR-DebugArchive.asi;scripts\DOA5LR-DNZ-Complete.asi;DOA5LR-DNZ-Complete.ini;scripts\DOA5LR-DNZ-Name.asi;scripts\DOA5LR-DNZ-Preview.asi;scripts\DOA5LR-DNZ-SharedAudio.asi;DOA5LR-DNZ-SharedAudio.ini;scripts\DOA5LR-DNZ-Thumbnail.asi;scripts\DOA5LR-ExtraStages.asi;DOA5LR-ExtraStages.ini;scripts\DOA5LR-RandomStages.asi;DOA5LR-RandomStages.ini;CodexCrimson\*;CodexDangerZone\*;PS4Stages\*;scripts\MAPS-DZ-CRIMSON-EN.txt;DOA5LR-Crimson.asi;DOA5LR-Crimson-Audio.asi;DOA5LR-Crimson-VFX.asi;DOA5LR-DangerZone.asi;DOA5LR-DNZ-Complete.asi;DOA5LR-DNZ-Name.asi;DOA5LR-DNZ-Preview.asi;DOA5LR-DNZ-SharedAudio.asi;DOA5LR-DNZ-Thumbnail.asi;DOA5LR-ExtraStages.asi;DOA5LR-RandomStages.asi
 move=DOA5LR-60fps-menus.ini|scripts\DOA5LR-60fps-menus.ini
 move=DOA5LR-Borderless.ini|scripts\DOA5LR-Borderless.ini
 move=DOA5LR-UpdateCheck.ini|scripts\DOA5LR-UpdateCheck.ini
@@ -55,6 +56,17 @@ move=DOA5LR-WiFi-Wired-Detector.ini|scripts\DOA5LR-WiFi-Wired-Detector.ini
 delete=DOA5LR-Crimson-EventLog.asi
 delete=DOA5LR-Crimson-BackendProbe.asi
 delete=DOA5LR-Crimson-EventLog.log
+delete=DOA5LR-Crimson.asi
+delete=DOA5LR-Crimson-Audio.asi
+delete=DOA5LR-Crimson-VFX.asi
+delete=DOA5LR-DangerZone.asi
+delete=DOA5LR-DNZ-Complete.asi
+delete=DOA5LR-DNZ-Name.asi
+delete=DOA5LR-DNZ-Preview.asi
+delete=DOA5LR-DNZ-SharedAudio.asi
+delete=DOA5LR-DNZ-Thumbnail.asi
+delete=DOA5LR-ExtraStages.asi
+delete=DOA5LR-RandomStages.asi
 delete=DOA5LR-DNZ-Menu.asi
 delete=60FPS-EN.txt
 delete=BORDERLESS-EN.txt

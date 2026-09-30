@@ -36,8 +36,10 @@ IF IT CRASHES OR FREEZES
   memory and may include your Steam name (untick it if you prefer).
 
 FILES
-- DOA5LR-DangerZone / DNZ-* / Crimson* / ExtraStages / RandomStages / DebugArchive .asi (+ .ini)
-  next to game.exe, stage data in CodexDangerZone, CodexCrimson and PS4Stages.
+- Since 0.3.14 the DOA5LR-DangerZone / DNZ-* / Crimson* / ExtraStages / RandomStages .asi are in
+  the scripts folder, like the other modules of the pack (the update removes the old copies next to
+  game.exe). Their .ini, DOA5LR-DebugArchive.asi and the stage data (CodexDangerZone, CodexCrimson,
+  PS4Stages) stay next to game.exe.
 - These modules write local logs next to the game (DOA5LR-Crimson-VFX.log, ...). Since 0.3.14 the
   Crimson effects log only records startup and errors, capped at 512 KB ([Log] in
   DOA5LR-Crimson-VFX.ini: Level=0 off, Level=2 every effect, MaxKB = cap).
