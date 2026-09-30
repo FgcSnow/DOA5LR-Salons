@@ -10,7 +10,7 @@ Changed: installer 1.3.4 (ResolutionMod follows Borderless, delete_if=, PLAY / S
          seen applied in a real game, pinned by SHA-256 below and passed with --dz / --extrastages.
 Removed: DOA5LR-Crimson-EventLog.asi and DOA5LR-Crimson-BackendProbe.asi (porting diagnostics), also deleted on disk.
 Manifest: delete=d3d9.dll becomes delete_if=d3d9.dll|<old ui_mod sha256> (1.3.3 ignores the key: nothing deleted).
-The two modules are rebuilt from src/Maps (build.cmd runs their self-tests) and signed with the installer.
+The two modules are rebuilt from the private team repository (--maps-source) (build.cmd runs their self-tests) and signed with the installer.
 Split download (installer 1.3.4): besides the full ZIP (url=, what older installers use) the release gets
 DOA5LR-Salons-core-0.3.14.zip (the full pack minus the stage data) and DOA5LR-Salons-maps-data-1.zip (CodexCrimson,
 CodexDangerZone, PS4Stages), announced by core= / data= in version.txt. core + data == full, entry for entry.
@@ -141,6 +141,8 @@ def main() -> None:
     ap.add_argument("--extrastages", type=Path, required=True)
     ap.add_argument("--takeover-zip", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--maps-source", type=Path, required=True, help="Private team source/pack-maps directory")
+    ap.add_argument("--installer-source", type=Path, required=True, help="Archived Installer 1.3.5 source directory with build.cmd")
     args = ap.parse_args()
     bz = (args.base_dir / BASE_ZIP).read_bytes()
     if sha(bz) != BASE_ZIP_SHA256:
@@ -177,10 +179,10 @@ def main() -> None:
         raise ValueError("--dz / --extrastages are not the pinned binaries")
     if b"Startup v2.0.4" not in es_asi or b"DOA5LR-DangerZone-crash.txt" in dz_asi:
         raise AssertionError("unexpected ExtraStages / DangerZone build")
-    random_asi = build(REPO / "src/Maps/RandomStages/build.cmd", REPO / "src/Maps/RandomStages/DOA5LR-RandomStages.asi")
-    vfx_asi = build(REPO / "src/Maps/CrimsonVFX/build.cmd", REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.asi")
-    print("building installer from repository source")
-    src = REPO / "src" / "Installer"
+    random_asi = build(args.maps_source / "RandomStages/build.cmd", args.maps_source / "RandomStages/DOA5LR-RandomStages.asi")
+    vfx_asi = build(args.maps_source / "CrimsonVFX/build.cmd", args.maps_source / "CrimsonVFX/DOA5LR-Crimson-VFX.asi")
+    print("building archived installer 1.3.5 from explicitly supplied source")
+    src = args.installer_source
     subprocess.run(["cmd", "/c", str(src / "build.cmd")], cwd=src, check=True)
     installer_source = (src / "Installer.cs").read_bytes()
     for needle in (f'AppVersion = "{INSTALLER_VERSION}"', 'case "optional_v5"', 'case "delete_if"', 'case "core"', 'case "data"', "SyncResolutionMod", "RequiresChooser", MAPS_LABEL):
@@ -196,8 +198,8 @@ def main() -> None:
     maps = json.loads((REPO / "src/Maps/maps-files.json").read_text(encoding="utf-8-sig"))
     # every listed file takes the hash of the file this pack ships (asi AND ini: a fresh install gets the new defaults)
     maps_files = {n: signed[n] for n in ("DOA5LR-RandomStages.asi", "DOA5LR-Crimson-VFX.asi", "DOA5LR-DangerZone.asi", "DOA5LR-ExtraStages.asi")}
-    maps_files["DOA5LR-RandomStages.ini"] = (REPO / "src/Maps/RandomStages/DOA5LR-RandomStages.ini").read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
-    maps_files["DOA5LR-Crimson-VFX.ini"] = (REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.ini").read_bytes()
+    maps_files["DOA5LR-RandomStages.ini"] = (args.maps_source / "RandomStages/DOA5LR-RandomStages.ini").read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    maps_files["DOA5LR-Crimson-VFX.ini"] = (args.maps_source / "CrimsonVFX/DOA5LR-Crimson-VFX.ini").read_bytes()
     new_maps = []
     for e in maps:
         if e["path"].startswith("scripts/") and e["path"][8:] in MOVED:   # list already rewritten by an earlier run
