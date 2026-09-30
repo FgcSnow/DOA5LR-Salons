@@ -4,11 +4,16 @@ DOA5LR-Salons - DANGER ZONE + THE CRIMSON 1 & 2 (PS4 stages)
 WHAT
 - Danger Zone, The Crimson 1 and The Crimson 2 (PS4 versions) are added to DOA5LR PC.
 - Pick them by hand in the stage select (proper thumbnails; Crimson 1 and 2 share one slot,
-  switch the variant in Solo), or tick them in the game's Random filter (three check boxes).
-- Offline and online. The original stages are all still there.
+  switch the variant in Solo), offline and online.
+- Random: tick them in the game's Random filter (three check boxes). Since 0.3.14 they are drawn
+  by OFFLINE Random only; online Random (ranked, lobbies) stays the game's own, so a player
+  without the maps never gets them. DOA5LR-RandomStages.ini: Online=1 adds them to online Random
+  too - only if everyone you play with has the maps.
+- The original stages are all still there.
 
 ONLINE
-- EVERYONE in the room (players AND spectators) needs the maps: update to 0.3.13 or later.
+- EVERYONE in the room (players AND spectators) needs the maps to play on them: update to
+  0.3.13 or later before picking them in a room.
 
 INSTALL / REMOVE
 - Installer check box "Maps", on by default. Untick it and click Update/Reinstall to leave the
@@ -33,7 +38,8 @@ IF IT CRASHES OR FREEZES
 FILES
 - DOA5LR-DangerZone / DNZ-* / Crimson* / ExtraStages / RandomStages / DebugArchive .asi (+ .ini)
   next to game.exe, stage data in CodexDangerZone, CodexCrimson and PS4Stages.
-- These modules write local logs next to the game (DOA5LR-Crimson-VFX.log, ...). The Diagnostic
-  tool resets the Crimson effects log when it goes over 20 MB.
+- These modules write local logs next to the game (DOA5LR-Crimson-VFX.log, ...). Since 0.3.14 the
+  Crimson effects log stops at 2 MB per game session and keeps the previous session as .log.old;
+  [Log] Enabled=0 in DOA5LR-Crimson-VFX.ini turns it off.
 
 Stages ported by FGCsnow & the DOA5LR community mod team.

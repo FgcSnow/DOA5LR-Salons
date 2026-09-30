@@ -1,6 +1,20 @@
-# DOA5LR-Salons 0.3.13 — Rooms, controls, installation and updates
+# DOA5LR-Salons 0.3.14 — Rooms, controls, installation and updates
 
-## What's new in 0.3.13
+## What's new in 0.3.14
+
+Fixes from your reports on 0.3.13 (Installer 1.3.4):
+
+- **The game no longer forces your desktop resolution / a full-size window.** The pack's AutoLink settings (`DInput8.ini`, `ResolutionMod=1`) forced the desktop resolution for everyone. That is only needed with **Borderless**, which renders at your monitor size. The installer now sets `ResolutionMod=0` when Borderless is unticked, so the resolution and window mode you choose in the game's launcher apply again. With Borderless ticked, rendering stays at the desktop size (untick Borderless to play at a lower resolution). A value you changed by hand is not turned back on, and a custom `WindowResolution` / `FullscreenResolution` is never touched.
+- **Your `d3d9.dll` is no longer deleted.** Older installers removed any `d3d9.dll` (it was meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. If an earlier update removed yours, it is in `DOA5LR-Salons-Backups\<date>\`.
+- **PLAY starts the game directly; "Set controls" opens the controls app** (idea from Inyo). PLAY only goes through the controls app when experimental keyboard remapping is on in Keyboard mode, because that app checks that no controller is connected first.
+- **Random: the new stages are offline only.** Danger Zone and The Crimson 1/2 were also added to online Random (ranked, lobbies), where a player without the maps could get a stage they do not have. Online Random is now the game's own; pick the new stages by hand in lobbies. Everyone in a room still needs the maps for a manual pick. (`[RandomStages] Online=1` in `DOA5LR-RandomStages.ini` brings back online Random, only if everyone you play with has the maps.)
+- **Smaller logs:** the Crimson effects log stops at 2 MB per game session and keeps the previous one as `.old` (`[Log] Enabled=0` in `DOA5LR-Crimson-VFX.ini` turns it off). Two diagnostic modules used while porting the stages (`DOA5LR-Crimson-EventLog.asi`, `DOA5LR-Crimson-BackendProbe.asi`) are removed.
+
+**Windows 11 "Unable to load ... Error: 4551"** comes from **Smart App Control**, not from Defender: it blocks unsigned DLLs. Turning Defender off changes nothing. See the Troubleshooting table at the end. Do not use tools that disable Windows Defender.
+
+Details: [0.3.14 release notes](RELEASE-NOTES-0.3.14.md).
+
+## Since 0.3.13
 
 **New stages: Danger Zone, The Crimson 1 and The Crimson 2** (the PS4 versions) on PC: pick them by hand with proper thumbnails, or tick them in the game's **Random** filter (three new check boxes). They work **offline and online**. The original stages are all still there.
 
@@ -32,7 +46,7 @@ Settings are in `scripts/DOA5LR-JoinFix.ini`. JoinFix writes no log file and sen
 
 ## Controls app (since 0.3.9)
 
-The pack includes a **Keyboard / controller** settings app. Use it to remap keyboard controls, choose how to launch the game, or inspect connected controllers, arcade sticks and leverless controllers.
+The pack includes a controls app (**Set controls** in the installer). Use it to remap keyboard controls, choose how to launch the game, or inspect connected controllers, arcade sticks and leverless controllers.
 
 **The settings app is always available. Experimental in-game remapping is optional and off by default.** Opening the app or the desktop shortcut does not start DOA5LR.
 
@@ -42,28 +56,27 @@ The existing optional Borderless and offline 60 fps features remain available. U
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.13/DOA5LR-Salons-Installer.exe) and open it |
+| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe) and open it |
 | Portable controls app (unchanged since 0.3.9) | First use of the app on an existing compatible pack | Download the [portable ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip), extract its complete `InputLab` folder to a new folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
 The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
 
 **If InputLab is already installed or active, update through the pack installer.** Do not extract a new full pack or portable app over your existing InputLab folder. That can overwrite profiles and default INIs, or replace runtime files without preserving the recorded module state. Keep your profiles and both kinds of backup.
 
-The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8, 0.3.9, 0.3.10, 0.3.11, 0.3.12 or 0.3.13)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
+The portable remapping module requires **the verified DOA5LR-Salons input setup (0.3.8 to 0.3.14)**, installed in a Steam library. The app checks the original input file before replacing it. If it reports a different input DLL, stop and repair the compatible pack rather than renaming or deleting files to bypass the check. Controller Finder can be used separately without enabling the module.
 
 ## Install or update the pack
 
 1. Close DOA5LR.
-2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. If an older installer offers its own update, accept Installer 1.3.3 first, then continue with the pack.
+2. Open `DOA5LR-Salons-Installer.exe` and check the selected game folder. If detection fails, choose the folder containing `game.exe`. If an older installer offers its own update, accept Installer 1.3.4 first, then continue with the pack.
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
-4. Open **Keyboard / controller**. This button works even with the experimental component unchecked.
-5. Choose a mode and use **Play via Steam** when ready to play.
+4. Click **PLAY** to start the game, or **Set controls** to open the controls app (it works even with the experimental component unchecked; its **Play via Steam** applies the chosen mode and launches).
 
-**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.13 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.13/DOA5LR-Salons-0.3.13.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
+**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.14 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
 
 For every upgrade, including from 0.3.8 or 0.3.9, use the installer to keep personal INIs, saved input choices and module backups. Do not overwrite custom INIs with archive defaults.
 
-The installer can create a **DOA5LR (Lobby Mods)** desktop shortcut. It opens the pack configuration window first. Its launch button opens the controls choice; it does not silently start a match or choose an input mode for you.
+The installer can create a **DOA5LR (Lobby Mods)** desktop shortcut. It opens the pack configuration window first; **PLAY** starts the game with your last applied settings (through the controls app only when keyboard remapping is on in Keyboard mode).
 
 If an older standalone prototype is active, use its **Restore previous setup** before installing this pack. The installer rejects that older unmanaged state so it does not mistake modified settings for your original setup.
 
@@ -144,6 +157,9 @@ The settings are in `scripts/DOA5LR-UpdateCheck.ini`. `Banner=0` hides the new b
 | An app file is missing | Repair an installed pack through the installer. For a first-use portable copy, re-extract the entire app into a new folder. Check antivirus protection history; keep protection enabled. |
 | Setup rejects an existing prototype or different input DLL | Restore the older prototype with its own backup or repair the compatible pack. Do not bypass the file check. |
 | Steam launch opens the game immediately | This is the direct Steam path. Use the pack shortcut or controls app to choose settings first. |
+| "Unable to load DOA5LR-....asi. Error: 4551" (Windows 11) | Smart App Control blocked an unsigned mod file; Defender is not the cause. Windows Security → App & browser control → Smart App Control → Off. On many Windows versions it cannot be turned back on without resetting Windows, so decide for yourself. Keep Defender on. |
+| A pack file disappears after install ("required file missing") | An antivirus quarantined it (false positive). Restore it from Windows Security → Protection history, then click REINSTALL (repair). |
+| The game runs at your desktop resolution although you chose another one | Untick Borderless in the installer and apply (Borderless always renders at the desktop size), or set `ResolutionMod=0` in `DInput8.ini`. |
 
 Rumble and controller button icons are not carried through the experimental keyboard input path. Online modes and other controller hardware have not been validated for this input patch.
 
