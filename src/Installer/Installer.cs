@@ -61,13 +61,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.8.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.8.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.8")]
+[assembly: System.Reflection.AssemblyVersion("1.3.9.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.9.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.9")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.8";
+    public const string AppVersion = "1.3.9";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -130,7 +130,8 @@ static class Ps4Skins
         int p = BitConverter.ToInt32(b, 60);
         if (p < 64 || p > b.Length - 6 || b[p] != 'P' || b[p + 1] != 'E' || b[p + 2] != 0 || b[p + 3] != 0 || BitConverter.ToUInt16(b, p + 4) != 0x14c) return false;
         var text = Encoding.ASCII.GetString(b);
-        return text.Contains("SteamAPI_Init") && (!proxy || text.Contains("cream_api.ini"));
+        // Loader variants may omit the literal configuration filename. Configuration and x86 checks remain mandatory.
+        return text.Contains("SteamAPI_Init");
     }
     // Legacy loaders enumerate DLC IDs separately from subscription flags.
     static string RegisterLegacy(string text, bool unlockAll)

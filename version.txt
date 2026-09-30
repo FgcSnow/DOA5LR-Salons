@@ -1,18 +1,19 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
+note=Installer 1.3.9: broader x86 costume loader detection; the literal cream_api.ini filename marker is no longer required. Existing DLLs are preserved; runtime compatibility with every loader is not guaranteed.
 note=0.3.15: RandomStages 2.2 fixes incorrect online detection in 0.3.14. With Online=0, extra stages are excluded unless every lobby member reports map support. Online=1 bypasses the check; existing settings are preserved.
 note=0.3.15: mixed-lobby exclusion tested in game; positive Random selection between two updated players still needs confirmation.
 note=0.3.15: PS4 hairstyle choices/order corrected; four targeted costume menu tests passed. Installer 1.3.8 accepts absent appid/orgapi while validating existing DLLs.
 note=Installer 1.3.7: missing costume registration section is added with backup when the existing loader is compatible; loader detection errors now explain the missing requirement.
 version=0.3.15
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-0.3.15.zip
-sha256=918cfa6b3d889ad1aa2caca67962d61ed9c987e1f0c9e23b078e77ea16fc1880
-size=266648253
-core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-core-0.3.15.zip|ed4b20c338c5a8786fe8bbca77711892899a412e0c9a38d5426b2e2ccfde35f3|7309105
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-0.3.15-r2.zip
+sha256=5f5181c218f7ab99354be22a7450dda5252a48cfd68668ed4a5c7486c90d3cbe
+size=266648303
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-core-0.3.15-r2.zip|848770bff70387bfdc84df95d650a1fa376e5fcdca266dc6376b39f17b30b94a|7309155
 data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-maps-data-1.zip|6f16b041b35d2e2f065162264e1f889dc8ad38af828796c90b35ec024bacf99f|259339170
 skins_data=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-ps4skins-data-2.zip|90c531e8b66fd80bb2da1074d3109a1a7ec8cd254638ff0befd393846b221417|83273540
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-Installer.exe
-installer_version=1.3.8
-installer_sha256=9d1844452f1f54f253800c64566263a809e8854713a1d08fa2651f78f159edc8
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-Installer-1.3.9.exe
+installer_version=1.3.9
+installer_sha256=d66d2bacb6b810cd78e125bc5d05fd482dc5a408160c2f363c94b362cf65b8fa
 notes=0.3.15 emergency online Random fix, PS4 hairstyles and installer defaults fix
 note=PS4 skins: requires an existing compatible local costume loader. Installer 1.3.6 checks it before installing; no Steam DLL is supplied or replaced. Snow confirmed the 15 costumes and color variants in combat and has played online with this set.
 note=PS4 skins use a separate download; intact installed data is reused. Older installers keep installing the core pack and stages, then need their own update to offer the skins option.

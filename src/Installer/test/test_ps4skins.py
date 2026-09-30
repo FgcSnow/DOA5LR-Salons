@@ -1,4 +1,4 @@
-"""Installer 1.3.8 PS4 costumes regression tests, entirely offline.
+"""Installer 1.3.9 PS4 costumes regression tests, entirely offline.
 
 Compiles the current source into a temporary directory and installs tiny synthetic
 packs into fake game folders. TEMP/TMP are isolated, no actual game or shipped
@@ -93,7 +93,7 @@ static class Ps4SkinsProbe {
             Console.WriteLine("optional_v5=maps|Maps|"+string.Join(";",maps.Globs));return;
         }
         string game=args[1];Manifest.Parse(File.ReadAllText(args[0]));
-        Check(Cfg.AppVersion=="1.3.8" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.8.0","installer and assembly versions 1.3.8");
+        Check(Cfg.AppVersion=="1.3.9" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.9.0","installer and assembly versions 1.3.9");
         Check(Component.Current.Count(c=>c.Id=="ps4skins")==1,"optional_v6 owns exactly one PS4 component");
         Check(Cfg.Ps4LoaderCompatible(game),"synthetic x86 loader/config accepted without executing it");
         var skins=Component.Current.Single(c=>c.Id=="ps4skins");
@@ -144,6 +144,20 @@ static class Ps4SkinsProbe {
         Check(Cfg.Ps4LoaderCompatible(game),"existing PS4 registration is accepted without expanding unlockall configuration");
         File.WriteAllBytes(config,original);
         string proxy=Path.Combine(game,"steam_api.dll");byte[] proxyBytes=File.ReadAllBytes(proxy);
+        byte[] variant=(byte[])proxyBytes.Clone();
+        byte[] marker=System.Text.Encoding.ASCII.GetBytes("cream_api.ini");
+        for(int offset=0;offset<=variant.Length-marker.Length;offset++) {
+            if(variant.Skip(offset).Take(marker.Length).SequenceEqual(marker))
+                for(int j=0;j<marker.Length;j++) variant[offset+j]=0;
+        }
+        File.WriteAllBytes(proxy,variant);
+        var variantConfig=File.ReadAllBytes(config);
+        Check(Cfg.Ps4LoaderCompatible(game),"x86 loader variant without literal config filename accepted");
+        Check(File.ReadAllBytes(proxy).SequenceEqual(variant) && File.ReadAllBytes(config).SequenceEqual(variantConfig),"variant detection does not modify DLL or configuration");
+        byte[] proxy64=(byte[])variant.Clone();proxy64[68]=0x64;proxy64[69]=0x86;
+        File.WriteAllBytes(proxy,proxy64);Check(!Cfg.Ps4LoaderCompatible(game),"64-bit variant refused");
+        File.WriteAllBytes(proxy,variant.Take(128).ToArray());Check(!Cfg.Ps4LoaderCompatible(game),"variant without Steam API marker refused");
+        File.WriteAllBytes(proxy,proxyBytes);
         File.WriteAllText(proxy,"SteamAPI_Init cream_api.ini");Check(!Cfg.Ps4LoaderCompatible(game),"non-PE proxy refused");
         File.WriteAllBytes(proxy,proxyBytes);
         string originalDll=Path.Combine(game,"steam_api_original.dll");byte[] originalDllBytes=File.ReadAllBytes(originalDll);
