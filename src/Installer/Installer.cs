@@ -408,6 +408,12 @@ static class Util
         File.WriteAllBytes(p, head.Concat(enc.GetBytes(txt)).ToArray());
         return "DInput8.ini: ResolutionMod=" + want + (borderless ? " (Borderless renders at the desktop size)" : " (Borderless off: the resolution and window mode of the game's launcher apply)");
     }
+    // ERROR_VIRUS_INFECTED (225) / ERROR_VIRUS_DELETED (226): the antivirus blocked this file
+    public static bool IsVirusError(Exception ex)
+    {
+        int code = ex.HResult & 0xFFFF;
+        return (ex.HResult >> 16 & 0x1FFF) == 7 && (code == 225 || code == 226);
+    }
     public static bool CanWrite(string dir)
     {
         try { var t = Path.Combine(dir, ".doa5lr-write-test-" + Guid.NewGuid().ToString("N")); File.WriteAllBytes(t, new byte[1]); File.Delete(t); return true; } catch { return false; }
@@ -703,7 +709,13 @@ class Engine
                 if (File.Exists(abs))
                 {
                     var b = Path.Combine(BackupFolder, rel); Directory.CreateDirectory(Path.GetDirectoryName(b));
-                    File.Copy(abs, b, true); bman.Add("had|" + rel);
+                    try { File.Copy(abs, b, true); bman.Add("had|" + rel); }
+                    catch (IOException ex)
+                    {   // 1.3.4 : an antivirus refuses to read a file it flags (0.3.13 DangerZone.asi, Defender ML false positive).
+                        // Without this the whole update failed, although the update is what replaces that file.
+                        if (!Util.IsVirusError(ex)) throw;
+                        bman.Add("new|" + rel); Line("not backed up " + rel + " (blocked by the antivirus); it is replaced by this version");
+                    }
                 }
                 else bman.Add("new|" + rel);
             }
@@ -738,7 +750,13 @@ class Engine
                     e.ExtractToFile(abs + ".new", true); SelfReplaced = true; Line("installer itself updated (applied on exit)"); continue;
                 }
                 try { e.ExtractToFile(abs, true); }
-                catch (IOException ex) { throw new Exception("Cannot write " + rel + " (" + ex.Message + "). Is the game or a launcher still open?"); }
+                catch (IOException ex)
+                {
+                    // 1.3.4 : the old copy is blocked by the antivirus: remove it, then write the new one
+                    bool retried = false;
+                    if (Util.IsVirusError(ex)) try { if (File.Exists(abs)) File.Delete(abs); e.ExtractToFile(abs, true); retried = true; Line("replaced " + rel + " (old copy blocked by the antivirus)"); } catch { }
+                    if (!retried) throw new Exception("Cannot write " + rel + " (" + ex.Message + "). Is the game or a launcher still open?");
+                }
                 if (exists) replaced++; else added++;
             }
             // 4. delete list

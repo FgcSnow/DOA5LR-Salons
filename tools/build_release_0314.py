@@ -4,12 +4,17 @@ Input  : the published 0.3.13 release folder (ZIP, installer and version.txt, SH
 Changed: installer 1.3.4 (ResolutionMod follows Borderless, delete_if=, PLAY / Set controls) and its source copy,
          DOA5LR-RandomStages.asi 2.1 + .ini (new stages in offline Random only), DOA5LR-Crimson-VFX.asi v26 (bounded log) + .ini,
          scripts/MAPS-DZ-CRIMSON-EN.txt, DOA5LR-Diagnostic/maps-files.json, the three guide copies, VERSION, SHA256SUMS.
+         DOA5LR-DangerZone.asi rebuilt without its crash handler (the 0.3.13 file is a Defender ML false positive,
+         Wacatac.C!ml, quarantined on players' PCs; crash dumps come from Windows WER / DOA5LR-Diagnostic instead) and
+         DOA5LR-ExtraStages.asi 2.0.4 (log can be turned off): both built outside this repository by the maps work,
+         seen applied in a real game, pinned by SHA-256 below and passed with --dz / --extrastages.
 Removed: DOA5LR-Crimson-EventLog.asi and DOA5LR-Crimson-BackendProbe.asi (porting diagnostics), also deleted on disk.
 Manifest: delete=d3d9.dll becomes delete_if=d3d9.dll|<old ui_mod sha256> (1.3.3 ignores the key: nothing deleted).
 The two modules are rebuilt from src/Maps (build.cmd runs their self-tests) and signed with the installer.
 Every other 0.3.13 file stays byte-identical. Signing contacts the timestamp service. No publication, no game write.
 
-  python tools/build_release_0314.py --base-dir <DOA5LR-Salons-0.3.13-Release> --out <folder>
+  python tools/build_release_0314.py --base-dir <DOA5LR-Salons-0.3.13-Release> --dz <DOA5LR-DangerZone.asi>
+         --extrastages <DOA5LR-ExtraStages 2.0.4 .asi> --out <folder>
 """
 
 from __future__ import annotations
@@ -39,6 +44,8 @@ UIMOD_D3D9_SHA256 = "badac2aa7b4ca2d355cecdf36afad246f5e27891c86f7fa23dc42c1998b
 # 0.3.13 binaries the rebuilt modules replace (their sources in src/Maps rebuild to these, PE timestamp aside)
 OLD_RANDOM_SHA256 = "0bfee24fedeb17a2cf90a7dcb27705d9d0b4ab6ebc3c3f22c0f0b88c38cb522a"
 OLD_VFX_SHA256 = "b6a651486e022205d5c3623c6f12f13ff39ad42e7ae7fd6c56c31037b55cef32"
+DZ_SHA256 = "4b2a37adb9339b940527f89880ebc227d3758eaf57dd32701ed5a5bb0256f0f8"            # MSVC, no crash handler
+EXTRASTAGES_SHA256 = "bdfc58709d44386753189575b964c9a95b8a0b0400ef9bc06eefa3161721dffa"   # 2.0.4
 REMOVED = ["DOA5LR-Crimson-EventLog.asi", "DOA5LR-Crimson-BackendProbe.asi"]
 REMOVED_LOGS = ["DOA5LR-Crimson-EventLog.log"]
 OLD_MAPS_LABEL = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)"
@@ -57,6 +64,8 @@ NOTES = [
     "so a player without the maps never gets them. Pick them by hand in rooms (everyone in the room needs the maps).",
     "note=0.3.14: the Crimson effects log keeps startup and errors only (512 KB max); two porting diagnostics (Crimson-EventLog, Crimson-BackendProbe) "
     "are removed. Windows 11 error 4551 on a .asi = Smart App Control (not Defender): see the guide.",
+    "note=0.3.14: DOA5LR-DangerZone.asi of 0.3.13 is flagged by Windows Defender (false positive): it is rebuilt without its crash "
+    "handler. If Defender removed it, updating puts the new one back and the maps work again.",
     "note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer.",
 ]
 
@@ -92,6 +101,8 @@ def build(cmd: Path, product: Path) -> bytes:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--base-dir", type=Path, required=True)
+    ap.add_argument("--dz", type=Path, required=True)
+    ap.add_argument("--extrastages", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     bz = (args.base_dir / BASE_ZIP).read_bytes()
@@ -113,6 +124,11 @@ def main() -> None:
     if sha(base["DOA5LR-RandomStages.asi"]) != OLD_RANDOM_SHA256 or sha(base["DOA5LR-Crimson-VFX.asi"]) != OLD_VFX_SHA256:
         raise AssertionError("0.3.13 RandomStages / Crimson-VFX are not the expected binaries")
 
+    dz_asi, es_asi = args.dz.read_bytes(), args.extrastages.read_bytes()
+    if sha(dz_asi) != DZ_SHA256 or sha(es_asi) != EXTRASTAGES_SHA256:
+        raise ValueError("--dz / --extrastages are not the pinned binaries")
+    if b"Startup v2.0.4" not in es_asi or b"DOA5LR-DangerZone-crash.txt" in dz_asi:
+        raise AssertionError("unexpected ExtraStages / DangerZone build")
     random_asi = build(REPO / "src/Maps/RandomStages/build.cmd", REPO / "src/Maps/RandomStages/DOA5LR-RandomStages.asi")
     vfx_asi = build(REPO / "src/Maps/CrimsonVFX/build.cmd", REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.asi")
     print("building installer from repository source")
@@ -124,7 +140,8 @@ def main() -> None:
             raise AssertionError(f"installer source is not 1.3.4 ({needle} missing)")
 
     print("signing the installer and the two rebuilt modules")
-    signed = sign({INSTALLER: (src / INSTALLER).read_bytes(), "DOA5LR-RandomStages.asi": random_asi, "DOA5LR-Crimson-VFX.asi": vfx_asi})
+    signed = sign({INSTALLER: (src / INSTALLER).read_bytes(), "DOA5LR-RandomStages.asi": random_asi, "DOA5LR-Crimson-VFX.asi": vfx_asi,
+                   "DOA5LR-DangerZone.asi": dz_asi, "DOA5LR-ExtraStages.asi": es_asi})
     installer = signed[INSTALLER]
 
     # Diagnostic: same list minus the removed modules, new hashes for the rebuilt ones (both repo copies stay identical)
@@ -133,7 +150,7 @@ def main() -> None:
     for e in maps:
         if e["path"] in REMOVED:
             continue
-        if e["path"] in ("DOA5LR-RandomStages.asi", "DOA5LR-Crimson-VFX.asi"):
+        if e["path"] in ("DOA5LR-RandomStages.asi", "DOA5LR-Crimson-VFX.asi", "DOA5LR-DangerZone.asi", "DOA5LR-ExtraStages.asi"):
             data = signed[e["path"]]
             e = {**e, "sha256": sha(data), "size": len(data)}
         new_maps.append(e)
@@ -149,6 +166,8 @@ def main() -> None:
         "DOA5LR-RandomStages.asi": signed["DOA5LR-RandomStages.asi"],
         "DOA5LR-RandomStages.ini": (REPO / "src/Maps/RandomStages/DOA5LR-RandomStages.ini").read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"),
         "DOA5LR-Crimson-VFX.asi": signed["DOA5LR-Crimson-VFX.asi"],
+        "DOA5LR-DangerZone.asi": signed["DOA5LR-DangerZone.asi"],
+        "DOA5LR-ExtraStages.asi": signed["DOA5LR-ExtraStages.asi"],
         "DOA5LR-Crimson-VFX.ini": (REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.ini").read_bytes(),
         "scripts/MAPS-DZ-CRIMSON-EN.txt": (REPO / "src/Maps/MAPS-DZ-CRIMSON-EN.txt").read_bytes(),
         "DOA5LR-Diagnostic/maps-files.json": maps_json,
@@ -188,6 +207,7 @@ def main() -> None:
         "zip": zip_path.name, "zip_sha256": sha(zip_data), "zip_bytes": len(zip_data), "zip_entries": len(payload),
         "installer_version": INSTALLER_VERSION, "installer_sha256": sha(installer),
         "random_stages_sha256": sha(signed["DOA5LR-RandomStages.asi"]), "crimson_vfx_v26_sha256": sha(signed["DOA5LR-Crimson-VFX.asi"]),
+        "dangerzone_sha256": sha(signed["DOA5LR-DangerZone.asi"]), "extrastages_sha256": sha(signed["DOA5LR-ExtraStages.asi"]),
         "removed": REMOVED, "changed": sorted(list(changed) + ["SHA256SUMS.txt"]),
     }
     (args.out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

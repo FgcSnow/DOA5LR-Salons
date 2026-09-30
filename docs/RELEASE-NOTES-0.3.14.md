@@ -17,6 +17,9 @@ Every installer since 0.3.4 removed any `d3d9.dll` from the game folder, because
 ## Random: new stages offline only
 RandomStages 2.1: Danger Zone and The Crimson 1/2 are drawn by offline Random only. Online Random (ranked, player match, lobbies) is the game's own again, so a player without the maps can never get one of them. Pick them by hand in lobbies (everyone in the room needs the maps). `Online=1` under `[RandomStages]` in `DOA5LR-RandomStages.ini` restores online Random for groups where everyone has the maps.
 
+## Danger Zone no longer removed by Windows Defender
+Windows Defender started flagging `DOA5LR-DangerZone.asi` of 0.3.13 as `Trojan:Win32/Wacatac!ml`, a false positive of its machine-learning scan, and quarantined it. Without it, Danger Zone, The Crimson and the stage menu additions do not start. The module is rebuilt from the same source without its own crash handler (Windows crash reports and DOA5LR-Diagnostic cover crashes); the new file is not flagged. Updating puts it back even if Defender removed the old one. Stage behaviour is unchanged. ExtraStages 2.0.4: same stage code, its log can be turned off (`[Log] Enabled=0` in `DOA5LR-ExtraStages.ini`).
+
 ## Smaller logs, fewer files
 - Crimson-VFX v26: the log records startup and errors only by default (no line per effect), capped at 512 KB (`[Log] MaxKB`); at startup a bigger log becomes `DOA5LR-Crimson-VFX.log.old` (deleted above 4 MB). `[Log] Level=0` turns it off, `Level=2` records every effect. Effects code unchanged.
 - Removed: `DOA5LR-Crimson-EventLog.asi` (a diagnostic that logged every stage effect while the stage was ported) and `DOA5LR-Crimson-BackendProbe.asi` (a research probe that did nothing on its own), with their logs.
@@ -25,4 +28,4 @@ RandomStages 2.1: Danger Zone and The Crimson 1/2 are drawn by offline Random on
 "Unable to load DOA5LR-....asi. Error: 4551" is **Smart App Control** (Windows 11), which blocks unsigned DLLs. It is not Windows Defender, so turning Defender off does not help, and we do not recommend tools that disable Defender. Smart App Control can be turned off in Windows Security → App & browser control; on many Windows versions it cannot be turned back on without resetting Windows.
 
 ## Unchanged
-Every other file is byte-identical to 0.3.13 (Lobby, JoinFix, InviteFix, WiFi-Wired-Detector, UpdateCheck, Borderless, 60fps, Replay Takeover 2.6, controls app, the other maps modules and stage data, Diagnostic probe).
+Every other file is byte-identical to 0.3.13 (Lobby, JoinFix, InviteFix, WiFi-Wired-Detector, UpdateCheck, Borderless, 60fps, Replay Takeover 2.6, controls app, the other maps modules and the stage data, Diagnostic probe).

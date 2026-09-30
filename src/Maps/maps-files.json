@@ -236,8 +236,8 @@
   },
   {
     "path": "DOA5LR-Crimson-VFX.asi",
-    "sha256": "34e596a686e1b86f836b7d39dcb6b50a5ba0164df8fbc464d5049a4bac35738e",
-    "size": 315864
+    "sha256": "e0388fdd38bd38ac96b32627aec71bd9a3669279c6489fbe97e9ba56c6f7ffb5",
+    "size": 316376
   },
   {
     "path": "DOA5LR-Crimson-VFX.ini",
@@ -251,8 +251,8 @@
   },
   {
     "path": "DOA5LR-DangerZone.asi",
-    "sha256": "afcba8892baa5941e4bc053bf7047531d332ef416516c66bdd55f924decd4a6c",
-    "size": 138240
+    "sha256": "b43ad2bcfa69e09381972566053795b91ad224913890b379e2c119888a8e2eff",
+    "size": 145368
   },
   {
     "path": "DOA5LR-DangerZone.ini",
@@ -301,8 +301,8 @@
   },
   {
     "path": "DOA5LR-ExtraStages.asi",
-    "sha256": "59394e519b57353cd706504bd8d8c13ba3a585d4fe51666c492acad0415e4f49",
-    "size": 56832
+    "sha256": "2ca19ec00a1158ed1e491a6a9bd124dc8b1e775b63b6f822c3f7abcdbe96e4e4",
+    "size": 64984
   },
   {
     "path": "DOA5LR-ExtraStages.ini",
@@ -311,7 +311,7 @@
   },
   {
     "path": "DOA5LR-RandomStages.asi",
-    "sha256": "a4a6ac75eb65a74af25a3766c68678d1eded54146e900153a4c5ef64db76c31c",
+    "sha256": "41223a0c0477dc101f11c39f4664ee8aa512083819b7401c4e6b1da26326f9c8",
     "size": 24024
   },
   {

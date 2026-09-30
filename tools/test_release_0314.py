@@ -73,8 +73,10 @@ ok(resmod(g) == "0", "ResolutionMod lowered to 0 (Borderless off)")
 ok(maps_ok(g), "67 stage files match the new list (rebuilt RandomStages / VFX)")
 ok(b"CopyLinkKey=0" in (g / "scripts/DOA5LR-JoinFix.ini").read_bytes(), "personal JoinFix.ini kept")
 same = [n for n in zip14 if n in zip13 and zip14[n] == zip13[n]]
-ok(all((g / n).read_bytes() == zip13[n] for n in same if not n.endswith(".ini") and n != "DOA5LR-Salons-Installer.exe"), f"{len(same)} unchanged files identical to 0.3.13 on disk")
-ok("delete_if" not in (g / "DOA5LR-Salons-Installer.log").read_text(encoding="utf-8", errors="replace") or True, "")
+OPTIONAL_OFF = {"DOA5LR-Companion.exe", "DOA5LR-InputBridge-Xidi.dll", "DOA5LR-InputBridge.ini", "DOA5LR-ControllerProfiles.ini"}   # InputLab runtime, off
+BORDERLESS_OFF = ("scripts/DOA5LR-Borderless.asi", "scripts/BORDERLESS-EN.txt", "scripts/Borderless-Source/")   # unticked by default
+check = [n for n in same if not n.endswith(".ini") and n not in OPTIONAL_OFF and not n.startswith(BORDERLESS_OFF) and n != "DOA5LR-Salons-Installer.exe"]
+ok(len(check) >= 140 and all((g / n).read_bytes() == zip13[n] for n in check), f"{len(check)} unchanged files identical to 0.3.13 on disk")
 
 print("2. the published 1.3.3 installs 0.3.14 (self-update declined)")
 g2 = new_game("g2")
@@ -84,7 +86,6 @@ ok(run(OLD, g2, M14) == 0, "1.3.3 installs 0.3.14")
 ok((g2 / "DOA5LR-Salons-VERSION.txt").read_text().strip() == "0.3.14" and maps_ok(g2), "0.3.14 installed, maps OK")
 ok((g2 / "d3d9.dll").read_bytes() == b"ReShade d3d9.dll", "1.3.3 no longer deletes d3d9.dll (delete_if ignored, delete= gone)")
 ok(not any((g2 / n).exists() for n in REMOVED), "diagnostics removed by 1.3.3 too (delete=)")
-ok((g2 / "DOA5LR-Salons-Installer.exe").exists() or True, "")
 
 print("3. 1.3.4 removes only the exact old ui_mod d3d9.dll")
 (g / "d3d9.dll").write_bytes(UIMOD)
