@@ -1,11 +1,18 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.14
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14.zip
-sha256=06d04fc0a34d1fe24569a8bac46c6868dc7b56e28edf579b2769aa629f438722
-size=266634147
-core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-core-0.3.14.zip|721e205d67fa75f25462afc7b3d333c56465aa33cbe98e07fd4c34645d7bf5c9|7294999
+sha256=bd50dc6fe0b44644b4415d9f38188f0a9739408beac6c9ddb9f7b9b9a86a01d4
+size=266645122
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-core-0.3.14.zip|6adb8e8c2586d0b7fa251c1de1603f04331f82be8ed053b8107771bfd3609dbc|7305974
 data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-maps-data-1.zip|6f16b041b35d2e2f065162264e1f889dc8ad38af828796c90b35ec024bacf99f|259339170
-notes=pack 0.3.14: your own resolution/window again without Borderless, your d3d9.dll kept, PLAY starts the game, new stages in offline Random only, smaller Crimson log, maps modules tidied into scripts
+skins_data=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-ps4skins-data-1.zip|a1e427c197f6e960194e9bf1708489588045ed167bc0aae19ab02a002687ae54|83273507
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe
+installer_version=1.3.6
+installer_sha256=b814f13552a93d6bef301267ba7fc7ea65475cab2f7d5f19efd22017ac0d3e45
+notes=pack 0.3.14 + optional PS4 skins test: 15 native costumes, separate download, installer 1.3.6
+note=PS4 skins: requires an existing compatible local costume loader. Installer 1.3.6 checks it before installing; no Steam DLL is supplied or replaced. Snow confirmed the 15 costumes and color variants in combat and has played online with this set.
+note=PS4 skins use a separate download; intact installed data is reused. Older installers keep installing the core pack and stages, then need their own update to offer the skins option.
+optional_v6=ps4skins|PS4 skins: 15 costumes (existing local costume loader required)|DLC\990015\990015.bcm;DLC\990015\data\990015.bin;DLC\990015\data\990015.blp;DLC\990015\data\990015.lnk;scripts\PS4-SKINS-EN.txt
 note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.5 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
 note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.
 note=0.3.14: PLAY starts the game directly; Set controls opens the controls app (idea from Inyo). With keyboard remapping on in Keyboard mode, PLAY still opens the controls app first (it checks that no controller is connected).
@@ -41,9 +48,6 @@ note=Source/signature scope: Lobby 0.9.0 is an unsigned external binary whose so
 note=0.3.8: the installer (1.1.0) now has check boxes: Borderless and 60fps-menus can be left out (their files are not installed, or removed if they were; your .ini settings are kept). Lobby, Steam invites, the wired/Wi-Fi tag, the controller fix and the update check are always installed. Your choice is remembered for every future update.
 note=0.3.8: WiFi-Wired-Detector 0.8.8: the LinkOverride=1 setting (declare yourself wired) is gone; the tag comes from your real adapter (LinkOverride=2 = force wireless still exists). The plugin is part of the pack on purpose: the tag is only worth something if every player shows it.
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe
-installer_version=1.3.5
-installer_sha256=d04a173ff8cf8d3f2d87103f9812ce096f81dbf62afa9ed005e94b284447e07b
 keep=*.ini
 optional=borderless|Borderless fullscreen window (F11 in game; display mode below)|scripts\DOA5LR-Borderless.asi;scripts\DOA5LR-Borderless.ini;scripts\BORDERLESS-EN.txt;scripts\Borderless-Source\*
 optional=60fps|60 fps menus, intros, win poses and Story cutscenes (offline only)|scripts\DOA5LR-60fps-menus.asi;scripts\DOA5LR-60fps-menus.ini;scripts\60FPS-EN.txt;scripts\60fps-Source\*
