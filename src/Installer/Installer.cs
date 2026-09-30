@@ -61,13 +61,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.7.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.7.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.7")]
+[assembly: System.Reflection.AssemblyVersion("1.3.8.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.8.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.8")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.7";
+    public const string AppVersion = "1.3.8";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -166,7 +166,9 @@ static class Ps4Skins
             if (section == "steam" && key.Equals("unlockall", StringComparison.OrdinalIgnoreCase) && (val.Equals("true", StringComparison.OrdinalIgnoreCase) || val == "1")) unlockAll = true;
             if (section == "dlc" && key == "990015") registration++;
         }
-        if (steam != 1 || dlc > 1 || orgKeys != 1 || appKeys != 1 || appid != "311730" || registration > 1 ||
+        // Missing keys use the existing loader defaults; explicit invalid values still fail.
+        if (orgKeys == 0) original = "steam_api_o.dll";
+        if (steam > 1 || dlc > 1 || orgKeys > 1 || appKeys > 1 || (appKeys == 1 && appid != "311730") || registration > 1 ||
             original.Length == 0 || original != Path.GetFileName(original) || original.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
             !original.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || original.Equals("steam_api.dll", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("PS4 skins: cream_api.ini has an unsupported or ambiguous configuration. Check appid=311730 and the configured original DLL name; duplicate [steam]/[dlc] sections or duplicate 990015 entries are not supported. Leave PS4 skins unticked to install the rest of the pack.");
         if (!Dll(Path.Combine(game, "steam_api.dll"), true)) throw new InvalidDataException("PS4 skins: steam_api.dll is missing or is not recognized as a compatible 32-bit costume loader. AutoLink alone does not provide this setup. Leave PS4 skins unticked to install the rest of the pack.");

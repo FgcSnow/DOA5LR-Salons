@@ -1,23 +1,25 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
+note=0.3.15: RandomStages 2.2 fixes incorrect online detection in 0.3.14. With Online=0, extra stages are excluded unless every lobby member reports map support. Online=1 bypasses the check; existing settings are preserved.
+note=0.3.15: mixed-lobby exclusion tested in game; positive Random selection between two updated players still needs confirmation.
+note=0.3.15: PS4 hairstyle choices/order corrected; four targeted costume menu tests passed. Installer 1.3.8 accepts absent appid/orgapi while validating existing DLLs.
 note=Installer 1.3.7: missing costume registration section is added with backup when the existing loader is compatible; loader detection errors now explain the missing requirement.
-version=0.3.14
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14-r2.zip
-sha256=68fad3fb2fe869b877bfe48b838df5fda087c094e822f446c5fa94fcd141c78d
-size=266645659
-core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-core-0.3.14-r2.zip|f5c198e68af06f74923d872f89d03747b6dab8647739fcc97046776008cd740f|7306511
-data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-maps-data-1.zip|6f16b041b35d2e2f065162264e1f889dc8ad38af828796c90b35ec024bacf99f|259339170
-skins_data=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-ps4skins-data-1.zip|a1e427c197f6e960194e9bf1708489588045ed167bc0aae19ab02a002687ae54|83273507
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer-1.3.7.exe
-installer_version=1.3.7
-installer_sha256=5bb1e5f27081c9d2ffb31e310e7f9ed0094c4beda02ac99cf346db0773b187cf
-notes=pack 0.3.14 + optional PS4 skins test: 15 native costumes, separate download, installer 1.3.6
+version=0.3.15
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-0.3.15.zip
+sha256=918cfa6b3d889ad1aa2caca67962d61ed9c987e1f0c9e23b078e77ea16fc1880
+size=266648253
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-core-0.3.15.zip|ed4b20c338c5a8786fe8bbca77711892899a412e0c9a38d5426b2e2ccfde35f3|7309105
+data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-maps-data-1.zip|6f16b041b35d2e2f065162264e1f889dc8ad38af828796c90b35ec024bacf99f|259339170
+skins_data=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-ps4skins-data-2.zip|90c531e8b66fd80bb2da1074d3109a1a7ec8cd254638ff0befd393846b221417|83273540
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.15/DOA5LR-Salons-Installer.exe
+installer_version=1.3.8
+installer_sha256=9d1844452f1f54f253800c64566263a809e8854713a1d08fa2651f78f159edc8
+notes=0.3.15 emergency online Random fix, PS4 hairstyles and installer defaults fix
 note=PS4 skins: requires an existing compatible local costume loader. Installer 1.3.6 checks it before installing; no Steam DLL is supplied or replaced. Snow confirmed the 15 costumes and color variants in combat and has played online with this set.
 note=PS4 skins use a separate download; intact installed data is reused. Older installers keep installing the core pack and stages, then need their own update to offer the skins option.
 optional_v6=ps4skins|PS4 skins: 15 costumes (existing local costume loader required)|DLC\990015\990015.bcm;DLC\990015\data\990015.bin;DLC\990015\data\990015.blp;DLC\990015\data\990015.lnk;scripts\PS4-SKINS-EN.txt
 note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.5 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
 note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.
 note=0.3.14: PLAY starts the game directly; Set controls opens the controls app (idea from Inyo). With keyboard remapping on in Keyboard mode, PLAY still opens the controls app first (it checks that no controller is connected).
-note=0.3.14: Danger Zone / Crimson are drawn by OFFLINE Random only: online Random (ranked, lobbies) is the game's own again, so a player without the maps never gets them. Pick them by hand in rooms (everyone in the room needs the maps).
 note=0.3.14: the Crimson effects log keeps startup and errors only (512 KB max); two porting diagnostics (Crimson-EventLog, Crimson-BackendProbe) are removed. Windows 11 error 4551 on a .asi = Smart App Control (not Defender): see the guide.
 note=0.3.14: DOA5LR-DangerZone.asi of 0.3.13 is flagged by Windows Defender (false positive): it is rebuilt without its crash handler. If Defender removed it, updating puts the new one back and the maps work again.
 note=0.3.14: the maps modules (DangerZone, DNZ-*, Crimson*, ExtraStages, RandomStages .asi) moved to the scripts folder like every other module of the pack (thanks WAZAAAAA); the update removes the old copies next to game.exe. Their .ini files and the stage data stay next to game.exe.

@@ -1,4 +1,4 @@
-"""Installer 1.3.7 PS4 costumes regression tests, entirely offline.
+"""Installer 1.3.8 PS4 costumes regression tests, entirely offline.
 
 Compiles the current source into a temporary directory and installs tiny synthetic
 packs into fake game folders. TEMP/TMP are isolated, no actual game or shipped
@@ -93,7 +93,7 @@ static class Ps4SkinsProbe {
             Console.WriteLine("optional_v5=maps|Maps|"+string.Join(";",maps.Globs));return;
         }
         string game=args[1];Manifest.Parse(File.ReadAllText(args[0]));
-        Check(Cfg.AppVersion=="1.3.7" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.7.0","installer and assembly versions 1.3.7");
+        Check(Cfg.AppVersion=="1.3.8" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.8.0","installer and assembly versions 1.3.8");
         Check(Component.Current.Count(c=>c.Id=="ps4skins")==1,"optional_v6 owns exactly one PS4 component");
         Check(Cfg.Ps4LoaderCompatible(game),"synthetic x86 loader/config accepted without executing it");
         var skins=Component.Current.Single(c=>c.Id=="ps4skins");
@@ -103,9 +103,21 @@ static class Ps4SkinsProbe {
             Check(Cfg.IsForbidden(path),"unrelated/protected file refused: "+path);
         string config=Path.Combine(game,"cream_api.ini");byte[] original=File.ReadAllBytes(config);
         string text=File.ReadAllText(config);
-        foreach(string invalid in new[]{text.Replace("appid=311730","appid=1"),text.Replace("appid=311730", ""),text.Replace("orgapi=steam_api_original.dll",@"orgapi=..\steam_api_original.dll"),text.Replace("orgapi=steam_api_original.dll","orgapi=steam_api.dll"),text+"\r\n[steam]\r\nappid=311730\r\n",text+"\r\n[dlc]\r\n",text.Replace("[dlc]","[dlc]\r\n990015=A\r\n990015=B"),text.Replace("[steam]","[steam]\r\nunlockall=true"),text.Replace("[steam]","[steam]\r\nunlockall=1")}) {
+        foreach(string invalid in new[]{text.Replace("appid=311730","appid=1"),text.Replace("orgapi=steam_api_original.dll",@"orgapi=..\steam_api_original.dll"),text.Replace("orgapi=steam_api_original.dll","orgapi=steam_api.dll"),text+"\r\n[steam]\r\nappid=311730\r\n",text+"\r\n[dlc]\r\n",text.Replace("[dlc]","[dlc]\r\n990015=A\r\n990015=B"),text.Replace("[steam]","[steam]\r\nunlockall=true"),text.Replace("[steam]","[steam]\r\nunlockall=1")}) {
             File.WriteAllText(config,invalid);Check(!Cfg.Ps4LoaderCompatible(game),"unsupported/ambiguous loader configuration refused");
         }
+        File.Copy(Path.Combine(game,"steam_api_original.dll"),Path.Combine(game,"steam_api_o.dll"),true);
+        foreach(string valid in new[]{text.Replace("appid=311730",""),text.Replace("orgapi=steam_api_original.dll",""),"[dlc]\r\n12345=Existing DLC\r\n","[dlc]\r\n990015=PS4 Skins\r\n"}) {
+            File.WriteAllText(config,valid);
+            byte[] saved=File.ReadAllBytes(config);
+            var accepted=Ps4Skins.Preflight(game);
+            Check(File.ReadAllBytes(config).SequenceEqual(saved),"default-key validation is read-only");
+            File.WriteAllBytes(config,accepted.After);
+            Check(Ps4Skins.Preflight(game).After.SequenceEqual(accepted.After),"missing steam/appid/orgapi accepted and idempotent");
+        }
+        File.Delete(Path.Combine(game,"steam_api_o.dll"));
+        File.WriteAllText(config,"[dlc]\r\n990015=PS4 Skins\r\n");
+        Check(!Cfg.Ps4LoaderCompatible(game),"missing default original DLL still refused");
         File.WriteAllText(config,text.Replace("[dlc]", "[other]"));
         byte[] missingSectionBefore=File.ReadAllBytes(config);
         var repair=Ps4Skins.Preflight(game);
