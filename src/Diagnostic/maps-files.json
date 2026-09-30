@@ -236,13 +236,13 @@
   },
   {
     "path": "DOA5LR-Crimson-VFX.asi",
-    "sha256": "e0388fdd38bd38ac96b32627aec71bd9a3669279c6489fbe97e9ba56c6f7ffb5",
+    "sha256": "d5b359ab63ba066776dcae7a7d338d008f83834bcc3d5e47715b6ffa96c7bb48",
     "size": 316376
   },
   {
     "path": "DOA5LR-Crimson-VFX.ini",
-    "sha256": "469bb9ae57eea43b95ed8c0aa8f3e61a31e1e36f4ad293db3731eb58b320ab0f",
-    "size": 855
+    "sha256": "a6cce8be716caf98b377c940730f17877872831f3783cbebded5c6ae926bc940",
+    "size": 1060
   },
   {
     "path": "DOA5LR-Crimson.asi",
@@ -251,7 +251,7 @@
   },
   {
     "path": "DOA5LR-DangerZone.asi",
-    "sha256": "b43ad2bcfa69e09381972566053795b91ad224913890b379e2c119888a8e2eff",
+    "sha256": "30b3b9fcefc8104e1bdbf016de77c38b1f889bdaa36735f2362517ea5949b62a",
     "size": 145368
   },
   {
@@ -301,7 +301,7 @@
   },
   {
     "path": "DOA5LR-ExtraStages.asi",
-    "sha256": "2ca19ec00a1158ed1e491a6a9bd124dc8b1e775b63b6f822c3f7abcdbe96e4e4",
+    "sha256": "1eddd355d6a801bda5260e9ebeb051b2ac8a29365985608ed9a6b41a843d66dc",
     "size": 64984
   },
   {
@@ -311,13 +311,13 @@
   },
   {
     "path": "DOA5LR-RandomStages.asi",
-    "sha256": "41223a0c0477dc101f11c39f4664ee8aa512083819b7401c4e6b1da26326f9c8",
+    "sha256": "7c3fd433d118d84b98e11f263dde8df83831c92675da3a9f7210131504b71c56",
     "size": 24024
   },
   {
     "path": "DOA5LR-RandomStages.ini",
-    "sha256": "445bb2d6bbce12d5a97a44dfec5684cfb956ade70c77ea857ef86a74d532402d",
-    "size": 216
+    "sha256": "95ecf4e7705432f50c8d98a74f96c37a77e6cb0bbbce8b0e828e8f8278d8eecd",
+    "size": 510
   },
   {
     "path": "PS4Stages/CRIMSON/CRIMSON.CAM",

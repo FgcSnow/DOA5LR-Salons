@@ -11,6 +11,9 @@ Changed: installer 1.3.4 (ResolutionMod follows Borderless, delete_if=, PLAY / S
 Removed: DOA5LR-Crimson-EventLog.asi and DOA5LR-Crimson-BackendProbe.asi (porting diagnostics), also deleted on disk.
 Manifest: delete=d3d9.dll becomes delete_if=d3d9.dll|<old ui_mod sha256> (1.3.3 ignores the key: nothing deleted).
 The two modules are rebuilt from src/Maps (build.cmd runs their self-tests) and signed with the installer.
+Split download (installer 1.3.4): besides the full ZIP (url=, what older installers use) the release gets
+DOA5LR-Salons-core-0.3.14.zip (the full pack minus the stage data) and DOA5LR-Salons-maps-data-1.zip (CodexCrimson,
+CodexDangerZone, PS4Stages), announced by core= / data= in version.txt. core + data == full, entry for entry.
 Every other 0.3.13 file stays byte-identical. Signing contacts the timestamp service. No publication, no game write.
 
   python tools/build_release_0314.py --base-dir <DOA5LR-Salons-0.3.13-Release> --dz <DOA5LR-DangerZone.asi>
@@ -46,6 +49,8 @@ OLD_RANDOM_SHA256 = "0bfee24fedeb17a2cf90a7dcb27705d9d0b4ab6ebc3c3f22c0f0b88c38c
 OLD_VFX_SHA256 = "b6a651486e022205d5c3623c6f12f13ff39ad42e7ae7fd6c56c31037b55cef32"
 DZ_SHA256 = "4b2a37adb9339b940527f89880ebc227d3758eaf57dd32701ed5a5bb0256f0f8"            # MSVC, no crash handler
 EXTRASTAGES_SHA256 = "bdfc58709d44386753189575b964c9a95b8a0b0400ef9bc06eefa3161721dffa"   # 2.0.4
+DATA_PREFIXES = ("CodexCrimson/", "CodexDangerZone/", "PS4Stages/")
+DATA_ZIP = "DOA5LR-Salons-maps-data-1.zip"   # data set 1 = the stage data of 0.3.13/0.3.14; a later release may reuse this asset
 REMOVED = ["DOA5LR-Crimson-EventLog.asi", "DOA5LR-Crimson-BackendProbe.asi"]
 REMOVED_LOGS = ["DOA5LR-Crimson-EventLog.log"]
 OLD_MAPS_LABEL = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, Random included; everyone in a room needs them)"
@@ -66,16 +71,19 @@ NOTES = [
     "are removed. Windows 11 error 4551 on a .asi = Smart App Control (not Defender): see the guide.",
     "note=0.3.14: DOA5LR-DangerZone.asi of 0.3.13 is flagged by Windows Defender (false positive): it is rebuilt without its crash "
     "handler. If Defender removed it, updating puts the new one back and the maps work again.",
-    "note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer.",
+    "note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and "
+    "later updates only download what changed (about 7 MB instead of 270 MB when your stage files are intact). If an older "
+    "installer stops with 'the file contains a virus', run the update again: Defender has then removed the old DangerZone.asi.",
 ]
 
 
-def manifest(base: str, zip_name: str, zip_data: bytes, installer: bytes) -> str:
+def manifest(base: str, zip_name: str, zip_data: bytes, installer: bytes, core_name: str, core: bytes, data: bytes) -> str:
     drop = ("version=", "url=", "sha256=", "size=", "notes=", "installer=", "installer_version=", "installer_sha256=")
     if "delete=d3d9.dll" not in base.splitlines():
         raise AssertionError("base manifest has no delete=d3d9.dll line")
     lines = [l for l in base.splitlines() if not l.startswith(drop) and l != "delete=d3d9.dll"]
-    lines[1:1] = [f"version={VERSION}", f"url={REL_BASE}/{zip_name}", f"sha256={sha(zip_data)}", f"size={len(zip_data)}"] + NOTES
+    lines[1:1] = [f"version={VERSION}", f"url={REL_BASE}/{zip_name}", f"sha256={sha(zip_data)}", f"size={len(zip_data)}",
+                  f"core={REL_BASE}/{core_name}|{sha(core)}|{len(core)}", f"data=maps|{REL_BASE}/{DATA_ZIP}|{sha(data)}|{len(data)}"] + NOTES
     k = next(i for i, l in enumerate(lines) if l.startswith("keep="))
     lines[k:k] = [f"installer={REL_BASE}/{INSTALLER}", f"installer_version={INSTALLER_VERSION}", f"installer_sha256={sha(installer)}"]
     k = next(i for i, l in enumerate(lines) if l.startswith("optional_v4="))
@@ -135,7 +143,7 @@ def main() -> None:
     src = REPO / "src" / "Installer"
     subprocess.run(["cmd", "/c", str(src / "build.cmd")], cwd=src, check=True)
     installer_source = (src / "Installer.cs").read_bytes()
-    for needle in (f'AppVersion = "{INSTALLER_VERSION}"', 'case "delete_if"', "SyncResolutionMod", "RequiresChooser", MAPS_LABEL):
+    for needle in (f'AppVersion = "{INSTALLER_VERSION}"', 'case "delete_if"', 'case "core"', 'case "data"', "SyncResolutionMod", "RequiresChooser", MAPS_LABEL):
         if needle.encode() not in installer_source:
             raise AssertionError(f"installer source is not 1.3.4 ({needle} missing)")
 
@@ -146,14 +154,18 @@ def main() -> None:
 
     # Diagnostic: same list minus the removed modules, new hashes for the rebuilt ones (both repo copies stay identical)
     maps = json.loads((REPO / "src/Maps/maps-files.json").read_text(encoding="utf-8-sig"))
+    # every listed file takes the hash of the file this pack ships (asi AND ini: a fresh install gets the new defaults)
+    maps_files = {n: signed[n] for n in ("DOA5LR-RandomStages.asi", "DOA5LR-Crimson-VFX.asi", "DOA5LR-DangerZone.asi", "DOA5LR-ExtraStages.asi")}
+    maps_files["DOA5LR-RandomStages.ini"] = (REPO / "src/Maps/RandomStages/DOA5LR-RandomStages.ini").read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    maps_files["DOA5LR-Crimson-VFX.ini"] = (REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.ini").read_bytes()
     new_maps = []
     for e in maps:
         if e["path"] in REMOVED:
             continue
-        if e["path"] in ("DOA5LR-RandomStages.asi", "DOA5LR-Crimson-VFX.asi", "DOA5LR-DangerZone.asi", "DOA5LR-ExtraStages.asi"):
-            data = signed[e["path"]]
-            e = {**e, "sha256": sha(data), "size": len(data)}
-        new_maps.append(e)
+        data = maps_files.get(e["path"], base.get(e["path"]))
+        if data is None:
+            raise AssertionError(f"listed stage file missing from the pack: {e['path']}")
+        new_maps.append({**e, "sha256": sha(data), "size": len(data)})
     if len(new_maps) != 67:
         raise AssertionError("67 stage files expected after removing the two diagnostics")
     maps_json = (json.dumps(new_maps, indent=2) + "\n").encode("utf-8")
@@ -164,11 +176,11 @@ def main() -> None:
         INSTALLER: installer,
         "scripts/Installer-Source/Installer.cs": installer_source,
         "DOA5LR-RandomStages.asi": signed["DOA5LR-RandomStages.asi"],
-        "DOA5LR-RandomStages.ini": (REPO / "src/Maps/RandomStages/DOA5LR-RandomStages.ini").read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"),
+        "DOA5LR-RandomStages.ini": maps_files["DOA5LR-RandomStages.ini"],
         "DOA5LR-Crimson-VFX.asi": signed["DOA5LR-Crimson-VFX.asi"],
         "DOA5LR-DangerZone.asi": signed["DOA5LR-DangerZone.asi"],
         "DOA5LR-ExtraStages.asi": signed["DOA5LR-ExtraStages.asi"],
-        "DOA5LR-Crimson-VFX.ini": (REPO / "src/Maps/CrimsonVFX/DOA5LR-Crimson-VFX.ini").read_bytes(),
+        "DOA5LR-Crimson-VFX.ini": maps_files["DOA5LR-Crimson-VFX.ini"],
         "scripts/MAPS-DZ-CRIMSON-EN.txt": (REPO / "src/Maps/MAPS-DZ-CRIMSON-EN.txt").read_bytes(),
         "DOA5LR-Diagnostic/maps-files.json": maps_json,
         **pack_guides(VERSION),
@@ -193,18 +205,40 @@ def main() -> None:
             raise AssertionError(f"{n} changed although it should be byte-identical to 0.3.13")
     if set(payload) != (set(base) - set(REMOVED)):
         raise AssertionError("unexpected file added or missing")
+    listed = json.loads(maps_json)
+    bad = [e["path"] for e in listed if e["path"] not in payload or sha(payload[e["path"]]) != e["sha256"]]
+    if bad:
+        raise AssertionError(f"maps-files.json does not match the pack: {bad}")
     check_pack_guides(payload, VERSION)
 
     zip_path = args.out / f"DOA5LR-Salons-{VERSION}.zip"
     write_zip(zip_path, payload)
     zip_data = zip_path.read_bytes()
+    # split download: the stage data = every maps-list entry under DATA_PREFIXES (the installer derives it the same way:
+    # entries of DOA5LR-Diagnostic/maps-files.json absent from the core)
+    data_files = {n: b for n, b in payload.items() if n.startswith(DATA_PREFIXES)}
+    listed = {e["path"] for e in new_maps}
+    if not data_files or set(data_files) != {n for n in listed if n.startswith(DATA_PREFIXES)}:
+        raise AssertionError("stage data files and maps-files.json disagree")
+    core_files = {n: b for n, b in payload.items() if n not in data_files}
+    if {**core_files, **data_files} != payload or set(core_files) & set(data_files):
+        raise AssertionError("core + data != full pack")
+    if {n for n in listed if n not in core_files} != set(data_files):
+        raise AssertionError("the installer would derive another data list")
+    core_path, data_path = args.out / f"DOA5LR-Salons-core-{VERSION}.zip", args.out / DATA_ZIP
+    write_zip(core_path, core_files)
+    write_zip(data_path, data_files)
+    core_data, data_data = core_path.read_bytes(), data_path.read_bytes()
     (args.out / INSTALLER).write_bytes(installer)
-    (args.out / "version.txt").write_text(manifest(base_manifest, zip_path.name, zip_data, installer), encoding="utf-8", newline="\n")
-    assets = [zip_path, args.out / INSTALLER]
+    (args.out / "version.txt").write_text(manifest(base_manifest, zip_path.name, zip_data, installer, core_path.name, core_data, data_data),
+                                          encoding="utf-8", newline="\n")
+    assets = [zip_path, core_path, data_path, args.out / INSTALLER]
     (args.out / "SHA256SUMS.txt").write_text("".join(f"{sha(p.read_bytes())} *{p.name}\n" for p in assets), encoding="ascii", newline="\n")
     report = {
         "version": VERSION, "from": BASE_ZIP, "from_sha256": BASE_ZIP_SHA256,
         "zip": zip_path.name, "zip_sha256": sha(zip_data), "zip_bytes": len(zip_data), "zip_entries": len(payload),
+        "core_zip": core_path.name, "core_sha256": sha(core_data), "core_bytes": len(core_data),
+        "data_zip": DATA_ZIP, "data_sha256": sha(data_data), "data_bytes": len(data_data), "data_entries": len(data_files),
         "installer_version": INSTALLER_VERSION, "installer_sha256": sha(installer),
         "random_stages_sha256": sha(signed["DOA5LR-RandomStages.asi"]), "crimson_vfx_v26_sha256": sha(signed["DOA5LR-Crimson-VFX.asi"]),
         "dangerzone_sha256": sha(signed["DOA5LR-DangerZone.asi"]), "extrastages_sha256": sha(signed["DOA5LR-ExtraStages.asi"]),

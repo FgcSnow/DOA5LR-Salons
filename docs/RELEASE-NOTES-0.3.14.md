@@ -11,6 +11,11 @@ Installer 1.3.4 now edits only that key, in place (same file encoding, one digit
 ## Your d3d9.dll is kept
 Every installer since 0.3.4 removed any `d3d9.dll` from the game folder, because the 0.3.3 pack shipped one that hid the character grid. That also removed ReShade and other d3d9 mods. The manifest now uses a new `delete_if=` rule: only that exact old file (SHA-256 `badac2aa…`) is removed. A removed file is always in `DOA5LR-Salons-Backups\<date>\`.
 
+## Smaller updates
+The stage data (CodexCrimson, CodexDangerZone, PS4Stages, about 260 MB) is published as its own archive. Installer 1.3.4 checks every installed stage file by SHA-256 and downloads that archive only when a file is missing or different; otherwise an update downloads only the rest of the pack (about 7 MB). New `version.txt` keys `core=` and `data=`; `url=` stays the full pack, which older installers keep using. Old downloads left in the temporary folder are removed.
+
+If Defender blocks the old `DOA5LR-DangerZone.asi`, Installer 1.3.4 replaces it without failing (it cannot back it up). An older installer stops once with "the file contains a virus"; the next try works, because Defender has removed the file by then.
+
 ## PLAY / Set controls (idea from Inyo)
 **PLAY** starts the game directly through Steam. **Set controls** opens the controls app. PLAY still opens the controls app first when experimental keyboard remapping is on in Keyboard or combined mode, because that app checks that no controller is connected before a keyboard launch.
 

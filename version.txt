@@ -1,8 +1,10 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
 version=0.3.14
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14.zip
-sha256=332b47dae2c4f042dae0cec5c25a994c9f885f3410722b26d1855f8f636a5f51
-size=266622508
+sha256=5239662d2000d329a1a34f3a701093ddfb2fc60e28cc63c3591cd93c8d7c5fbd
+size=266628015
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-core-0.3.14.zip|581aa55ec351505e112474f1baccd3cdd319a38128f21e4033056d0a24039b66|7288867
+data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-maps-data-1.zip|6f16b041b35d2e2f065162264e1f889dc8ad38af828796c90b35ec024bacf99f|259339170
 notes=pack 0.3.14: your own resolution/window again without Borderless, your d3d9.dll kept, PLAY starts the game, new stages in offline Random only, smaller Crimson log
 note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.4 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
 note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.
@@ -10,7 +12,7 @@ note=0.3.14: PLAY starts the game directly; Set controls opens the controls app 
 note=0.3.14: Danger Zone / Crimson are drawn by OFFLINE Random only: online Random (ranked, lobbies) is the game's own again, so a player without the maps never gets them. Pick them by hand in rooms (everyone in the room needs the maps).
 note=0.3.14: the Crimson effects log keeps startup and errors only (512 KB max); two porting diagnostics (Crimson-EventLog, Crimson-BackendProbe) are removed. Windows 11 error 4551 on a .asi = Smart App Control (not Defender): see the guide.
 note=0.3.14: DOA5LR-DangerZone.asi of 0.3.13 is flagged by Windows Defender (false positive): it is rebuilt without its crash handler. If Defender removed it, updating puts the new one back and the maps work again.
-note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer.
+note=0.3.14: accept Installer 1.3.4 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and later updates only download what changed (about 7 MB instead of 270 MB when your stage files are intact). If an older installer stops with 'the file contains a virus', run the update again: Defender has then removed the old DangerZone.asi.
 note=0.3.13: Danger Zone, The Crimson 1 and The Crimson 2 (PS4 versions): pick them by hand with proper thumbnails or tick them in the game's Random filter (three new check boxes). Offline and online; the original stages stay.
 note=0.3.13: ONLINE, EVERYONE IN THE ROOM (players and spectators) NEEDS THE MAPS: update before joining rooms that use them. Installer 1.3.3 adds a Maps check box, on by default (untick it to leave them out; your .ini settings are kept).
 note=0.3.13: AutoLink costumes work with the maps, but only put character folders inside AutoLink (+ _Movie, _Texture, _Sound, _Stages): modding tools stored in AutoLink\_Modding made a tester crash after the first fight.
@@ -39,7 +41,7 @@ note=0.3.8: WiFi-Wired-Detector 0.8.8: the LinkOverride=1 setting (declare yours
 note=Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
 installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe
 installer_version=1.3.4
-installer_sha256=538ac8a9a6bc81f4e3c5795db2c0497cbe85232aef3a59a8a364636d5080c388
+installer_sha256=bcaea68ef6953c82c130a43ccc3f5a1df46f85fe077c3e43cd0b3bb94975262e
 keep=*.ini
 optional=borderless|Borderless fullscreen window (F11 in game; display mode below)|scripts\DOA5LR-Borderless.asi;scripts\DOA5LR-Borderless.ini;scripts\BORDERLESS-EN.txt;scripts\Borderless-Source\*
 optional=60fps|60 fps menus, intros, win poses and Story cutscenes (offline only)|scripts\DOA5LR-60fps-menus.asi;scripts\DOA5LR-60fps-menus.ini;scripts\60FPS-EN.txt;scripts\60fps-Source\*

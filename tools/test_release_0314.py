@@ -34,6 +34,10 @@ def local_manifest(rel: Path, zipname: str, name: str) -> Path:
     lines = []
     for l in (rel / "version.txt").read_text(encoding="utf-8").splitlines():
         if l.startswith("url="): l = "url=" + zipname
+        if l.startswith(("core=", "data=")):                     # split download assets as sibling files
+            parts = l.split("|"); i = 0 if l.startswith("core=") else 1
+            fname = parts[i].rsplit("/", 1)[1]; shutil.copy(rel / fname, d / fname)
+            parts[i] = ("core=" if i == 0 else "") + fname; l = "|".join(parts)
         if l.startswith(("installer=", "installer_version=", "installer_sha256=")): continue   # self-update declined / not tested here
         lines.append(l)
     (d / "version.txt").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
@@ -52,7 +56,7 @@ def run(exe, g, man, *extra): return subprocess.run([str(exe), "--auto", "--game
 def resmod(g):
     t = (g / "DInput8.ini").read_bytes(); s = t[2:].decode("utf-16-le"); i = s.index("[PATCH]")
     return s[s.index("ResolutionMod=", i) + len("ResolutionMod=")]
-def maps_ok(g): return all((g / e["path"]).is_file() and sha(g / e["path"]) == e["sha256"] for e in maps)
+def maps_ok(g, ini=False): return all((g / e["path"]).is_file() and (sha(g / e["path"]) == e["sha256"] or (not ini and e["path"].endswith(".ini"))) for e in maps)   # an update keeps the player's .ini
 def comp(g, k, v):
     p = g / "DOA5LR-Salons-Components.txt"
     lines = [l for l in p.read_text().splitlines() if not l.startswith(k + "=")] if p.exists() else []
@@ -66,6 +70,8 @@ ok(resmod(g) == "1" and all((g / n).is_file() for n in REMOVED), "0.3.13 state: 
 (g / "DOA5LR-Crimson-EventLog.log").write_bytes(b"x" * 1000)
 (g / "scripts/DOA5LR-JoinFix.ini").write_bytes(b"[JoinFix]\r\nKeyFix=1\r\nCopyLinkKey=0\r\n")
 ok(run(NEW, g, M14) == 0, "1.3.4 updates to 0.3.14")
+lg = (g / "DOA5LR-Salons-Installer.log").read_text(encoding="utf-8", errors="replace")
+ok("only the core pack downloaded" in lg, "0.3.13 stage data already installed and intact: only the core downloaded (split download)")
 ok((g / "DOA5LR-Salons-VERSION.txt").read_text().strip() == "0.3.14", "version 0.3.14")
 ok(not any((g / n).exists() for n in REMOVED + ["DOA5LR-Crimson-EventLog.log"]), "EventLog / BackendProbe and the EventLog log removed")
 ok((g / "d3d9.dll").read_bytes() == b"ReShade d3d9.dll", "foreign d3d9.dll kept")
@@ -82,7 +88,15 @@ print("2. the published 1.3.3 installs 0.3.14 (self-update declined)")
 g2 = new_game("g2")
 ok(run(OLD, g2, M13) == 0, "1.3.3 installs 0.3.13")
 (g2 / "d3d9.dll").write_bytes(b"ReShade d3d9.dll")
-ok(run(OLD, g2, M14) == 0, "1.3.3 installs 0.3.14")
+first = run(OLD, g2, M14)
+if first != 0:   # 1.3.3 cannot back up the 0.3.13 DangerZone.asi that Defender blocks; Defender quarantines it on that access
+    ok("virus" in (g2 / "DOA5LR-Salons-Installer.log").read_text(encoding="utf-8", errors="replace"), "1.3.3 first try stopped by the antivirus-blocked old DangerZone.asi (known, 1.3.4 fixes it)")
+    import time
+    for _ in range(60):
+        if not (g2 / "DOA5LR-DangerZone.asi").exists(): break
+        time.sleep(1)
+    ok(not (g2 / "DOA5LR-DangerZone.asi").exists(), "Defender removed the old DangerZone.asi a few seconds later")
+ok(first == 0 or run(OLD, g2, M14) == 0, "1.3.3 installs 0.3.14 (second try if the first hit the blocked file)")
 ok((g2 / "DOA5LR-Salons-VERSION.txt").read_text().strip() == "0.3.14" and maps_ok(g2), "0.3.14 installed, maps OK")
 ok((g2 / "d3d9.dll").read_bytes() == b"ReShade d3d9.dll", "1.3.3 no longer deletes d3d9.dll (delete_if ignored, delete= gone)")
 ok(not any((g2 / n).exists() for n in REMOVED), "diagnostics removed by 1.3.3 too (delete=)")
@@ -99,6 +113,15 @@ left = [e["path"] for e in maps if (g / e["path"]).exists()]
 ok(all(x.endswith(".ini") for x in left), "stage files removed (only .ini settings kept)")
 comp(g, "maps", 1)
 ok(run(NEW, g, M14) == 0 and maps_ok(g), "stage files back, identical")
+
+print("4b. fresh install by 1.3.4: core + stage data")
+g3 = new_game("g3")
+ok(run(NEW, g3, M14) == 0 and maps_ok(g3, ini=True), "fresh install complete, .ini files = the new defaults")
+ok("stage data to download" in (g3 / "DOA5LR-Salons-Installer.log").read_text(encoding="utf-8", errors="replace"), "stage data downloaded and merged")
+with ZipFile(a.rel / "DOA5LR-Salons-core-0.3.14.zip") as z: core = {n: z.read(n) for n in z.namelist()}
+with ZipFile(a.rel / "DOA5LR-Salons-maps-data-1.zip") as z: data = {n: z.read(n) for n in z.namelist()}
+ok({**core, **data} == zip14 and not set(core) & set(data), f"core ({len(core)}) + data ({len(data)}) == full pack, entry for entry")
+ok(all(n.startswith(("CodexCrimson/", "CodexDangerZone/", "PS4Stages/")) for n in data), "data archive = stage data folders only")
 
 print("5. version.txt")
 v = (a.rel / "version.txt").read_text(encoding="utf-8").splitlines()

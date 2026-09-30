@@ -12,7 +12,8 @@
 ## Installer 1.3.4
 
 - **PLAY** starts the game directly; **Set controls** opens the controls app (idea from Inyo). PLAY only goes through the controls app when experimental keyboard remapping is on in Keyboard mode (it checks that no controller is connected).
-- Resolution and d3d9.dll fixes above. **Accept the installer update to 1.3.4 when it is offered.**
+- **Much smaller updates:** the stage data (about 260 MB) is now a separate download. When your stage files are already installed and intact, an update downloads only about 7 MB; a missing or damaged stage file is downloaded again automatically.
+- Resolution and d3d9.dll fixes above. **Accept the installer update to 1.3.4 when it is offered.** If an older installer stops with "the file contains a virus", run the update again: Defender has removed the old DangerZone.asi in the meantime.
 
 ## Smaller logs, fewer files
 
@@ -35,6 +36,7 @@ Close DOA5LR and run the installer (or accept the update notice after closing th
 | --- | --- |
 | [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-Installer.exe) | Recommended for installing, updating or repairing the pack. |
 | [DOA5LR-Salons-0.3.14.zip](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.14/DOA5LR-Salons-0.3.14.zip) | Full pack archive for a new setup (includes the installer). |
+| `DOA5LR-Salons-core-0.3.14.zip`, `DOA5LR-Salons-maps-data-1.zip` | Used by the installer (pack without the stage data + the stage data). No need to download them yourself. |
 
 ## Signing
 
