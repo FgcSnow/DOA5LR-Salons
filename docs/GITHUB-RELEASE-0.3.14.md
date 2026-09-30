@@ -20,6 +20,14 @@
 - The Crimson effects log (up to 42 MB) now only records startup and errors, capped at 512 KB (`[Log] Level=0` in `DOA5LR-Crimson-VFX.ini` turns it off). ExtraStages' log can be turned off too (`[Log] Enabled=0`).
 - Removed two diagnostic modules used while porting the stages: `DOA5LR-Crimson-EventLog.asi` and `DOA5LR-Crimson-BackendProbe.asi`.
 
+## Replay Takeover 2.7
+
+- **No more freeze or dead controller** around cliffhangers, falls, jumps over an obstacle and stage transitions: during one of these sequences the jump back waits until it ends, and the checkpoint is set at its end.
+- **Jumping back from another area or floor** (Lost World, Glacier, jungle waterfall, Temple of the Dragon floors…) rebuilds everything cleanly: no camera left below, no character falling from the sky.
+- **Stage hazards and objects come back correctly:** Scramble's ghost pillar, circus lights and wall, Sky City's Buddha, Hot Zone's barrel, Flow's raft tree, the street train, Temple of the Dragon's table and vases.
+- Crash fixed after some Lost World transitions; taking control during the intro sets the checkpoint at the start of the fight; "Replay" from the replay menu during takeover gives the replay back.
+- Still fully asleep online (lobbies, online matches, spectating). Guide: `scripts\REPLAY-TAKEOVER-EN.txt`.
+
 ## Tidier game folder
 
 - The maps modules (`DOA5LR-DangerZone.asi`, `DOA5LR-DNZ-*.asi`, `DOA5LR-Crimson*.asi`, `DOA5LR-ExtraStages.asi`, `DOA5LR-RandomStages.asi`) now live in the **`scripts`** folder like every other module of the pack (thanks WAZAAAAA). The update removes the old copies next to `game.exe`, with any installer version, so they are never loaded twice. Their `.ini` files and the stage data stay next to `game.exe`.
@@ -30,7 +38,7 @@ That is **Smart App Control**, not Windows Defender: it blocks unsigned mod DLLs
 
 ## Everything else
 
-Every other pack file is byte-identical to 0.3.13 (the moved maps modules included) (Lobby, JoinFix, InviteFix, WiFi-Wired-Detector, UpdateCheck, Borderless, 60 fps, Replay Takeover 2.6, controls app, the other stage modules and the stage data, Diagnostic probe).
+Every other pack file is byte-identical to 0.3.13 (the moved maps modules included) (Lobby, JoinFix, InviteFix, WiFi-Wired-Detector, UpdateCheck, Borderless, 60 fps, controls app, the other stage modules and the stage data, Diagnostic probe).
 
 ## Update
 

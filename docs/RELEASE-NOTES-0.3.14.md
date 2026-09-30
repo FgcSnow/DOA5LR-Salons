@@ -33,4 +33,8 @@ Windows Defender started flagging `DOA5LR-DangerZone.asi` of 0.3.13 as `Trojan:W
 "Unable to load DOA5LR-....asi. Error: 4551" is **Smart App Control** (Windows 11), which blocks unsigned DLLs. It is not Windows Defender, so turning Defender off does not help, and we do not recommend tools that disable Defender. Smart App Control can be turned off in Windows Security → App & browser control; on many Windows versions it cannot be turned back on without resetting Windows.
 
 ## Unchanged
-Every other file is byte-identical to 0.3.13 (Lobby, JoinFix, InviteFix, WiFi-Wired-Detector, UpdateCheck, Borderless, 60fps, Replay Takeover 2.6, controls app, the other maps modules and the stage data, Diagnostic probe).
+Every other file is byte-identical to 0.3.13 (Lobby, JoinFix, InviteFix, WiFi-Wired-Detector, UpdateCheck, Borderless, 60fps, controls app, the other maps modules and the stage data, Diagnostic probe).
+
+## Replay Takeover 2.7
+
+Replaces 2.6 (module, English guide, source). Scene tour from the testers' reports: no freeze around cliffhangers, falls and transitions (the jump back waits for the end of the sequence), clean jump back from another area or floor, hazards and breakable objects restored, crash after some Lost World transitions fixed. `.ini` default unchanged; still asleep online.

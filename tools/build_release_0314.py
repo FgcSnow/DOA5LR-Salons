@@ -49,6 +49,10 @@ OLD_RANDOM_SHA256 = "0bfee24fedeb17a2cf90a7dcb27705d9d0b4ab6ebc3c3f22c0f0b88c38c
 OLD_VFX_SHA256 = "b6a651486e022205d5c3623c6f12f13ff39ad42e7ae7fd6c56c31037b55cef32"
 DZ_SHA256 = "4b2a37adb9339b940527f89880ebc227d3758eaf57dd32701ed5a5bb0256f0f8"            # MSVC, no crash handler
 EXTRASTAGES_SHA256 = "bdfc58709d44386753189575b964c9a95b8a0b0400ef9bc06eefa3161721dffa"   # 2.0.4
+# Replay Takeover 2.7 (scene tour from the testers' reports), built outside this repository: pinned ZIP and module
+TAKEOVER_ZIP_SHA256 = "a45dee52fbb65a80ef490047a14c4c95fdaa3d8d74bb14f55962aedb0a5dfa24"
+TAKEOVER_ASI_SHA256 = "097d0c2f03214335e607e5d757e52b60a2b9d38686c1605aa11f3f5d42641974"
+TAKEOVER_ROOT = "DOA5LR-ReplayTakeover-2.7\\"
 DATA_PREFIXES = ("CodexCrimson/", "CodexDangerZone/", "PS4Stages/")
 DATA_ZIP = "DOA5LR-Salons-maps-data-1.zip"   # data set 1 = the stage data of 0.3.13/0.3.14; a later release may reuse this asset
 REMOVED = ["DOA5LR-Crimson-EventLog.asi", "DOA5LR-Crimson-BackendProbe.asi"]
@@ -80,6 +84,10 @@ NOTES = [
     "note=0.3.14: the maps modules (DangerZone, DNZ-*, Crimson*, ExtraStages, RandomStages .asi) moved to the scripts folder like "
     "every other module of the pack (thanks WAZAAAAA); the update removes the old copies next to game.exe. Their .ini files and "
     "the stage data stay next to game.exe.",
+    "note=0.3.14: Replay Takeover 2.7: no more freeze or dead controller around cliffhangers, falls and transitions (the jump back "
+    "waits for the end of the sequence); jumping back from another area or floor (Lost World, Glacier, Temple of the Dragon...) "
+    "rebuilds everything cleanly; stage hazards and breakable objects come back correctly; a crash after some Lost World "
+    "transitions is fixed. Still fully asleep online.",
     "note=0.3.14: accept Installer 1.3.5 when it is offered: the resolution and d3d9.dll fixes are done by the new installer, and "
     "later updates only download what changed (about 7 MB instead of 270 MB when your stage files are intact). If an older "
     "installer stops with 'the file contains a virus', run the update again: Defender has then removed the old DangerZone.asi.",
@@ -131,6 +139,7 @@ def main() -> None:
     ap.add_argument("--base-dir", type=Path, required=True)
     ap.add_argument("--dz", type=Path, required=True)
     ap.add_argument("--extrastages", type=Path, required=True)
+    ap.add_argument("--takeover-zip", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     bz = (args.base_dir / BASE_ZIP).read_bytes()
@@ -152,6 +161,17 @@ def main() -> None:
     if sha(base["DOA5LR-RandomStages.asi"]) != OLD_RANDOM_SHA256 or sha(base["DOA5LR-Crimson-VFX.asi"]) != OLD_VFX_SHA256:
         raise AssertionError("0.3.13 RandomStages / Crimson-VFX are not the expected binaries")
 
+    tz = args.takeover_zip.read_bytes()
+    if sha(tz) != TAKEOVER_ZIP_SHA256:
+        raise ValueError("--takeover-zip is not the pinned Replay Takeover 2.7 archive")
+    tmp_t = args.out / "_takeover.zip"
+    tmp_t.write_bytes(tz)
+    with ZipFile(tmp_t) as z:
+        rt = {n.replace("\\", "/")[len(TAKEOVER_ROOT):]: z.read(n) for n in z.namelist()}
+    tmp_t.unlink()
+    rt_asi = rt["Dossier du jeu - Game folder/DOA5LR-ReplayTakeover.asi"]
+    if sha(rt_asi) != TAKEOVER_ASI_SHA256 or b"Replay Takeover 2.7" not in rt_asi:
+        raise AssertionError("unexpected Replay Takeover module")
     dz_asi, es_asi = args.dz.read_bytes(), args.extrastages.read_bytes()
     if sha(dz_asi) != DZ_SHA256 or sha(es_asi) != EXTRASTAGES_SHA256:
         raise ValueError("--dz / --extrastages are not the pinned binaries")
@@ -169,7 +189,7 @@ def main() -> None:
 
     print("signing the installer and the two rebuilt modules")
     signed = sign({INSTALLER: (src / INSTALLER).read_bytes(), "DOA5LR-RandomStages.asi": random_asi, "DOA5LR-Crimson-VFX.asi": vfx_asi,
-                   "DOA5LR-DangerZone.asi": dz_asi, "DOA5LR-ExtraStages.asi": es_asi})
+                   "DOA5LR-DangerZone.asi": dz_asi, "DOA5LR-ExtraStages.asi": es_asi, "DOA5LR-ReplayTakeover.asi": rt_asi})
     installer = signed[INSTALLER]
 
     # Diagnostic: same list minus the removed modules, new hashes for the rebuilt ones (both repo copies stay identical)
@@ -203,12 +223,22 @@ def main() -> None:
         "DOA5LR-DangerZone.asi": signed["DOA5LR-DangerZone.asi"],
         "DOA5LR-ExtraStages.asi": signed["DOA5LR-ExtraStages.asi"],
         "DOA5LR-Crimson-VFX.ini": maps_files["DOA5LR-Crimson-VFX.ini"],
+        "DOA5LR-ReplayTakeover.asi": signed["DOA5LR-ReplayTakeover.asi"],
+        "scripts/REPLAY-TAKEOVER-EN.txt": rt["README.txt"],
+        "scripts/ReplayTakeover-Source/ReplayTakeover.cpp": rt["source/ReplayTakeover.cpp"],
+        "scripts/ReplayTakeover-Source/Checkpoint.h": rt["source/Checkpoint.h"],
         "scripts/MAPS-DZ-CRIMSON-EN.txt": (REPO / "src/Maps/MAPS-DZ-CRIMSON-EN.txt").read_bytes(),
         "DOA5LR-Diagnostic/maps-files.json": maps_json,
         "DOA5LR-Diagnostic/DOA5LR-Diagnostic.ps1": (REPO / "src/Diagnostic/DOA5LR-Diagnostic.ps1").read_bytes(),   # .ini: presence only
         **pack_guides(VERSION),
         "DOA5LR-Salons-VERSION.txt": (VERSION + "\r\n").encode("ascii"),
     }
+    for a_, b_ in (("Dossier du jeu - Game folder/DOA5LR-ReplayTakeover.ini", "DOA5LR-ReplayTakeover.ini"),
+                   ("source/build.cmd", "scripts/ReplayTakeover-Source/build.cmd"),
+                   ("source/tests/TestEngine.cpp", "scripts/ReplayTakeover-Source/tests/TestEngine.cpp"),
+                   ("source/tests/test.cmd", "scripts/ReplayTakeover-Source/tests/test.cmd")):
+        if rt[a_] != payload[b_]:
+            raise AssertionError(f"Replay Takeover 2.7 {a_} differs from 0.3.13 (not handled by this builder)")
     for n in changed:
         if n not in payload:
             raise AssertionError(f"{n} is missing from 0.3.13")
@@ -279,7 +309,7 @@ def main() -> None:
         "data_zip": DATA_ZIP, "data_sha256": sha(data_data), "data_bytes": len(data_data), "data_entries": len(data_files),
         "installer_version": INSTALLER_VERSION, "installer_sha256": sha(installer),
         "random_stages_sha256": sha(signed["DOA5LR-RandomStages.asi"]), "crimson_vfx_v26_sha256": sha(signed["DOA5LR-Crimson-VFX.asi"]),
-        "dangerzone_sha256": sha(signed["DOA5LR-DangerZone.asi"]), "extrastages_sha256": sha(signed["DOA5LR-ExtraStages.asi"]),
+        "dangerzone_sha256": sha(signed["DOA5LR-DangerZone.asi"]), "replaytakeover_27_sha256": sha(signed["DOA5LR-ReplayTakeover.asi"]), "extrastages_sha256": sha(signed["DOA5LR-ExtraStages.asi"]),
         "removed": REMOVED, "changed": sorted(list(changed) + ["SHA256SUMS.txt"]),
     }
     (args.out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
