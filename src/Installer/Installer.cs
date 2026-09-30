@@ -31,6 +31,7 @@
 //   optional_v4=id|label|glob;glob...  (1.3.3: DZ / Crimson maps; 1.3.2 ignores this key and self-updates first)
 //   optional_v5=id|label|glob;glob...  (1.3.5: maps modules in scripts; older installers ignore this key)
 //   optional_v6=id|label|glob;glob...  (1.3.6: optional native PS4 costumes; older installers ignore this key)
+//   optional_v7=id|label|glob;glob...  (1.3.11: maps modules in scripts\DOA5LR-Stages\; older installers ignore this key)
 //   skins_data=url|sha256|size         independent four-file costume archive; downloaded only when selected and needed
 //   core=url|sha256|size                (1.3.4: the pack WITHOUT the stage data; with data= below, a player whose stage data is
 //   data=maps|url|sha256|size            already installed and intact downloads only the core. url= stays the full pack for older
@@ -61,13 +62,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.10.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.10.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.10")]
+[assembly: System.Reflection.AssemblyVersion("1.3.11.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.11.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.11")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.10";
+    public const string AppVersion = "1.3.11";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
@@ -105,7 +106,13 @@ static class Cfg
         // 1.3.3 : JoinFix (room join fix) was not checked; maps modules (only when the Maps box is ticked, see Owns())
         @"scripts\DOA5LR-JoinFix.asi",
         // 1.3.5 : the maps modules moved from the game root to scripts\ (like every other module of the pack)
-        @"scripts\DOA5LR-ExtraStages.asi", @"scripts\DOA5LR-DangerZone.asi", @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-RandomStages.asi" };
+        // 1.3.11 : and into their own folder scripts\DOA5LR-Stages\ (the ASI loader also loads sub-folders)
+        @"scripts\DOA5LR-Stages\DOA5LR-ExtraStages.asi", @"scripts\DOA5LR-Stages\DOA5LR-DangerZone.asi", @"scripts\DOA5LR-Stages\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Stages\DOA5LR-RandomStages.asi" };
+    // 1.3.11 : the eleven maps modules; the same file name must never be in scripts\ AND scripts\DOA5LR-Stages\ (loaded twice)
+    public const string StagesDir = @"scripts\DOA5LR-Stages";
+    public static readonly string[] StageModules = { "DOA5LR-Crimson.asi", "DOA5LR-Crimson-Audio.asi", "DOA5LR-Crimson-VFX.asi", "DOA5LR-DangerZone.asi",
+        "DOA5LR-DNZ-Complete.asi", "DOA5LR-DNZ-Name.asi", "DOA5LR-DNZ-Preview.asi", "DOA5LR-DNZ-SharedAudio.asi", "DOA5LR-DNZ-Thumbnail.asi",
+        "DOA5LR-ExtraStages.asi", "DOA5LR-RandomStages.asi" };
     // Files the pack must never contain / the installer must never write (same rule as build_pack.py).
     public static readonly Regex Forbidden = new Regex(@"steam_api|cream|unlock|(^|[\\/])DLC", RegexOptions.IgnoreCase);
     // Only these four native costume assets are allowed. Steam/proxy binaries and other DLC stay forbidden.
@@ -262,9 +269,11 @@ class Component
     // 1.3.3 : maps component of 0.3.13/0.3.14 (optional_v4 = modules at the game root); kept to read those manifests
     public static readonly Component MapsRoot = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt" } };
     // 1.3.5 : modules in scripts\ (optional_v5); the old root names are listed too, so leaving the maps out removes them
-    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"scripts\DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"scripts\DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"scripts\DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"scripts\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"scripts\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"scripts\DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt", @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-DangerZone.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-RandomStages.asi" } };
+    public static readonly Component MapsScripts = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"scripts\DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"scripts\DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"scripts\DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"scripts\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"scripts\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"scripts\DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt", @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-DangerZone.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-RandomStages.asi" } };
+    // 1.3.11 : modules in scripts\DOA5LR-Stages\ (optional_v7) first; the scripts\ and root names stay listed so leaving the maps out removes every copy
+    public static readonly Component Maps = new Component { Id = "maps", Label = "Maps: Danger Zone + The Crimson 1 and 2 (PS4 stages, offline Random; everyone in a room needs them)", Globs = new[] { @"scripts\DOA5LR-Stages\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Stages\DOA5LR-Crimson-Audio.asi", @"scripts\DOA5LR-Stages\DOA5LR-Crimson-VFX.asi", @"scripts\DOA5LR-Stages\DOA5LR-DangerZone.asi", @"scripts\DOA5LR-Stages\DOA5LR-DNZ-Complete.asi", @"scripts\DOA5LR-Stages\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-Stages\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-Stages\DOA5LR-DNZ-SharedAudio.asi", @"scripts\DOA5LR-Stages\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-Stages\DOA5LR-ExtraStages.asi", @"scripts\DOA5LR-Stages\DOA5LR-RandomStages.asi", @"scripts\DOA5LR-Crimson.asi", @"scripts\DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-Audio.ini", @"DOA5LR-Crimson-BackendProbe.asi", @"DOA5LR-Crimson-EventLog.asi", @"scripts\DOA5LR-Crimson-VFX.asi", @"DOA5LR-Crimson-VFX.ini", @"scripts\DOA5LR-DangerZone.asi", @"DOA5LR-DangerZone.ini", @"DOA5LR-DebugArchive.asi", @"scripts\DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Complete.ini", @"scripts\DOA5LR-DNZ-Name.asi", @"scripts\DOA5LR-DNZ-Preview.asi", @"scripts\DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-SharedAudio.ini", @"scripts\DOA5LR-DNZ-Thumbnail.asi", @"scripts\DOA5LR-ExtraStages.asi", @"DOA5LR-ExtraStages.ini", @"scripts\DOA5LR-RandomStages.asi", @"DOA5LR-RandomStages.ini", @"CodexCrimson\*", @"CodexDangerZone\*", @"PS4Stages\*", @"scripts\MAPS-DZ-CRIMSON-EN.txt", @"DOA5LR-Crimson.asi", @"DOA5LR-Crimson-Audio.asi", @"DOA5LR-Crimson-VFX.asi", @"DOA5LR-DangerZone.asi", @"DOA5LR-DNZ-Complete.asi", @"DOA5LR-DNZ-Name.asi", @"DOA5LR-DNZ-Preview.asi", @"DOA5LR-DNZ-SharedAudio.asi", @"DOA5LR-DNZ-Thumbnail.asi", @"DOA5LR-ExtraStages.asi", @"DOA5LR-RandomStages.asi" } };
     public static readonly Component Ps4Skin = new Component { Id = "ps4skins", Label = "PS4 skins: 15 costumes (existing local costume loader required)", Globs = new[] { @"DLC\990015\990015.bcm", @"DLC\990015\data\990015.bin", @"DLC\990015\data\990015.blp", @"DLC\990015\data\990015.lnk", @"scripts\PS4-SKINS-EN.txt" } };
-    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps, MapsRoot, Ps4Skin }).ToArray();
+    public static readonly Component[] Known = Defaults.Concat(new[] { InputLab, ReplayTakeover, Maps, MapsScripts, MapsRoot, Ps4Skin }).ToArray();
     public static Component[] Current = Defaults;   // replaced by the manifest's optional= lines when it has some
     public static Component Parse(string v)
     {
@@ -340,7 +349,8 @@ class Manifest
                 case "optional_v3":
                 case "optional_v4":
                 case "optional_v5":
-                case "optional_v6": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
+                case "optional_v6":
+                case "optional_v7": { var c = Component.Parse(v); if (c != null && !m.Optional.Any(x => x.Id == c.Id)) m.Optional.Add(c); break; }
                 case "skins_data": { var c = v.Split('|'); long n; if (c.Length != 3 || !Regex.IsMatch(c[1].Trim(), "^[0-9a-fA-F]{64}$") || !long.TryParse(c[2].Trim(), out n) || n <= 0 || m.SkinsUrl != "") throw new InvalidDataException("Refused: invalid PS4 skins archive in manifest."); m.SkinsUrl = c[0].Trim(); m.SkinsSha256 = c[1].Trim().ToLowerInvariant(); m.SkinsSize = n; break; }
             }
         }
@@ -1091,6 +1101,13 @@ class Engine
                 var abs = Abs(rel);
                 if (!Inside(abs) || Cfg.IsForbidden(rel) && !rel.Equals("DLC Unlocker.txt", StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
                 if (File.Exists(abs)) { try { File.Delete(abs); deleted++; Line("removed obsolete " + rel); } catch (Exception ex) { Line("could not remove " + rel + ": " + ex.Message); } }
+            }
+            // 4a. 1.3.11 : a maps module present both in scripts\ and scripts\DOA5LR-Stages\ would be loaded twice
+            //     (same file name, two copies in memory) : the copy of the new folder wins, the old one goes.
+            foreach (var n in Cfg.StageModules)
+            {
+                string oldAbs = Abs(Path.Combine("scripts", n)), newAbs = Abs(Path.Combine(Cfg.StagesDir, n));
+                if (File.Exists(oldAbs) && File.Exists(newAbs)) { try { File.Delete(oldAbs); deleted++; Line("removed duplicate scripts\\" + n + " (now in " + Cfg.StagesDir + ")"); } catch (Exception ex) { Line("could not remove duplicate scripts\\" + n + ": " + ex.Message); } }
             }
             // 4b. 1.3.4 : conditional deletes — only the exact old file (a same-named file of another mod stays)
             if (m != null) foreach (var d in m.DeleteIf)

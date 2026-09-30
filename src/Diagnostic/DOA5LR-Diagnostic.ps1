@@ -177,7 +177,9 @@ function New-LogZip([string]$game, [string]$note, [bool]$withDump, [string]$zipP
     ConvertTo-Json -InputObject @(Get-CrashEvents $game) -Depth 5 | Set-Content -LiteralPath (Join-Path $work 'plantages-windows-48h.json') -Encoding UTF8
     # Journaux des modules des maps (la fin seulement). Pas le journal du salon (noms de joueurs).
     $logs = New-Item -ItemType Directory -Path (Join-Path $work 'journaux-modules')
-    foreach ($f in @(Get-ChildItem -LiteralPath $game -File -Filter 'DOA5LR-*.log' -Force)) {
+    # 0.3.16 : les journaux des maps sont dans DOA5LR-Logs\ (les anciens, a la racine, sont encore lus)
+    $logDirs = @($game, (Join-Path $game 'DOA5LR-Logs')) | Where-Object { Test-Path -LiteralPath $_ }
+    foreach ($f in @(Get-ChildItem -LiteralPath $logDirs -File -Filter 'DOA5LR-*.log' -Force)) {
         if ($f.Name -match '^DOA5LR-(Crimson|DangerZone|DNZ|ExtraStages|RandomStages|DebugArchive|ReplayTakeover)') { Copy-Tail $f.FullName (Join-Path $logs.FullName $f.Name) 1MB }
     }
     # Captures de la sonde : les 3 dernieres sessions.
@@ -261,7 +263,8 @@ function Warn-AutoLinkStrays([bool]$popup) {
 }
 function Clear-BigLogs([string]$game) {
     # Le journal des effets de Crimson grossit a chaque partie : on repart de zero s'il depasse 20 Mo.
-    foreach ($f in @(Get-ChildItem -LiteralPath $game -File -Filter 'DOA5LR-Crimson*.log' -ErrorAction SilentlyContinue)) {
+    $logDirs = @($game, (Join-Path $game 'DOA5LR-Logs')) | Where-Object { Test-Path -LiteralPath $_ }
+    foreach ($f in @(Get-ChildItem -LiteralPath $logDirs -File -Filter 'DOA5LR-Crimson*.log' -ErrorAction SilentlyContinue)) {
         if ($f.Length -gt 20MB) { try { $old = $f.FullName + '.old'; Copy-Tail $f.FullName $old 2MB; Remove-Item -LiteralPath $f.FullName -Force } catch {} }
     }
 }

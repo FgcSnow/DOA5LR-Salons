@@ -1,4 +1,4 @@
-"""Installer 1.3.10 PS4 costumes regression tests, entirely offline.
+"""Installer 1.3.11 PS4 costumes regression tests, entirely offline.
 
 Compiles the current source into a temporary directory and installs tiny synthetic
 packs into fake game folders. TEMP/TMP are isolated, no actual game or shipped
@@ -93,7 +93,7 @@ static class Ps4SkinsProbe {
             Console.WriteLine("optional_v5=maps|Maps|"+string.Join(";",maps.Globs));return;
         }
         string game=args[1];Manifest.Parse(File.ReadAllText(args[0]));
-        Check(Cfg.AppVersion=="1.3.10" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.10.0","installer and assembly versions 1.3.10");
+        Check(Cfg.AppVersion=="1.3.11" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.11.0","installer and assembly versions 1.3.11");
         Check(Component.Current.Count(c=>c.Id=="ps4skins")==1,"optional_v6 owns exactly one PS4 component");
         Check(Cfg.Ps4LoaderCompatible(game),"synthetic x86 loader/config accepted without executing it");
         var skins=Component.Current.Single(c=>c.Id=="ps4skins");
