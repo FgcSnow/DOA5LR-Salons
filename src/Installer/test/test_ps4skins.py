@@ -106,6 +106,14 @@ static class Ps4SkinsProbe {
         foreach(string invalid in new[]{text.Replace("appid=311730","appid=1"),text.Replace("appid=311730", ""),text.Replace("orgapi=steam_api_original.dll",@"orgapi=..\steam_api_original.dll"),text.Replace("orgapi=steam_api_original.dll","orgapi=steam_api.dll"),text+"\r\n[steam]\r\nappid=311730\r\n",text+"\r\n[dlc]\r\n",text.Replace("[dlc]","[dlc]\r\n990015=A\r\n990015=B"),text.Replace("[steam]","[steam]\r\nunlockall=true"),text.Replace("[steam]","[steam]\r\nunlockall=1")}) {
             File.WriteAllText(config,invalid);Check(!Cfg.Ps4LoaderCompatible(game),"unsupported/ambiguous loader configuration refused");
         }
+        File.WriteAllText(config,text.Replace("[dlc]", "[other]"));
+        byte[] missingSectionBefore=File.ReadAllBytes(config);
+        var repair=Ps4Skins.Preflight(game);
+        Check(repair.Before.SequenceEqual(missingSectionBefore),"preflight preserves source bytes and does not write config");
+        string repaired=System.Text.Encoding.GetEncoding(28591).GetString(repair.After);
+        Check(repaired.EndsWith("[dlc]\r\n990015=PS4 costumes\r\n") && repaired.Contains("12345=My existing DLC"),"missing dlc section appended without changing unrelated sections");
+        File.WriteAllBytes(config,repair.After);
+        Check(Ps4Skins.Preflight(game).After.SequenceEqual(repair.After),"repaired registration is idempotent");
         File.WriteAllText(config,text.Replace("[steam]","[steam]\r\nunlockall=true").Replace("[dlc]","[dlc]\r\n990015=Existing custom registration"));
         Check(Cfg.Ps4LoaderCompatible(game),"existing PS4 registration is accepted without expanding unlockall configuration");
         File.WriteAllBytes(config,original);
