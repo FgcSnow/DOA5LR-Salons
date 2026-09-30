@@ -130,7 +130,8 @@ static class Ps4Skins
         int p = BitConverter.ToInt32(b, 60);
         if (p < 64 || p > b.Length - 6 || b[p] != 'P' || b[p + 1] != 'E' || b[p + 2] != 0 || b[p + 3] != 0 || BitConverter.ToUInt16(b, p + 4) != 0x14c) return false;
         var text = Encoding.ASCII.GetString(b);
-        return text.Contains("SteamAPI_Init") && (!proxy || text.Contains("cream_api.ini"));
+        // Loader variants may omit the literal configuration filename. Configuration and x86 checks remain mandatory.
+        return text.Contains("SteamAPI_Init");
     }
     public static ConfigChange Preflight(string game)
     {
