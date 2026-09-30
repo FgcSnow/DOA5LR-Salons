@@ -115,6 +115,20 @@ static class Ps4SkinsProbe {
             File.WriteAllBytes(config,accepted.After);
             Check(Ps4Skins.Preflight(game).After.SequenceEqual(accepted.After),"missing steam/appid/orgapi accepted and idempotent");
         }
+        string legacyBase="[steam]\r\n\r\nappid=311730\r\n\r\norgapi=steam_api_original.dll\r\n\r\n[dlc_subscription]\r\n\r\n42=true\r\n\r\n[dlc_index]\r\n\r\n0=42\r\n\r\n[dlc]\r\n\r\n990015=Existing label\r\n\r\n";
+        foreach(string legacyText in new[]{legacyBase,legacyBase.Replace("\r\n\r\n","\r\n"),legacyBase+"[dlc_names]\r\n\r\n0=Personal label\r\n\r\n"}) {
+            File.WriteAllText(config,legacyText);
+            byte[] unchanged=File.ReadAllBytes(config);
+            var legacyFix=Ps4Skins.Preflight(game);
+            string result=System.Text.Encoding.GetEncoding(28591).GetString(legacyFix.After);
+            Check(result.Contains("990015=true") && result.Contains("1=990015") && result.Contains("1=PS4 costumes"),"legacy subscription/index/name added even with existing modern registration");
+            Check(File.ReadAllBytes(config).SequenceEqual(unchanged),"legacy preflight is read-only");
+            File.WriteAllBytes(config,legacyFix.After);
+            Check(Ps4Skins.Preflight(game).After.SequenceEqual(legacyFix.After),"legacy registration idempotent");
+        }
+        foreach(string invalid in new[]{legacyBase.Replace("42=true","42=true\r\n\r\n990015=false"),legacyBase.Replace("0=42","1=42"),legacyBase.Replace("0=42","0=42\r\n\r\n0=43"),legacyBase+"[dlc_index]\r\n\r\n",legacyBase.Replace("[dlc_index]","[other]"),legacyBase+"[dlc_names]\r\n\r\n1=Other DLC\r\n\r\n"}) {
+            File.WriteAllText(config,invalid);Check(!Cfg.Ps4LoaderCompatible(game),"ambiguous or disabled legacy config rejected without edits");
+        }
         File.Delete(Path.Combine(game,"steam_api_o.dll"));
         File.WriteAllText(config,"[dlc]\r\n990015=PS4 Skins\r\n");
         Check(!Cfg.Ps4LoaderCompatible(game),"missing default original DLL still refused");
