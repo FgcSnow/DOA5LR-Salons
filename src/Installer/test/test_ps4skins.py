@@ -1,4 +1,4 @@
-"""Installer 1.3.9 PS4 costumes regression tests, entirely offline.
+"""Installer 1.3.10 PS4 costumes regression tests, entirely offline.
 
 Compiles the current source into a temporary directory and installs tiny synthetic
 packs into fake game folders. TEMP/TMP are isolated, no actual game or shipped
@@ -93,7 +93,7 @@ static class Ps4SkinsProbe {
             Console.WriteLine("optional_v5=maps|Maps|"+string.Join(";",maps.Globs));return;
         }
         string game=args[1];Manifest.Parse(File.ReadAllText(args[0]));
-        Check(Cfg.AppVersion=="1.3.9" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.9.0","installer and assembly versions 1.3.9");
+        Check(Cfg.AppVersion=="1.3.10" && Assembly.GetExecutingAssembly().GetName().Version.ToString()=="1.3.10.0","installer and assembly versions 1.3.10");
         Check(Component.Current.Count(c=>c.Id=="ps4skins")==1,"optional_v6 owns exactly one PS4 component");
         Check(Cfg.Ps4LoaderCompatible(game),"synthetic x86 loader/config accepted without executing it");
         var skins=Component.Current.Single(c=>c.Id=="ps4skins");
@@ -115,8 +115,8 @@ static class Ps4SkinsProbe {
             File.WriteAllBytes(config,accepted.After);
             Check(Ps4Skins.Preflight(game).After.SequenceEqual(accepted.After),"missing steam/appid/orgapi accepted and idempotent");
         }
-        string legacyBase="[steam]\r\n\r\nappid=311730\r\n\r\norgapi=steam_api_original.dll\r\n\r\n[dlc_subscription]\r\n\r\n42=true\r\n\r\n[dlc_index]\r\n\r\n0=42\r\n\r\n[dlc]\r\n\r\n990015=Existing label\r\n\r\n";
-        foreach(string legacyText in new[]{legacyBase,legacyBase.Replace("\r\n\r\n","\r\n"),legacyBase+"[dlc_names]\r\n\r\n0=Personal label\r\n\r\n"}) {
+        string legacyBase="[steam]\r\nappid=311730\r\norgapi=steam_api_original.dll\r\n[dlc_subscription]\r\n42=true\r\n[dlc_index]\r\n0=42\r\n[dlc]\r\n990015=Existing label\r\n";
+        foreach(string legacyText in new[]{legacyBase,legacyBase.Replace("\r\n","\n"),legacyBase+"[dlc_names]\r\n0=Personal label\r\n"}) {
             File.WriteAllText(config,legacyText);
             byte[] unchanged=File.ReadAllBytes(config);
             var legacyFix=Ps4Skins.Preflight(game);
@@ -126,7 +126,7 @@ static class Ps4SkinsProbe {
             File.WriteAllBytes(config,legacyFix.After);
             Check(Ps4Skins.Preflight(game).After.SequenceEqual(legacyFix.After),"legacy registration idempotent");
         }
-        foreach(string invalid in new[]{legacyBase.Replace("42=true","42=true\r\n\r\n990015=false"),legacyBase.Replace("0=42","1=42"),legacyBase.Replace("0=42","0=42\r\n\r\n0=43"),legacyBase+"[dlc_index]\r\n\r\n",legacyBase.Replace("[dlc_index]","[other]"),legacyBase+"[dlc_names]\r\n\r\n1=Other DLC\r\n\r\n"}) {
+        foreach(string invalid in new[]{legacyBase.Replace("42=true","42=true\r\n990015=false"),legacyBase.Replace("0=42","1=42"),legacyBase.Replace("0=42","0=42\r\n0=43"),legacyBase+"[dlc_index]\r\n",legacyBase.Replace("[dlc_index]","[other]"),legacyBase+"[dlc_names]\r\n1=Other DLC\r\n"}) {
             File.WriteAllText(config,invalid);Check(!Cfg.Ps4LoaderCompatible(game),"ambiguous or disabled legacy config rejected without edits");
         }
         File.Delete(Path.Combine(game,"steam_api_o.dll"));

@@ -61,13 +61,13 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyCompany("FGCsnow & BonuStage")]
 [assembly: System.Reflection.AssemblyProduct("DOA5LR-Salons")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright (c) 2026 FGCsnow & BonuStage - github.com/FgcSnow/DOA5LR-Salons")]
-[assembly: System.Reflection.AssemblyVersion("1.3.9.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.9.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("1.3.9")]
+[assembly: System.Reflection.AssemblyVersion("1.3.10.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.10.0")]
+[assembly: System.Reflection.AssemblyInformationalVersion("1.3.10")]
 
 static class Cfg
 {
-    public const string AppVersion = "1.3.9";
+    public const string AppVersion = "1.3.10";
     public const string PackName = "DOA5LR-Salons";
     // Stable URL of version.txt (branch main of the GitHub repo). Set once, never changes.
     public const string OfficialVersionUrl = "https://raw.githubusercontent.com/FgcSnow/DOA5LR-Salons/main/version.txt";
