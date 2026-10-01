@@ -10,7 +10,7 @@ if not defined BIN for /d %%D in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\Mart
 if not defined BIN (echo LLVM-MinGW not found. Install it:  winget install MartinStorsjo.LLVM-MinGW.UCRT   ^(or set LLVM_MINGW=^<its folder^>^) & exit /b 1)
 if "%BIN:~-1%"=="\" set "BIN=%BIN:~0,-1%"
 "%BIN%\i686-w64-mingw32-windres.exe" -O coff -o version.res version.rc || (echo WINDRES FAILED & exit /b 1)
-"%BIN%\i686-w64-mingw32-gcc.exe" -O2 -s -shared -static -Wl,--no-insert-timestamp -DNO_LOG -o DOA5LR-60fps-menus.asi fps60_menus.c version.res  || (echo BUILD release FAILED & exit /b 1)
-"%BIN%\i686-w64-mingw32-gcc.exe" -O2 -s -shared -static -Wl,--no-insert-timestamp -o DOA5LR-60fps-menus-debug.asi fps60_menus.c version.res  || (echo BUILD debug FAILED & exit /b 1)
+"%BIN%\i686-w64-mingw32-gcc.exe" -O1 -shared -static -Wl,--no-insert-timestamp -DNO_LOG -o DOA5LR-60fps-menus.asi fps60_menus.c version.res  || (echo BUILD release FAILED & exit /b 1)
+"%BIN%\i686-w64-mingw32-gcc.exe" -O1 -shared -static -Wl,--no-insert-timestamp -o DOA5LR-60fps-menus-debug.asi fps60_menus.c version.res  || (echo BUILD debug FAILED & exit /b 1)
 del version.res
 for %%F in (DOA5LR-60fps-menus.asi DOA5LR-60fps-menus-debug.asi) do echo OK  %%F  %%~zF bytes
