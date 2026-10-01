@@ -12,8 +12,8 @@ if "%BIN:~-1%"=="\" set "BIN=%BIN:~0,-1%"
 set "GCC=%BIN%\i686-w64-mingw32-gcc.exe"
 set "RES=%BIN%\i686-w64-mingw32-windres.exe"
 "%RES%" -O coff -o version.res version.rc || (echo WINDRES FAILED & exit /b 1)
-"%GCC%" -O2 -s -shared -static -Wl,--no-insert-timestamp -DNO_LOG -o DOA5LR-InviteFix.asi invitefix.c version.res || (echo BUILD release FAILED & exit /b 1)
-"%GCC%" -O2 -s -shared -static -Wl,--no-insert-timestamp -o DOA5LR-InviteFix-debug.asi invitefix.c version.res || (echo BUILD debug FAILED & exit /b 1)
+"%GCC%" -O1 -shared -static -Wl,--no-insert-timestamp -DNO_LOG -o DOA5LR-InviteFix.asi invitefix.c version.res || (echo BUILD release FAILED & exit /b 1)
+"%GCC%" -O1 -shared -static -Wl,--no-insert-timestamp -o DOA5LR-InviteFix-debug.asi invitefix.c version.res || (echo BUILD debug FAILED & exit /b 1)
 del version.res
 for %%F in (DOA5LR-InviteFix.asi DOA5LR-InviteFix-debug.asi) do echo OK  %%F  %%~zF bytes
 exit /b 0

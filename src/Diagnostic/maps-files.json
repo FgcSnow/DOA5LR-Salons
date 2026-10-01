@@ -225,99 +225,99 @@
     "size": 1478656
   },
   {
-    "path": "scripts/DOA5LR-Crimson-Audio.asi",
-    "sha256": "803e91e3f8a823f3f446a4c57eb39ff3eaf5c1f8c261c52161ccf6551a8c2b51",
-    "size": 13312
+    "path": "scripts/DOA5LR-Stages/DOA5LR-Crimson-Audio.asi",
+    "sha256": "543ff04505c618ddb818aac459e35acc6bcdfb8ee68091e4e05653e63b9cd7ee",
+    "size": 69592
   },
   {
-    "path": "DOA5LR-Crimson-Audio.ini",
+    "path": "scripts/DOA5LR-Stages/DOA5LR-Crimson-Audio.ini",
     "sha256": "360fb6d341cfdcd0a09771498e75d9a4f13d7bf8c7c955f25d8a5638c6b2b384",
     "size": 109
   },
   {
-    "path": "scripts/DOA5LR-Crimson-VFX.asi",
-    "sha256": "8b6e9216b87e513ad659bef15448d468f937a59c39869bc675afddae5daf636a",
-    "size": 316376
+    "path": "scripts/DOA5LR-Stages/DOA5LR-Crimson-VFX.asi",
+    "sha256": "1a3f62175bafa8cf57780d1b7ba431f625a9b4d3e23169fd3ef44c3cf8efc952",
+    "size": 579032
   },
   {
-    "path": "DOA5LR-Crimson-VFX.ini",
+    "path": "scripts/DOA5LR-Stages/DOA5LR-Crimson-VFX.ini",
     "sha256": "a6cce8be716caf98b377c940730f17877872831f3783cbebded5c6ae926bc940",
     "size": 1060
   },
   {
-    "path": "scripts/DOA5LR-Crimson.asi",
-    "sha256": "b4d505e76e4600c5d8b3cb0c01f89ba1f900cced594ed82e0c89ea17cfcb74b7",
-    "size": 21504
+    "path": "scripts/DOA5LR-Stages/DOA5LR-Crimson.asi",
+    "sha256": "73202ffc12c8270ec021e236710836f3c4aa5cf44cc2672f09b50ee2c1a4a0e6",
+    "size": 81368
   },
   {
-    "path": "scripts/DOA5LR-DangerZone.asi",
-    "sha256": "3134bab5aa815e357318240278fb5a264c9d9e3123265f6b01897dea7a4519fb",
-    "size": 145368
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DangerZone.asi",
+    "sha256": "587454ef55fcec279954334dabbf785207d0c24a96fbb95603325af947d30f30",
+    "size": 146904
   },
   {
-    "path": "DOA5LR-DangerZone.ini",
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DangerZone.ini",
     "sha256": "f0c98ddf53ea80d757663122703be93c8015261a1a455b883ab8c85af78ab5c4",
     "size": 710
   },
   {
     "path": "DOA5LR-DebugArchive.asi",
-    "sha256": "00c05dec59a60960ea39e5fbf54887091d2258de651d86c998e0b2e4a1d7d5e0",
-    "size": 12288
+    "sha256": "bfaf0ec28723a92b59dcf31fd9f8b2a04245e596acd04cd5f325300d83668e55",
+    "size": 69592
   },
   {
-    "path": "scripts/DOA5LR-DNZ-Complete.asi",
-    "sha256": "ab3b5dff2ca8644ae8e2166d91502889cd582a6138cd32a04eb32555a391236c",
-    "size": 17408
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-Complete.asi",
+    "sha256": "fa409b5c74463406e630a0bc42b5a622dbec8667f66083abb0fa9f49aa06a15b",
+    "size": 76248
   },
   {
-    "path": "DOA5LR-DNZ-Complete.ini",
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-Complete.ini",
     "sha256": "da5c1575f5392647eff0c936939c5c3fa710d055a90724be61a1ebbf265d92a2",
     "size": 354
   },
   {
-    "path": "scripts/DOA5LR-DNZ-Name.asi",
-    "sha256": "7fabc673e3c46175aa7398a1182afb4231646232bc586e6cf0d78cbe07714533",
-    "size": 11776
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-Name.asi",
+    "sha256": "7631078fd8785c58edd6ab1e96d23eae85def36ab7890f99d0b820392a33f996",
+    "size": 69592
   },
   {
-    "path": "scripts/DOA5LR-DNZ-Preview.asi",
-    "sha256": "262ac74476bdf18a2117a8a4411dcb80446637fcd860419ca2c1c23114dba108",
-    "size": 12288
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-Preview.asi",
+    "sha256": "ba305647ece012bda9c760a3292449285effcdbf45a96af21dad893e0d651385",
+    "size": 70104
   },
   {
-    "path": "scripts/DOA5LR-DNZ-SharedAudio.asi",
-    "sha256": "bd838f8b3ca31ff9280bf4851637aba245f72cfc9d3545146d4ee8260c573879",
-    "size": 13312
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-SharedAudio.asi",
+    "sha256": "3da9735c2dfe70bd35a3f9ef9bb005f74e5dfd466398a52f9ad2d357a5713770",
+    "size": 71128
   },
   {
-    "path": "DOA5LR-DNZ-SharedAudio.ini",
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-SharedAudio.ini",
     "sha256": "cfcd60e7a4b139c039e37b9c2d23b2279f9f55a60aacb185125f84e6655f8bc1",
     "size": 188
   },
   {
-    "path": "scripts/DOA5LR-DNZ-Thumbnail.asi",
-    "sha256": "51a3ffc924c6d7d13fcc6d816a501d017f2d3d932360156084c7f78c81cbc382",
-    "size": 13312
+    "path": "scripts/DOA5LR-Stages/DOA5LR-DNZ-Thumbnail.asi",
+    "sha256": "7da49b1cc48b3df900dd8136a60f1d6a0b97487ff80c8846b07c0a2029950dde",
+    "size": 73176
   },
   {
-    "path": "scripts/DOA5LR-ExtraStages.asi",
-    "sha256": "3283e758d6922c24ff50e7222746ee111b524a5645a0482b6084b68d805ca63b",
-    "size": 64984
+    "path": "scripts/DOA5LR-Stages/DOA5LR-ExtraStages.asi",
+    "sha256": "732af98dbc6c9c91c93de6f7dcb39507802425cd2844f30ca90bbe32bd47fded",
+    "size": 117720
   },
   {
-    "path": "DOA5LR-ExtraStages.ini",
+    "path": "scripts/DOA5LR-Stages/DOA5LR-ExtraStages.ini",
     "sha256": "de7842c2133703d7c91d7234d89a68e895a4bbcec8506dbcc70dd7528cd5f5a5",
     "size": 777
   },
   {
-    "path": "scripts/DOA5LR-RandomStages.asi",
-    "sha256": "ef67ca6ef38221472e42477d38352d58424b39b50634bb8600baacb501b6f54e",
-    "size": 24024
+    "path": "scripts/DOA5LR-Stages/DOA5LR-RandomStages.asi",
+    "sha256": "d829545fa790bf9bbaa0087528491f517834402ed9255e8ab7b0a19cc40a6bae",
+    "size": 77784
   },
   {
-    "path": "DOA5LR-RandomStages.ini",
-    "sha256": "95ecf4e7705432f50c8d98a74f96c37a77e6cb0bbbce8b0e828e8f8278d8eecd",
-    "size": 510
+    "path": "scripts/DOA5LR-Stages/DOA5LR-RandomStages.ini",
+    "sha256": "669456a556a21a68e31721af68504a1ae2c826da950194bb54fafc8d484c1736",
+    "size": 608
   },
   {
     "path": "PS4Stages/CRIMSON/CRIMSON.CAM",
@@ -331,7 +331,7 @@
   },
   {
     "path": "PS4Stages/MENU/STAGESELECT-THUMBS.textures",
-    "sha256": "d6aa467cf256c470e460d0c4f725f03abb864de7d484e4e71d15bb57c8d27364",
+    "sha256": "e76cdb0103f80e0e9885c58f35768800edf2af294ff00148ac285ece1cb41f76",
     "size": 5237504
   }
 ]
