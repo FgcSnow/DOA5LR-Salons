@@ -5,18 +5,18 @@
   },
   {
     "path": "scripts/DOA5LR-JoinFix.asi",
-    "sha256": "837cd37be94408c92077ebe5f3782f83219b1c23eb59ef99fa3101d11a03414d"
+    "sha256": "e8befe93cca7928407d3a41a9afa64abbd7f18c222da9cd1530562f894de7ed3"
   },
   {
     "path": "scripts/DOA5LR-InviteFix.asi",
-    "sha256": "24dfb3c41d0ea4640208eadeab98f05e36121332826c32e8fbcdf0084813187d"
+    "sha256": "f34131f2d7528668f5419064175b9e2627e1054706312ef95effcd4f7b4e61a5"
   },
   {
     "path": "scripts/DOA5LR-WiFi-Wired-Detector.asi",
-    "sha256": "52d0cd7cabe0185ec89bd0c00076f0e8151d25a3b62b1ade6f9c3e46da1f5732"
+    "sha256": "e404dd7b4cba2051aee5fbf4ef0f87fdedf98da2c1dcb15c2d1dc169040a7c7b"
   },
   {
     "path": "scripts/DOA5LR-UpdateCheck.asi",
-    "sha256": "f2663f30f82f6122578acf16effc1e4e695bfa06da56844a86e6d0d085037a6e"
+    "sha256": "54eb92aec6e66b44ba69369974b626bd6d39375fcc777582524d7b504a7c92cf"
   }
 ]

@@ -8,13 +8,13 @@ note=0.3.15: RandomStages 2.2 fixes incorrect online detection in 0.3.14. With O
 note=0.3.15: mixed-lobby exclusion tested in game; positive Random selection between two updated players still needs confirmation.
 version=0.3.16
 url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-0.3.16.zip
-sha256=926e5e566fd1f62f824c99044e2930fdf1ffdf16fb00bb73b54663242e6fe31f
-size=267106378
-core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-core-0.3.16.zip|ca1d911db45e1882d7841c0678e2b6943fc484884731488bb642a077110bdcb6|9320681
+sha256=0533954bb196c567444a73e5410a77921207324360a98e763679e25ad2f63b86
+size=267087913
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-core-0.3.16.zip|b39dcc03b538b31d89445456c6cb08a6306ea3f8c7dc95c186739989aee23a98|9302216
 data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-maps-data-2.zip|f1215a8013e84c2aa07fb91926218ed0da12809a6e1d6859116f96dbdf792249|257785719
 installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-Installer.exe
 installer_version=1.3.11
-installer_sha256=bf76c2c1587640f28593c9a844bbe32575e191da0c665f0808e4766f76c1c147
+installer_sha256=d5f4fec86a1b701e7e5596526bbac49e5e12915b165d8ef8b6a60a808c398d7d
 notes=0.3.16 correct stage thumbnails, stage modules in their own folder, logs in DOA5LR-Logs
 note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.5 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
 note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.

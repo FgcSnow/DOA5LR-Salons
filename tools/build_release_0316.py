@@ -54,7 +54,9 @@ assert sha(built['DOA5LR-ExtraStages.asi']) == 'ade22d4779d5b5d3bec55db849ebdcd6
 dz = (mods / 'DOA5LR-DangerZone.asi').read_bytes(); assert sha(dz) == '4fd9b983e7db98dbad945883d331e5649293368f04109f5e2bd62eddc55e73a4'; built['DOA5LR-DangerZone.asi'] = dz
 labb = built.pop('DOA5LR-LabDestroyed.asi')
 coremods = pinned(o1 / 'core')
-assert set(coremods) == {'DOA5LR-60fps-menus.asi', 'DOA5LR-Borderless.asi', 'DOA5LR-InviteFix.asi', 'DOA5LR-JoinFix.asi', 'DOA5LR-UpdateCheck.asi', 'DOA5LR-WiFi-Wired-Detector.asi'}
+# JoinFix: the maintainer keeps the released 0.3 binary validated online since 25/09 (never flagged), not the -O1 rebuild
+del coremods['DOA5LR-JoinFix.asi']
+assert set(coremods) == {'DOA5LR-60fps-menus.asi', 'DOA5LR-Borderless.asi', 'DOA5LR-InviteFix.asi', 'DOA5LR-UpdateCheck.asi', 'DOA5LR-WiFi-Wired-Detector.asi'}
 thumbs = (o1 / 'STAGESELECT-THUMBS.textures').read_bytes()   # v5: blank slots 25 (Crimson 1) and 27 (default, shown only for stage 7) changed; DNZ / Crimson 2 use native slots 55 / 56
 assert sha(thumbs) == 'e76cdb0103f80e0e9885c58f35768800edf2af294ff00148ac285ece1cb41f76' and len(thumbs) == len(maps1[THUMBS])
 
@@ -75,6 +77,7 @@ exe = signed.pop('DOA5LR-Salons-Installer.exe'); (out / 'DOA5LR-Salons-Installer
 old = dict(core)
 for m in MAPS: del core[f'scripts/DOA5LR-{m}.asi']
 assert all('scripts/' + n in core for n in coremods)
+assert sha(core['scripts/DOA5LR-JoinFix.asi']) == 'e8befe93cca7928407d3a41a9afa64abbd7f18c222da9cd1530562f894de7ed3'   # released JoinFix 0.3, kept
 core.update(signed)
 core[THUMBS] = thumbs
 core.update(pack_guides(V))
@@ -90,7 +93,7 @@ assert not any('990015' in n or 'skin' in n.lower() for n in core)
 INIS = [f'DOA5LR-{m}.ini' for m in ['Crimson-Audio', 'Crimson-VFX', 'DangerZone', 'DNZ-Complete', 'DNZ-SharedAudio', 'ExtraStages', 'RandomStages']]
 for n in INIS: core[STAGES + n] = core.pop(n)   # the modules read scripts\DOA5LR-Stages\ first, then next to game.exe
 # -O1 modules: their shipped build.cmd and the lobby-module hashes checked by DOA5LR-Diagnostic
-for d, s in [('60fps-menus', '60fps'), ('Borderless', 'Borderless'), ('InviteFix', 'InviteFix'), ('JoinFix', 'JoinFix'), ('UpdateCheck', 'UpdateCheck'), ('WiFi-Wired-Detector', 'WiFi-Wired')]:
+for d, s in [('60fps-menus', '60fps'), ('Borderless', 'Borderless'), ('InviteFix', 'InviteFix'), ('UpdateCheck', 'UpdateCheck'), ('WiFi-Wired-Detector', 'WiFi-Wired')]:
     k = f'scripts/{s}-Source/build.cmd'; assert k in core; core[k] = (repo / 'src' / d / 'build.cmd').read_bytes(); assert b' -O1 ' in core[k] and b'-O2 -s' not in core[k]
 mrows = json.loads(core['DOA5LR-Diagnostic/salons-modules.json'])
 for x in mrows:

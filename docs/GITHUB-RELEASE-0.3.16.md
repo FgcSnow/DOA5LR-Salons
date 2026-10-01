@@ -5,7 +5,7 @@
 ## Fixes
 
 - **Wrong stage thumbnails:** some tiles showed the picture of another stage while still loading the right one (Lorelei Halloween, and the lower levels of Scramble, Plant and Circus you reach with the up arrow). Every tile has its own picture again, and The Crimson 1 now has its own PS4 picture.
-- **Fewer antivirus false positives ("Wacatac" and similar):** the pack modules are now built with other compiler options (`-O1`, thanks WAZAAAAA) and every module is signed. Same source code, same behaviour.
+- **Fewer antivirus false positives ("Wacatac" and similar):** the pack modules are now built with other compiler options (`-O1`, thanks WAZAAAAA) and every module is signed (JoinFix stays the validated 0.3 build). Same source code, same behaviour.
 - **Tidier game folder** (thanks Odd): the stage modules and their `.ini` files are now in `scripts\DOA5LR-Stages\`, their logs in `DOA5LR-Logs\`. Your settings are moved with them and kept; the update removes the old copies.
 
 ## Changes
@@ -17,9 +17,9 @@
 
 | File | Use | SHA-256 |
 | --- | --- | --- |
-| `DOA5LR-Salons-Installer.exe` | **Install / update (recommended)** | `bf76c2c1587640f28593c9a844bbe32575e191da0c665f0808e4766f76c1c147` |
-| `DOA5LR-Salons-0.3.16.zip` | Full pack, manual install on a fresh game only | `926e5e566fd1f62f824c99044e2930fdf1ffdf16fb00bb73b54663242e6fe31f` |
-| `DOA5LR-Salons-core-0.3.16.zip` | Used by the installer | `ca1d911db45e1882d7841c0678e2b6943fc484884731488bb642a077110bdcb6` |
+| `DOA5LR-Salons-Installer.exe` | **Install / update (recommended)** | `d5f4fec86a1b701e7e5596526bbac49e5e12915b165d8ef8b6a60a808c398d7d` |
+| `DOA5LR-Salons-0.3.16.zip` | Full pack, manual install on a fresh game only | `0533954bb196c567444a73e5410a77921207324360a98e763679e25ad2f63b86` |
+| `DOA5LR-Salons-core-0.3.16.zip` | Used by the installer | `b39dcc03b538b31d89445456c6cb08a6306ea3f8c7dc95c186739989aee23a98` |
 | `DOA5LR-Salons-maps-data-2.zip` | Used by the installer (stage data) | `f1215a8013e84c2aa07fb91926218ed0da12809a6e1d6859116f96dbdf792249` |
 
 Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
