@@ -22,4 +22,6 @@
 | `DOA5LR-Salons-core-0.3.16.zip` | Used by the installer | `b39dcc03b538b31d89445456c6cb08a6306ea3f8c7dc95c186739989aee23a98` |
 | `DOA5LR-Salons-maps-data-2.zip` | Used by the installer (stage data) | `f1215a8013e84c2aa07fb91926218ed0da12809a6e1d6859116f96dbdf792249` |
 
+PS: there is a little surprise hidden in this patch 👀 Have fun finding it.
+
 Support the project: https://www.patreon.com/cw/DoA5LRcommunitymod
