@@ -1,4 +1,6 @@
 # DOA5LR-Salons manifest - read by DOA5LR-Salons-Installer.exe and DOA5LR-UpdateCheck.asi (one key per line)
+note=0.3.17: the second variant of the Lab tile (Lab, destroyed) added in 0.3.16 is removed (desyncs reported online): the update deletes its module and its log, the Lab tile is the original one again. Everyone should update: a 0.3.16 player can still pick it.
+note=0.3.17: ExtraStages and the stage-select pictures are back to the 0.3.16 build made before that work. Every other file is byte-identical to 0.3.16 (same Installer 1.3.11, no stage data download).
 note=0.3.16: some stage tiles showed the picture of another stage (Lorelei Halloween, and the lower levels of Scramble, Plant and Circus; the right stage still loaded): each tile has its own picture again, and The Crimson 1 now has its own PS4 picture.
 note=0.3.16: tidier game folder: the stage modules and their .ini files are in scripts\DOA5LR-Stages\, their logs in DOA5LR-Logs\. Your settings are moved with them and kept; the update removes the old copies.
 note=0.3.16: the pack modules are now built with other compiler options (-O1, thanks WAZAAAAA) and signed: fewer antivirus false positives ("Wacatac" and similar). Same source code, same behaviour.
@@ -6,16 +8,16 @@ note=0.3.16: the PS4 skins are no longer part of the pack. If you installed them
 note=0.3.16: accept Installer 1.3.11 when it is offered (it knows the new folder). Small update when your stage data is intact.
 note=0.3.15: RandomStages 2.2 fixes incorrect online detection in 0.3.14. With Online=0, extra stages are excluded unless every lobby member reports map support. Online=1 bypasses the check; existing settings are preserved.
 note=0.3.15: mixed-lobby exclusion tested in game; positive Random selection between two updated players still needs confirmation.
-version=0.3.16
-url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-0.3.16.zip
-sha256=0533954bb196c567444a73e5410a77921207324360a98e763679e25ad2f63b86
-size=267087913
-core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-core-0.3.16.zip|b39dcc03b538b31d89445456c6cb08a6306ea3f8c7dc95c186739989aee23a98|9302216
-data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-maps-data-2.zip|f1215a8013e84c2aa07fb91926218ed0da12809a6e1d6859116f96dbdf792249|257785719
-installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-Installer.exe
+version=0.3.17
+url=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.17/DOA5LR-Salons-0.3.17.zip
+sha256=9145bfe652ced640efc97df9cb27d4c520f16a4b6f32b6c983f64062c4479304
+size=267047829
+core=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.17/DOA5LR-Salons-core-0.3.17.zip|4665ea9df9c60d01279a141e83e7ba77d2683a5f3e8a2d05df17dcf95835781f|9262132
+data=maps|https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.17/DOA5LR-Salons-maps-data-2.zip|f1215a8013e84c2aa07fb91926218ed0da12809a6e1d6859116f96dbdf792249|257785719
+installer=https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.17/DOA5LR-Salons-Installer.exe
 installer_version=1.3.11
 installer_sha256=d5f4fec86a1b701e7e5596526bbac49e5e12915b165d8ef8b6a60a808c398d7d
-notes=0.3.16 correct stage thumbnails, stage modules in their own folder, logs in DOA5LR-Logs
+notes=0.3.17 back to 0.3.16 without the Lab (destroyed) variant (online desyncs)
 note=0.3.14: the pack's AutoLink setting (DInput8.ini ResolutionMod=1) forced the desktop resolution for everyone. It is only needed by Borderless: Installer 1.3.5 sets ResolutionMod=0 when Borderless is unticked, so the resolution and window mode of the game's launcher apply again. A value you changed by hand is not turned back on.
 note=0.3.14: older installers deleted any d3d9.dll (meant for one old file of the 0.3.3 pack). Now only that exact old file is removed; ReShade or another d3d9 mod stays. A removed file is in DOA5LR-Salons-Backups.
 note=0.3.14: PLAY starts the game directly; Set controls opens the controls app (idea from Inyo). With keyboard remapping on in Keyboard mode, PLAY still opens the controls app first (it checks that no controller is connected).
@@ -156,4 +158,9 @@ delete=scripts\DOA5LR-ExtraStages.asi
 delete=scripts\DOA5LR-RandomStages.asi
 delete=DOA5LR-DNZ-Menu.log
 delete=DOA5LR-DangerZone-crash.txt
+delete=scripts\DOA5LR-Stages\DOA5LR-LabDestroyed.asi
+delete=scripts\DOA5LR-LabDestroyed.asi
+delete=DOA5LR-LabDestroyed.asi
+delete=DOA5LR-Logs\DOA5LR-LabDestroyed.log
+delete=DOA5LR-LabDestroyed.log
 delete_if=d3d9.dll|badac2aa7b4ca2d355cecdf36afad246f5e27891c86f7fa23dc42c1998ba4ee8
