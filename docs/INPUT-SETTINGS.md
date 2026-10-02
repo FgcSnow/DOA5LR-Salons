@@ -1,4 +1,9 @@
-# DOA5LR-Salons 0.3.16 — Rooms, controls, installation and updates
+# DOA5LR-Salons 0.3.17 — Rooms, controls, installation and updates
+
+## What's new in 0.3.17
+
+- **The second variant of the Lab tile (Lab, destroyed) added in 0.3.16 is removed.** The update deletes its module (`scripts\DOA5LR-Stages\DOA5LR-LabDestroyed.asi`) and its log. The Lab tile is the original one again.
+- Every other file is byte-identical to 0.3.16 (same Installer 1.3.11, no stage data download).
 
 ## What's new in 0.3.16
 
@@ -74,7 +79,7 @@ The existing optional Borderless and offline 60 fps features remain available. U
 
 | Package | Use it for | Start with |
 | --- | --- | --- |
-| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-Installer.exe) and open it |
+| Installer (recommended) | Install, update or repair the pack while retaining personal settings | Download [DOA5LR-Salons-Installer.exe](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.17/DOA5LR-Salons-Installer.exe) and open it |
 | Portable controls app (unchanged since 0.3.9) | First use of the app on an existing compatible pack | Download the [portable ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.9/DOA5LR-Commandes-portable-0.3.9.zip), extract its complete `InputLab` folder to a new folder, then open `InputLab/DOA5LR-Commandes.exe` |
 
 The installer downloads the pack by itself. Do not run anything from inside a ZIP. The portable app also needs its sibling executables, profiles and `payload` folder; copying only its EXE is not enough.
@@ -90,7 +95,7 @@ The portable remapping module requires **the verified DOA5LR-Salons input setup 
 3. Leave **Experimental in-game keyboard remapping (settings app always available)** unchecked unless you want the module installed immediately. Install or update the pack.
 4. Click **PLAY** to start the game, or **Set controls** to open the controls app (it works even with the experimental component unchecked; its **Play via Steam** applies the chosen mode and launches).
 
-**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.16 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.16/DOA5LR-Salons-0.3.16.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
+**Manual full-ZIP installation is for a new game/base setup without existing pack settings or an active InputLab module.** In that case, close the game and extract the [full 0.3.17 ZIP](https://github.com/FgcSnow/DOA5LR-Salons/releases/download/v0.3.17/DOA5LR-Salons-0.3.17.zip) into the folder containing `game.exe`. Direct extraction copies the archive as supplied, including files for optional components; it does not apply installer checkbox choices. It does not activate keyboard remapping by itself.
 
 For every upgrade, including from 0.3.8 or 0.3.9, use the installer to keep personal INIs, saved input choices and module backups. Do not overwrite custom INIs with archive defaults.
 

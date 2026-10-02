@@ -301,7 +301,7 @@
   },
   {
     "path": "scripts/DOA5LR-Stages/DOA5LR-ExtraStages.asi",
-    "sha256": "732af98dbc6c9c91c93de6f7dcb39507802425cd2844f30ca90bbe32bd47fded",
+    "sha256": "46d5bca0f85c9735a94a1237a214e03a269330dbe2bbf01f552f7365be1137fc",
     "size": 117720
   },
   {
@@ -331,7 +331,7 @@
   },
   {
     "path": "PS4Stages/MENU/STAGESELECT-THUMBS.textures",
-    "sha256": "e76cdb0103f80e0e9885c58f35768800edf2af294ff00148ac285ece1cb41f76",
+    "sha256": "74e4e0c08057ca6f4671cbd8c1d3f9fdddfb067dcf85fc9c89573f963a4c2fb5",
     "size": 5237504
   }
 ]
